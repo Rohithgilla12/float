@@ -30,15 +30,54 @@ You asked: **"Can we open source the repo AND sell it for $4.99?"**
    - Users happily pay $4.99 for a one-click signed `.dmg` that auto-updates cleanly.
 
 #### Best Merchant Platforms to Sell For $4.99:
-1. **Lemon Squeezy** *(Recommended)*:
-   - Built specifically for digital software & desktop licenses.
-   - Acts as **Merchant of Record (MoR)**: Handles all global sales taxes, EU VAT, and invoicing automatically.
-   - Provides a built-in License Key generation API if you want to gate any features or just issue license receipts.
-   - Takes ~5% + $0.50 per transaction.
-2. **Gumroad**:
-   - Very popular, but higher fees (10% flat).
+1. **Dodo Payments** *(Configured & Built-in)*:
+   - Modern, developer-first Merchant of Record (MoR) with global tax & VAT compliance.
+   - Built-in **License Keys** engine: automatically generates cryptographic license keys on checkout and delivers them to buyers via email.
+   - **Public Client API**: desktop apps can call `https://live.dodopayments.com/licenses/activate` directly without leaking secret API tokens.
+   - Low transaction fees, instant checkout links, and clean dashboard.
+2. **Gumroad / Lemon Squeezy**:
+   - Alternative options, but Dodo Payments provides the fastest license validation and native developer API.
 3. **Mac App Store**:
    - High discovery, but Apple takes 15% (Small Business Program) and requires sandboxing compliance.
+
+---
+
+## 2. Dodo Payments Setup & Integration Guide
+
+FloatNotes includes a complete, out-of-the-box integration with Dodo Payments in [`src/utils/license.ts`](file:///Users/rohithgilla/github.com/float-notes/src/utils/license.ts) and [`src/components/LicenseModal.tsx`](file:///Users/rohithgilla/github.com/float-notes/src/components/LicenseModal.tsx).
+
+### Step 1: Create Product in Dodo Payments
+1. Log in to your [Dodo Payments Dashboard](https://app.dodopayments.com).
+2. Go to **Products &rarr; Add Product**.
+3. Fill in:
+   - **Name**: `FloatNotes Pro Lifetime`
+   - **Type**: One-Time Payment
+   - **Price**: `$4.99 USD`
+   - **Description**: `Lifetime license for FloatNotes on macOS with Apple notarized binaries and automatic updates.`
+4. Under **License Keys**:
+   - Toggle **Enable License Keys** to `ON`.
+   - Set **Max Activations per Key**: `3` (allows users to activate on their MacBook and desktop iMac).
+5. Copy your **Checkout Link** (e.g., `https://checkout.dodopayments.com/buy/pdt_yourproductid`).
+
+### Step 2: Configure Checkout Link in FloatNotes
+In [`src/utils/license.ts`](file:///Users/rohithgilla/github.com/float-notes/src/utils/license.ts):
+```ts
+export const DODO_CHECKOUT_URL = 'https://checkout.dodopayments.com/buy/pdt_yourproductid';
+```
+
+### Step 3: How License Verification Works
+When a customer buys on Dodo Payments:
+1. Dodo automatically generates a license key (e.g. `LK-9B8A-77C1-...`) and emails it to the customer.
+2. Customer clicks **PRO** in the header or **⌘K &rarr; Enter License Key...** in FloatNotes.
+3. The app sends a `POST` request to `https://live.dodopayments.com/licenses/activate`:
+   ```json
+   {
+     "license_key": "LK-9B8A-77C1-...",
+     "name": "macOS FloatNotes Device"
+   }
+   ```
+4. Dodo responds with confirmation and an `instance_id`.
+5. The license is cached in `localStorage` with offline resilience so users can take notes without internet.
 
 ---
 

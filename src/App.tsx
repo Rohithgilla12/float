@@ -5,8 +5,10 @@ import { WindowHeader } from './components/WindowHeader';
 import { NoteEditor } from './components/NoteEditor';
 import { ActionBar } from './components/ActionBar';
 import { CommandPaletteModal } from './components/CommandPaletteModal';
+import { LicenseModal } from './components/LicenseModal';
 import { ParticleBurstCanvas, ParticleCanvasHandle } from './components/ParticleBurstCanvas';
 import { haptics } from './utils/audioHaptics';
+import { getStoredLicense, LicenseStatus } from './utils/license';
 
 export const App: React.FC = () => {
   const {
@@ -23,6 +25,8 @@ export const App: React.FC = () => {
 
   const [isPinned, setIsPinned] = useState(true);
   const [actionsPaletteOpen, setActionsPaletteOpen] = useState(false);
+  const [licenseModalOpen, setLicenseModalOpen] = useState(false);
+  const [licenseStatus, setLicenseStatus] = useState<LicenseStatus>(getStoredLicense);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const particleCanvasRef = useRef<ParticleCanvasHandle>(null);
@@ -159,10 +163,13 @@ export const App: React.FC = () => {
         return;
       }
 
-      // Esc: Dismiss Palette or Close/Hide Window
+      // Esc: Dismiss Modal, Palette or Close/Hide Window
       if (e.key === 'Escape') {
         e.preventDefault();
-        if (actionsPaletteOpen) {
+        if (licenseModalOpen) {
+          haptics.playClick();
+          setLicenseModalOpen(false);
+        } else if (actionsPaletteOpen) {
           haptics.playClick();
           setActionsPaletteOpen(false);
         } else {
@@ -174,7 +181,7 @@ export const App: React.FC = () => {
 
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [actionsPaletteOpen, handleTogglePin, handleCloseWindow, createNote, notes, setActiveNoteId, showToast]);
+  }, [licenseModalOpen, actionsPaletteOpen, handleTogglePin, handleCloseWindow, createNote, notes, setActiveNoteId, showToast]);
 
   return (
     <div className={`theme-${theme} w-screen h-screen flex flex-col overflow-hidden bg-transparent`}>
@@ -216,6 +223,11 @@ export const App: React.FC = () => {
           }}
           onCloseWindow={handleCloseWindow}
           onMinimizeWindow={handleMinimizeWindow}
+          isPro={licenseStatus.isPro}
+          onOpenLicense={() => {
+            haptics.playClick();
+            setLicenseModalOpen(true);
+          }}
         />
 
         {/* Note Editor Area with Task Particle Bursts (Overdrive Direction B) & Audio Haptics (Direction A) */}
@@ -269,6 +281,22 @@ export const App: React.FC = () => {
             showToast('🗑️ Deleted note');
           }}
           onExportNote={handleExportNote}
+          isPro={licenseStatus.isPro}
+          onOpenLicense={() => {
+            haptics.playClick();
+            setLicenseModalOpen(true);
+          }}
+        />
+
+        {/* Dodo Payments License Modal */}
+        <LicenseModal
+          isOpen={licenseModalOpen}
+          onClose={() => setLicenseModalOpen(false)}
+          licenseStatus={licenseStatus}
+          onLicenseChanged={status => {
+            setLicenseStatus(status);
+            showToast(status.isPro ? '⚡ FloatNotes Pro Activated!' : 'License updated');
+          }}
         />
 
         {/* Toast Notification */}

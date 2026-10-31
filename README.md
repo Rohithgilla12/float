@@ -87,9 +87,9 @@ npm run tauri build
 
 FloatNotes follows the open source commercial model popularized by indie macOS tools like **Maccy** and **Shottr**:
 - The code is **100% Open Source** on GitHub under the [MIT License](LICENSE).
-- Pre-built, signed, and Apple-notarized `.dmg` binaries with automatic updates are available for a **$4.99 one-time lifetime license** on Lemon Squeezy / Gumroad.
+- Pre-built, signed, and Apple-notarized `.dmg` binaries with automatic updates are available for a **$4.99 one-time lifetime license** powered by **Dodo Payments**.
 
-See [`MONETIZATION_AND_SIGNING.md`](MONETIZATION_AND_SIGNING.md) for the complete Apple signing, notarization, and monetization playbook.
+See [`MONETIZATION_AND_SIGNING.md`](MONETIZATION_AND_SIGNING.md) for the complete Apple signing, notarization, and Dodo Payments integration guide.
 
 ---
 

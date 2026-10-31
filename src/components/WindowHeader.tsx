@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pin, Plus, Moon, Sun, MoreHorizontal } from 'lucide-react';
+import { Pin, Plus, Moon, Sun, MoreHorizontal, Sparkles } from 'lucide-react';
 import { Note } from '../types/note';
 import { ThemeConfig } from '../types/theme';
 
@@ -15,6 +15,8 @@ interface WindowHeaderProps {
   onOpenActions: () => void;
   onCloseWindow?: () => void;
   onMinimizeWindow?: () => void;
+  isPro?: boolean;
+  onOpenLicense?: () => void;
 }
 
 export const WindowHeader: React.FC<WindowHeaderProps> = ({
@@ -29,6 +31,8 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
   onOpenActions,
   onCloseWindow,
   onMinimizeWindow,
+  isPro,
+  onOpenLicense,
 }) => {
   return (
     <div
@@ -85,6 +89,22 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
 
       {/* Right: Actions & Pin State */}
       <div className="flex items-center gap-1.5">
+        {/* Pro Status / Upgrade Badge */}
+        {onOpenLicense && (
+          <button
+            onClick={onOpenLicense}
+            title={isPro ? 'FloatNotes Pro Active' : 'Upgrade to Pro ($4.99 via Dodo Payments)'}
+            className={`btn-press px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold flex items-center gap-1 border transition-all ${
+              isPro
+                ? 'bg-amber-500/15 text-amber-500 border-amber-500/30'
+                : 'bg-black/5 dark:bg-white/5 text-[var(--text-muted)] hover:text-amber-400 border-[var(--border-subtle)]'
+            }`}
+          >
+            <Sparkles className="w-2.5 h-2.5 fill-current" />
+            <span>{isPro ? 'PRO' : 'PRO $4.99'}</span>
+          </button>
+        )}
+
         {/* Quick Light/Dark Toggle */}
         <button
           onClick={onToggleThemeMode}

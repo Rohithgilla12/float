@@ -67,6 +67,33 @@ class AudioHapticsEngine {
     } catch {}
   }
 
+  // Celebratory two-tone ascending chime
+  public playSuccess(): void {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      [
+        { freq: 587.33, start: 0, dur: 0.12 }, // D5
+        { freq: 880.0, start: 0.08, dur: 0.16 }, // A5
+      ].forEach(tone => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(tone.freq, now + tone.start);
+
+        gain.gain.setValueAtTime(0.06, now + tone.start);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + tone.start + tone.dur);
+
+        osc.start(now + tone.start);
+        osc.stop(now + tone.start + tone.dur);
+      });
+    } catch {}
+  }
+
   // Raycast tactile button / key click
   public playClick(): void {
     const ctx = this.getContext();

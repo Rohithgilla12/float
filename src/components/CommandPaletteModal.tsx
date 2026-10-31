@@ -7,6 +7,8 @@ import {
   Trash2,
   FileDown,
   Search,
+  Sparkles,
+  Key,
 } from 'lucide-react';
 import { ThemeId, THEMES } from '../types/theme';
 import { haptics } from '../utils/audioHaptics';
@@ -22,6 +24,8 @@ interface CommandPaletteModalProps {
   onCreateNote: () => void;
   onDeleteNote: () => void;
   onExportNote: () => void;
+  isPro?: boolean;
+  onOpenLicense?: () => void;
 }
 
 interface ActionItem {
@@ -45,6 +49,8 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
   onCreateNote,
   onDeleteNote,
   onExportNote,
+  isPro,
+  onOpenLicense,
 }) => {
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -60,7 +66,52 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     }
   }, [isOpen]);
 
+  const licensingActions: ActionItem[] = onOpenLicense
+    ? isPro
+      ? [
+          {
+            id: 'license-active',
+            label: 'FloatNotes Pro (Active)',
+            description: 'Manage your lifetime license or view activation status',
+            shortcut: 'PRO',
+            icon: <Sparkles className="w-4 h-4 fill-current text-amber-400" />,
+            category: 'Pro & Licensing',
+            action: () => {
+              onClose();
+              onOpenLicense();
+            },
+          },
+        ]
+      : [
+          {
+            id: 'upgrade-pro',
+            label: 'Upgrade to FloatNotes Pro ($4.99)',
+            description: 'Get Apple notarized binaries, auto-updates via Dodo Payments',
+            shortcut: '$4.99',
+            icon: <Sparkles className="w-4 h-4 text-amber-400" />,
+            category: 'Pro & Licensing',
+            action: () => {
+              onClose();
+              onOpenLicense();
+            },
+          },
+          {
+            id: 'enter-license',
+            label: 'Enter License Key...',
+            description: 'Activate your Dodo Payments purchase',
+            shortcut: '🔑',
+            icon: <Key className="w-4 h-4 text-amber-300" />,
+            category: 'Pro & Licensing',
+            action: () => {
+              onClose();
+              onOpenLicense();
+            },
+          },
+        ]
+    : [];
+
   const mainActions: ActionItem[] = [
+    ...licensingActions,
     {
       id: 'copy',
       label: 'Copy Markdown',
