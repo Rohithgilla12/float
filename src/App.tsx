@@ -179,6 +179,9 @@ export const App: React.FC = () => {
         onMouseMove={handleMouseMove}
         className="window-shell w-full h-full rounded-2xl flex flex-col overflow-hidden relative select-none"
       >
+        {/* Ambient Specular Glass Glow (Direction B) */}
+        <div className="specular-glow" />
+
         {/* Micro-Particle Burst Canvas (Overdrive Direction B) */}
         <ParticleBurstCanvas ref={particleCanvasRef} />
 

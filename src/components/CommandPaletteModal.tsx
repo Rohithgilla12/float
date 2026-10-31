@@ -9,6 +9,7 @@ import {
   Search,
 } from 'lucide-react';
 import { ThemeId, THEMES } from '../types/theme';
+import { haptics } from '../utils/audioHaptics';
 
 interface CommandPaletteModalProps {
   isOpen: boolean;
@@ -179,6 +180,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       } else if (e.key === 'Enter') {
         e.preventDefault();
         if (filteredActions[selectedIndex]) {
+          haptics.playClick();
           filteredActions[selectedIndex].action();
         }
       } else if (e.key === 'Escape') {
@@ -202,7 +204,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       {/* Click outside to dismiss */}
       <div className="absolute inset-0" onClick={onClose} />
 
-      <div className="relative w-full max-w-md rounded-2xl bg-[var(--bg-window-solid)] border border-[var(--border-highlight)] shadow-2xl overflow-hidden flex flex-col z-10 transition-all">
+      <div className="morph-palette-container relative w-full max-w-md rounded-2xl bg-[var(--bg-window-solid)] border border-[var(--border-highlight)] shadow-2xl overflow-hidden flex flex-col z-10">
         
         {/* Search Header */}
         <div className="px-4 py-3 border-b border-[var(--border-subtle)] flex items-center gap-3">
@@ -245,7 +247,10 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
               return (
                 <div
                   key={item.id}
-                  onClick={item.action}
+                  onClick={() => {
+                    haptics.playClick();
+                    item.action();
+                  }}
                   onMouseEnter={() => setSelectedIndex(idx)}
                   className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-colors ${
                     isSelected
