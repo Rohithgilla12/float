@@ -151,6 +151,7 @@ export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
         }
       } else if (e.key === 'Escape') {
         e.preventDefault();
+        e.stopPropagation();
         onClose();
       }
     };

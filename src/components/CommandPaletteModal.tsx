@@ -185,6 +185,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         }
       } else if (e.key === 'Escape') {
         e.preventDefault();
+        e.stopPropagation();
         if (viewingThemes) {
           setViewingThemes(false);
         } else {

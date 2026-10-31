@@ -159,17 +159,22 @@ export const App: React.FC = () => {
         return;
       }
 
-      // Esc: Dismiss Palette
-      if (e.key === 'Escape' && actionsPaletteOpen) {
+      // Esc: Dismiss Palette or Close/Hide Window
+      if (e.key === 'Escape') {
         e.preventDefault();
-        haptics.playClick();
-        setActionsPaletteOpen(false);
+        if (actionsPaletteOpen) {
+          haptics.playClick();
+          setActionsPaletteOpen(false);
+        } else {
+          handleCloseWindow();
+        }
+        return;
       }
     };
 
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [actionsPaletteOpen, handleTogglePin, createNote, notes, setActiveNoteId, showToast]);
+  }, [actionsPaletteOpen, handleTogglePin, handleCloseWindow, createNote, notes, setActiveNoteId, showToast]);
 
   return (
     <div className={`theme-${theme} w-screen h-screen flex flex-col overflow-hidden bg-transparent`}>
