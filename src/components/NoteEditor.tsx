@@ -11,17 +11,20 @@ import {
 import { EditorBlock, parseMarkdownToBlocks, serializeBlocksToMarkdown } from '../utils/markdownBlocks';
 import { SlashCommand } from '../types/note';
 import { SlashCommandMenu } from './SlashCommandMenu';
+import { haptics } from '../utils/audioHaptics';
 
 interface NoteEditorProps {
   content: string;
   onChange: (content: string) => void;
   onOpenActions: () => void;
+  onTaskCheckBurst?: (x: number, y: number) => void;
 }
 
 export const NoteEditor: React.FC<NoteEditorProps> = ({
   content,
   onChange,
   onOpenActions,
+  onTaskCheckBurst,
 }) => {
   const [blocks, setBlocks] = useState<EditorBlock[]>(() => parseMarkdownToBlocks(content));
   
@@ -76,14 +79,24 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
   };
 
   // Toggle Task Checkbox
-  const handleToggleTask = (index: number) => {
+  const handleToggleTask = (index: number, e?: React.MouseEvent) => {
     const updated = [...blocks];
     if (updated[index] && updated[index].type === 'task') {
+      const willBeChecked = !updated[index].checked;
       updated[index] = {
         ...updated[index],
-        checked: !updated[index].checked,
+        checked: willBeChecked,
       };
       notifyChange(updated);
+
+      if (willBeChecked) {
+        haptics.playCheck();
+        if (e && onTaskCheckBurst) {
+          onTaskCheckBurst(e.clientX, e.clientY);
+        }
+      } else {
+        haptics.playUncheck();
+      }
     }
   };
 
@@ -480,7 +493,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 {/* Interactive Clickable Checkbox */}
                 <button
                   type="button"
-                  onClick={() => handleToggleTask(idx)}
+                  onClick={e => handleToggleTask(idx, e)}
                   className={`w-4 h-4 rounded mt-0.5 flex items-center justify-center text-xs font-bold transition-all shrink-0 btn-press cursor-pointer ${
                     block.checked
                       ? 'border border-[var(--accent-color)] bg-[var(--accent-color)] text-white shadow-sm'

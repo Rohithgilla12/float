@@ -153,12 +153,35 @@ body {
 }
 
 .window-shell {
+  position: relative;
   background-color: var(--bg-window);
   backdrop-filter: blur(28px) saturate(180%);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
   border: 1px solid var(--border-window);
   box-shadow: var(--shadow-window);
   transition: background-color 180ms var(--ease-raycast), border-color 180ms var(--ease-raycast), box-shadow 180ms var(--ease-raycast), color 180ms ease;
+}
+
+/* Overdrive Direction B: Sub-pixel Specular Border Shader */
+.window-shell::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(
+    300px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    var(--accent-color),
+    rgba(255, 255, 255, 0.14) 35%,
+    transparent 70%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 45;
+  opacity: 0.85;
+  transition: opacity 150ms ease;
 }
 
 .btn-press:active {

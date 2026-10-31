@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNotes } from './hooks/useNotes';
 import { useTheme } from './hooks/useTheme';
 import { WindowHeader } from './components/WindowHeader';
 import { NoteEditor } from './components/NoteEditor';
 import { ActionBar } from './components/ActionBar';
 import { CommandPaletteModal } from './components/CommandPaletteModal';
+import { ParticleBurstCanvas, ParticleCanvasHandle } from './components/ParticleBurstCanvas';
+import { haptics } from './utils/audioHaptics';
 
 export const App: React.FC = () => {
   const {
@@ -23,6 +25,9 @@ export const App: React.FC = () => {
   const [actionsPaletteOpen, setActionsPaletteOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const particleCanvasRef = useRef<ParticleCanvasHandle>(null);
+  const windowShellRef = useRef<HTMLDivElement>(null);
+
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
   }, []);
@@ -33,10 +38,22 @@ export const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, [toastMessage]);
 
+  // Overdrive Direction B: Mouse-Tracking Sub-Pixel Specular Glass Border
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const win = windowShellRef.current;
+    if (!win) return;
+    const rect = win.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    win.style.setProperty('--mouse-x', `${x}px`);
+    win.style.setProperty('--mouse-y', `${y}px`);
+  }, []);
+
   // Always on Top Pin Toggle with Tauri Backend Integration
   const handleTogglePin = useCallback(async () => {
     const nextState = !isPinned;
     setIsPinned(nextState);
+    haptics.playClick();
 
     // Call Tauri window API if available
     try {
@@ -51,6 +68,7 @@ export const App: React.FC = () => {
 
   // Window Controls
   const handleCloseWindow = useCallback(async () => {
+    haptics.playClick();
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       await invoke('hide_window');
@@ -60,6 +78,7 @@ export const App: React.FC = () => {
   }, [showToast]);
 
   const handleMinimizeWindow = useCallback(async () => {
+    haptics.playClick();
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       await invoke('minimize_window');
@@ -70,6 +89,7 @@ export const App: React.FC = () => {
 
   // Copy Note Markdown to Clipboard
   const handleCopyNote = useCallback(async () => {
+    haptics.playClick();
     try {
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(activeNote.content);
@@ -83,6 +103,7 @@ export const App: React.FC = () => {
 
   // Export Note as .md File
   const handleExportNote = useCallback(() => {
+    haptics.playClick();
     try {
       const blob = new Blob([activeNote.content], { type: 'text/markdown;charset=utf-8' });
       const url = URL.createObjectURL(blob);
@@ -105,6 +126,7 @@ export const App: React.FC = () => {
       // ⌘K: Actions Palette
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
+        haptics.playClick();
         setActionsPaletteOpen(prev => !prev);
         return;
       }
@@ -119,6 +141,7 @@ export const App: React.FC = () => {
       // ⌘N: New Note
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
         e.preventDefault();
+        haptics.playClick();
         createNote();
         showToast('✨ Created new note');
         return;
@@ -129,6 +152,7 @@ export const App: React.FC = () => {
         const index = parseInt(e.key, 10) - 1;
         if (notes[index]) {
           e.preventDefault();
+          haptics.playClick();
           setActiveNoteId(notes[index].id);
           showToast(`Switched to "${notes[index].title}"`);
         }
@@ -138,6 +162,7 @@ export const App: React.FC = () => {
       // Esc: Dismiss Palette
       if (e.key === 'Escape' && actionsPaletteOpen) {
         e.preventDefault();
+        haptics.playClick();
         setActionsPaletteOpen(false);
       }
     };
@@ -148,38 +173,68 @@ export const App: React.FC = () => {
 
   return (
     <div className={`theme-${theme} w-screen h-screen flex flex-col overflow-hidden bg-transparent`}>
-      {/* Outer Floating Window Container */}
-      <div className="window-shell w-full h-full rounded-2xl flex flex-col overflow-hidden relative select-none">
-        
+      {/* Outer Floating Window Container with Overdrive Specular Glass Shader */}
+      <div
+        ref={windowShellRef}
+        onMouseMove={handleMouseMove}
+        className="window-shell w-full h-full rounded-2xl flex flex-col overflow-hidden relative select-none"
+      >
+        {/* Micro-Particle Burst Canvas (Overdrive Direction B) */}
+        <ParticleBurstCanvas ref={particleCanvasRef} />
+
         {/* Top Header Bar */}
         <WindowHeader
           notes={notes}
           activeNoteId={activeNoteId}
-          onSelectNote={setActiveNoteId}
+          onSelectNote={id => {
+            haptics.playClick();
+            setActiveNoteId(id);
+          }}
           onCreateNote={() => {
+            haptics.playClick();
             createNote();
             showToast('✨ Created new note');
           }}
           isPinned={isPinned}
           onTogglePin={handleTogglePin}
           currentTheme={themeConfig}
-          onToggleThemeMode={toggleLightDark}
-          onOpenActions={() => setActionsPaletteOpen(true)}
+          onToggleThemeMode={() => {
+            haptics.playClick();
+            toggleLightDark();
+          }}
+          onOpenActions={() => {
+            haptics.playClick();
+            setActionsPaletteOpen(true);
+          }}
           onCloseWindow={handleCloseWindow}
           onMinimizeWindow={handleMinimizeWindow}
         />
 
-        {/* Note Editor Area */}
+        {/* Note Editor Area with Task Particle Bursts (Overdrive Direction B) & Audio Haptics (Direction A) */}
         <NoteEditor
           content={activeNote.content}
           onChange={updateActiveNoteContent}
-          onOpenActions={() => setActionsPaletteOpen(true)}
+          onOpenActions={() => {
+            haptics.playClick();
+            setActionsPaletteOpen(true);
+          }}
+          onTaskCheckBurst={(x, y) => {
+            particleCanvasRef.current?.burst(x, y, [
+              themeConfig.accent,
+              '#FFFFFF',
+              '#38BDF8',
+              '#F59E0B',
+            ]);
+          }}
         />
 
         {/* Bottom Raycast Action Bar */}
         <ActionBar
           content={activeNote.content}
-          onOpenActions={() => setActionsPaletteOpen(true)}
+          onOpenActions={() => {
+            haptics.playClick();
+            setActionsPaletteOpen(true);
+          }}
         />
 
         {/* Raycast ⌘K Actions Command Palette */}
@@ -191,14 +246,17 @@ export const App: React.FC = () => {
           onTogglePin={handleTogglePin}
           currentTheme={theme}
           onSelectTheme={t => {
+            haptics.playClick();
             setTheme(t);
             showToast(`Switched to ${t}`);
           }}
           onCreateNote={() => {
+            haptics.playClick();
             createNote();
             showToast('✨ Created new note');
           }}
           onDeleteNote={() => {
+            haptics.playClick();
             deleteActiveNote();
             showToast('🗑️ Deleted note');
           }}
