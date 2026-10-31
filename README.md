@@ -4,6 +4,7 @@
 [![Tauri v2](https://img.shields.io/badge/Tauri-v2-FFC131?logo=tauri&logoColor=white)](https://v2.tauri.app/)
 [![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Launch Film](https://img.shields.io/badge/15s_Film-Watch_on_R2-F59E0B?logo=quicktime&logoColor=white)](https://pub-f69e073835364d8883ded4ff1d09e386.r2.dev/float-intro.mp4)
 
 > **The fastest, most beautiful floating desktop scratchpad for macOS.**  
 > Crafted with **Tauri v2 (Rust)**, **React + TypeScript**, and **Tailwind CSS**. Built for speed, fluid motion, and zero friction.

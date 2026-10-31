@@ -11,9 +11,14 @@ import {
   Maximize2,
   Play,
   Monitor,
+  Volume2,
+  VolumeX,
+  ExternalLink,
 } from 'lucide-react';
 import App from '../App';
 import { DODO_CHECKOUT_URL, openExternalLink } from '../utils/license';
+
+const R2_VIDEO_URL = 'https://pub-f69e073835364d8883ded4ff1d09e386.r2.dev/float-intro.mp4';
 
 interface LandingPageProps {
   onOpenAppFullscreen: () => void;
@@ -21,6 +26,7 @@ interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen }) => {
   const [heroView, setHeroView] = useState<'sandbox' | 'video'>('sandbox');
+  const [isVideoMuted, setIsVideoMuted] = useState(true);
 
   const handleBuy = () => {
     openExternalLink(DODO_CHECKOUT_URL);
@@ -63,6 +69,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
             </a>
             <a href="#features" className="hover:text-white transition-colors">
               Features
+            </a>
+            <a href="#film" className="hover:text-white transition-colors">
+              Film
             </a>
             <a href="#shortcuts" className="hover:text-white transition-colors">
               Shortcuts
@@ -180,17 +189,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
               /* Embedded Live React Float App */
               <App />
             ) : (
-              /* 15s HyperFrames Rendered Video */
-              <div className="w-full h-full flex flex-col items-center justify-center bg-black relative">
+              /* 15s HyperFrames Rendered Video streaming from Cloudflare R2 */
+              <div className="w-full h-full flex flex-col items-center justify-center bg-black relative group">
                 <video
-                  src="/float-intro.mp4"
+                  src={R2_VIDEO_URL}
                   autoPlay
                   loop
-                  muted
+                  muted={isVideoMuted}
                   playsInline
                   controls
                   className="w-full h-full object-cover rounded-2xl"
                 />
+                <button
+                  onClick={() => setIsVideoMuted(!isVideoMuted)}
+                  className="absolute bottom-4 right-4 z-20 px-3 py-1.5 rounded-xl bg-black/80 hover:bg-black text-white text-xs font-semibold backdrop-blur-md border border-white/20 flex items-center gap-1.5 shadow-xl transition-all cursor-pointer"
+                >
+                  {isVideoMuted ? <VolumeX className="w-3.5 h-3.5 text-amber-400" /> : <Volume2 className="w-3.5 h-3.5 text-amber-400" />}
+                  <span>{isVideoMuted ? 'Unmute Sound' : 'Mute'}</span>
+                </button>
               </div>
             )}
           </div>
@@ -199,9 +215,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
             <span>
               {heroView === 'sandbox'
                 ? '👆 Live interactive sandbox — click checkboxes, type, or press /'
-                : '🎬 15s Launch Video rendered with HyperFrames (Ready for Twitter & web)'}
+                : '🎬 15s Launch Film rendered with HyperFrames • Streamed globally via Cloudflare R2'}
             </span>
-            {heroView === 'sandbox' && (
+            {heroView === 'sandbox' ? (
               <button
                 onClick={onOpenAppFullscreen}
                 className="hover:text-amber-400 flex items-center gap-1 transition-colors cursor-pointer"
@@ -209,6 +225,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
                 <span>Full Screen</span>
                 <Maximize2 className="w-3 h-3" />
               </button>
+            ) : (
+              <a
+                href={R2_VIDEO_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-amber-400 flex items-center gap-1 transition-colors"
+              >
+                <span>Direct 1080p Stream</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
             )}
           </div>
         </div>
@@ -352,6 +378,46 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
               </tr>
             </tbody>
           </table>
+        </div>
+      </section>
+
+      {/* 15-Second Launch Film Showcase (Streamed from Cloudflare R2) */}
+      <section id="film" className="py-20 px-6 max-w-5xl mx-auto border-t border-white/5">
+        <div className="text-center mb-12">
+          <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 font-mono">
+            15-SECOND PRODUCT FILM
+          </span>
+          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white mt-3">
+            Pure flow. Zero friction.
+          </h2>
+          <p className="mt-2 text-sm text-white/60 max-w-xl mx-auto">
+            Rendered at 1080p 60 FPS with custom synthesized audio, keyframe foley, and 35mm grain. Streamed globally with instant seeking via Cloudflare R2.
+          </p>
+        </div>
+
+        <div className="relative rounded-3xl border border-white/15 overflow-hidden shadow-2xl bg-black max-w-4xl mx-auto group">
+          <div className="aspect-video w-full">
+            <video
+              src={R2_VIDEO_URL}
+              controls
+              playsInline
+              preload="metadata"
+              poster="/assets/preview-poster.jpg"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="p-4 bg-white/[0.03] border-t border-white/10 flex items-center justify-between text-xs text-white/60 font-mono">
+            <span>Float Launch Film &bull; 1080p H.264 &bull; 48kHz Stereo</span>
+            <a
+              href={R2_VIDEO_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors"
+            >
+              <span>Download Raw MP4</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
         </div>
       </section>
 
