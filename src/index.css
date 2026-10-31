@@ -1,0 +1,206 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', sans-serif;
+  --font-mono: 'Geist Mono', 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+  --ease-raycast: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15);
+}
+
+/* 1. Raycast Obsidian (Dark) */
+.theme-obsidian {
+  --bg-window: rgba(13, 15, 18, 0.88);
+  --bg-window-solid: #0d0f12;
+  --bg-surface: rgba(22, 26, 32, 0.65);
+  --bg-surface-hover: rgba(255, 255, 255, 0.08);
+  --bg-surface-active: rgba(255, 255, 255, 0.14);
+  --border-window: rgba(255, 255, 255, 0.1);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-highlight: rgba(255, 255, 255, 0.2);
+  --text-primary: #F3F4F6;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+  --accent-color: #FF6363;
+  --accent-glow: rgba(255, 99, 99, 0.22);
+  --accent-secondary: #F59E0B;
+  --kbd-bg: rgba(255, 255, 255, 0.08);
+  --kbd-border: rgba(255, 255, 255, 0.15);
+  --code-bg: rgba(0, 0, 0, 0.45);
+  --shadow-window: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --is-dark: 1;
+}
+
+/* 2. Catppuccin Mocha (Dark Pastel) */
+.theme-mocha {
+  --bg-window: rgba(30, 30, 46, 0.90);
+  --bg-window-solid: #1e1e2e;
+  --bg-surface: rgba(49, 50, 68, 0.65);
+  --bg-surface-hover: rgba(205, 214, 244, 0.1);
+  --bg-surface-active: rgba(205, 214, 244, 0.18);
+  --border-window: rgba(180, 190, 254, 0.18);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-highlight: rgba(203, 166, 247, 0.35);
+  --text-primary: #CDD6F4;
+  --text-secondary: #BAC2DE;
+  --text-muted: #7F849C;
+  --accent-color: #CBA6F7;
+  --accent-glow: rgba(203, 166, 247, 0.25);
+  --accent-secondary: #FAB387;
+  --kbd-bg: rgba(49, 50, 68, 0.8);
+  --kbd-border: rgba(180, 190, 254, 0.2);
+  --code-bg: rgba(17, 17, 27, 0.6);
+  --shadow-window: 0 25px 60px -15px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(203, 166, 247, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  --is-dark: 1;
+}
+
+/* 3. Catppuccin Latte (Light Pastel) */
+.theme-latte {
+  --bg-window: rgba(239, 241, 245, 0.94);
+  --bg-window-solid: #eff1f5;
+  --bg-surface: rgba(230, 233, 239, 0.85);
+  --bg-surface-hover: rgba(76, 79, 105, 0.07);
+  --bg-surface-active: rgba(76, 79, 105, 0.12);
+  --border-window: rgba(140, 143, 161, 0.25);
+  --border-subtle: rgba(140, 143, 161, 0.12);
+  --border-highlight: rgba(136, 57, 239, 0.35);
+  --text-primary: #4C4F69;
+  --text-secondary: #6C6F85;
+  --text-muted: #8C8FA1;
+  --accent-color: #8839EF;
+  --accent-glow: rgba(136, 57, 239, 0.15);
+  --accent-secondary: #FE640B;
+  --kbd-bg: rgba(204, 208, 218, 0.6);
+  --kbd-border: rgba(156, 160, 176, 0.4);
+  --code-bg: rgba(230, 233, 239, 0.95);
+  --shadow-window: 0 20px 50px -10px rgba(76, 79, 105, 0.18), 0 0 0 1px rgba(140, 143, 161, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --is-dark: 0;
+}
+
+/* 4. Raycast Paper (Light Clean) */
+.theme-paper {
+  --bg-window: rgba(255, 255, 255, 0.95);
+  --bg-window-solid: #ffffff;
+  --bg-surface: rgba(248, 250, 252, 0.9);
+  --bg-surface-hover: rgba(15, 23, 42, 0.06);
+  --bg-surface-active: rgba(15, 23, 42, 0.1);
+  --border-window: rgba(226, 232, 240, 0.9);
+  --border-subtle: rgba(226, 232, 240, 0.6);
+  --border-highlight: rgba(244, 63, 94, 0.3);
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --accent-color: #E11D48;
+  --accent-glow: rgba(225, 29, 72, 0.12);
+  --accent-secondary: #F59E0B;
+  --kbd-bg: rgba(241, 245, 249, 0.9);
+  --kbd-border: rgba(203, 213, 225, 0.8);
+  --code-bg: rgba(241, 245, 249, 0.95);
+  --shadow-window: 0 20px 50px -10px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 1);
+  --is-dark: 0;
+}
+
+/* 5. Spatial Sonoma Acrylic (Dark Glass) */
+.theme-sonoma {
+  --bg-window: rgba(28, 30, 36, 0.75);
+  --bg-window-solid: #1c1e24;
+  --bg-surface: rgba(45, 49, 58, 0.55);
+  --bg-surface-hover: rgba(255, 255, 255, 0.1);
+  --bg-surface-active: rgba(255, 255, 255, 0.18);
+  --border-window: rgba(255, 255, 255, 0.16);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-highlight: rgba(56, 189, 248, 0.4);
+  --text-primary: #FFFFFF;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --accent-color: #38BDF8;
+  --accent-glow: rgba(56, 189, 248, 0.3);
+  --accent-secondary: #A855F7;
+  --kbd-bg: rgba(255, 255, 255, 0.12);
+  --kbd-border: rgba(255, 255, 255, 0.2);
+  --code-bg: rgba(0, 0, 0, 0.5);
+  --shadow-window: 0 30px 80px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  --is-dark: 1;
+}
+
+/* 6. Linear Monastic (Dark Slate) */
+.theme-monastic {
+  --bg-window: rgba(18, 19, 22, 0.96);
+  --bg-window-solid: #121316;
+  --bg-surface: #1B1D22;
+  --bg-surface-hover: #24272E;
+  --bg-surface-active: #2F333C;
+  --border-window: #2E323B;
+  --border-subtle: #22252C;
+  --border-highlight: #434855;
+  --text-primary: #ECEFF4;
+  --text-secondary: #A0A6B2;
+  --text-muted: #646A78;
+  --accent-color: #10B981;
+  --accent-glow: rgba(16, 185, 129, 0.22);
+  --accent-secondary: #6366F1;
+  --kbd-bg: #22252C;
+  --kbd-border: #353A45;
+  --code-bg: #16181D;
+  --shadow-window: 0 20px 45px -10px rgba(0, 0, 0, 0.8), 0 0 0 1px #2E323B;
+  --is-dark: 1;
+}
+
+body {
+  font-family: var(--font-sans);
+  letter-spacing: -0.011em;
+}
+
+.window-shell {
+  background-color: var(--bg-window);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--border-window);
+  box-shadow: var(--shadow-window);
+  transition: background-color 180ms var(--ease-raycast), border-color 180ms var(--ease-raycast), box-shadow 180ms var(--ease-raycast), color 180ms ease;
+}
+
+.btn-press:active {
+  transform: scale(0.96);
+  transition: transform 80ms ease-out;
+}
+
+.mac-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  transition: opacity 120ms ease;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 120, 0.25);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 120, 120, 0.45);
+}
+
+.slash-popover {
+  animation: slashPop 140ms var(--ease-raycast) forwards;
+  transform-origin: top left;
+}
+
+@keyframes slashPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
