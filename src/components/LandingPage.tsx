@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Sparkles,
   Download,
@@ -9,6 +9,8 @@ import {
   Palette,
   ShieldCheck,
   Maximize2,
+  Play,
+  Monitor,
 } from 'lucide-react';
 import App from '../App';
 import { DODO_CHECKOUT_URL, openExternalLink } from '../utils/license';
@@ -18,6 +20,8 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen }) => {
+  const [heroView, setHeroView] = useState<'sandbox' | 'video'>('sandbox');
+
   const handleBuy = () => {
     openExternalLink(DODO_CHECKOUT_URL);
   };
@@ -42,11 +46,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
           <div className="flex items-center gap-3">
             <img
               src="/favicon.png"
-              alt="FloatNotes App Icon"
+              alt="Float App Icon"
               className="w-8 h-8 rounded-xl shadow-lg shadow-amber-500/20 border border-white/10"
             />
             <div className="flex items-center gap-2">
-              <span className="font-bold text-base tracking-tight text-white">FloatNotes</span>
+              <span className="font-bold text-base tracking-tight text-white">Float</span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/60">
                 v0.1.0
               </span>
@@ -138,26 +142,74 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
           One-time payment &bull; Free lifetime updates &bull; Apple Notarized DMG &bull; Powered by Dodo Payments
         </p>
 
-        {/* Interactive Live App Demo Embedded in Hero */}
+        {/* Interactive Live App Demo or Video Teaser */}
         <div id="demo" className="mt-14 relative mx-auto max-w-2xl">
+          {/* Segmented View Switcher */}
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <button
+              onClick={() => setHeroView('sandbox')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                heroView === 'sandbox'
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                  : 'bg-white/5 text-white/60 hover:text-white border border-transparent hover:border-white/10'
+              }`}
+            >
+              <Monitor className="w-3.5 h-3.5" />
+              <span>Interactive Sandbox</span>
+            </button>
+
+            <button
+              onClick={() => setHeroView('video')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                heroView === 'video'
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                  : 'bg-white/5 text-white/60 hover:text-white border border-transparent hover:border-white/10'
+              }`}
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              <span>Watch 15s Launch Teaser</span>
+            </button>
+          </div>
+
           {/* Glowing Shadow Frame */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/30 via-purple-500/20 to-blue-500/30 rounded-3xl blur-xl opacity-70 group-hover:opacity-100 transition duration-1000 group-hover:duration-200" />
+          <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/30 via-purple-500/20 to-blue-500/30 rounded-3xl blur-xl opacity-70 transition duration-1000" />
           
           {/* Floating Mockup Window Wrapper */}
           <div className="relative rounded-2xl border border-white/20 shadow-2xl bg-[#141517] overflow-hidden text-left h-[460px]">
-            {/* Embedded Live React FloatNotes App */}
-            <App />
+            {heroView === 'sandbox' ? (
+              /* Embedded Live React Float App */
+              <App />
+            ) : (
+              /* 15s HyperFrames Rendered Video */
+              <div className="w-full h-full flex flex-col items-center justify-center bg-black relative">
+                <video
+                  src="/float-intro.mp4"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  controls
+                  className="w-full h-full object-cover rounded-2xl"
+                />
+              </div>
+            )}
           </div>
 
           <div className="mt-3 flex items-center justify-between text-xs text-white/50 px-2 font-mono">
-            <span>👆 Live interactive sandbox — click checkboxes, type, or press <kbd className="px-1 rounded bg-white/10 text-white/80">/</kbd></span>
-            <button
-              onClick={onOpenAppFullscreen}
-              className="hover:text-amber-400 flex items-center gap-1 transition-colors"
-            >
-              <span>Full Screen</span>
-              <Maximize2 className="w-3 h-3" />
-            </button>
+            <span>
+              {heroView === 'sandbox'
+                ? '👆 Live interactive sandbox — click checkboxes, type, or press /'
+                : '🎬 15s Launch Video rendered with HyperFrames (Ready for Twitter & web)'}
+            </span>
+            {heroView === 'sandbox' && (
+              <button
+                onClick={onOpenAppFullscreen}
+                className="hover:text-amber-400 flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <span>Full Screen</span>
+                <Maximize2 className="w-3 h-3" />
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -366,7 +418,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
 
             <div>
               <div className="flex justify-between items-center">
-                <h3 className="font-bold text-lg text-white">FloatNotes Pro Lifetime</h3>
+                <h3 className="font-bold text-lg text-white">Float Pro Lifetime</h3>
                 <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-mono text-xs">Official .dmg</span>
               </div>
               <div className="mt-4 flex items-baseline gap-1">
@@ -415,8 +467,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
       {/* Footer */}
       <footer className="py-12 px-6 border-t border-white/5 text-center text-xs text-white/40 font-mono space-y-3">
         <div className="flex items-center justify-center gap-4 text-white/60">
-          <a href="https://floatnotes.gilla.fun" className="hover:text-white transition-colors">
-            floatnotes.gilla.fun
+          <a href="https://float.gilla.fun" className="hover:text-white transition-colors">
+            float.gilla.fun
           </a>
           <span>&bull;</span>
           <a href="https://github.com/rohithgilla/float-notes" className="hover:text-white transition-colors">

@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "float-notes",
+  "productName": "Float",
   "version": "0.1.0",
-  "identifier": "com.floatnotes.app",
+  "identifier": "fun.gilla.float",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "FloatNotes",
+        "title": "Float",
         "width": 520,
         "height": 560,
         "minWidth": 360,
@@ -36,7 +36,7 @@
     "active": true,
     "targets": ["dmg", "app"],
     "category": "Productivity",
-    "copyright": "Copyright © 2026 FloatNotes. All rights reserved.",
+    "copyright": "Copyright © 2026 Float. All rights reserved.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

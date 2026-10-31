@@ -115,7 +115,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-sm text-[var(--text-primary)]">FloatNotes Pro</h3>
+                <h3 className="font-semibold text-sm text-[var(--text-primary)]">Float Pro</h3>
                 <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-500 border border-amber-500/30">
                   {licenseStatus.isPro ? 'PRO ACTIVE' : '$4.99 LIFETIME'}
                 </span>
@@ -143,7 +143,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({
                 <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <div className="font-semibold text-[var(--text-primary)]">
-                    FloatNotes Pro is Active!
+                    Float Pro is Active!
                   </div>
                   <div className="text-[11px] text-[var(--text-secondary)]">
                     Thank you for supporting open source desktop craftsmanship.
@@ -195,7 +195,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({
             <div className="space-y-4">
               <div className="space-y-2 text-[var(--text-secondary)] leading-relaxed">
                 <p>
-                  FloatNotes is 100% open-source under MIT. Purchasing a Pro license gives you official pre-notarized Apple binaries, automatic background updates, and supports continuous engineering.
+                  Float is 100% open-source under MIT. Purchasing a Pro license gives you official pre-notarized Apple binaries, automatic background updates, and supports continuous engineering.
                 </p>
                 <div className="grid grid-cols-2 gap-2 pt-1 font-sans">
                   <div className="flex items-center gap-2 p-2 rounded-lg bg-black/5 dark:bg-white/5 border border-[var(--border-subtle)]">

@@ -1,0 +1,186 @@
+{
+  "version": 1,
+  "historyId": "7572b019-e1e8-4f69-8ce3-75c7341ad99b",
+  "currentRevision": "a531434b-e7c1-4844-8800-3dce1cbad4da",
+  "pendingChanges": false,
+  "files": {
+    "AGENTS.md": {
+      "hash": "1b36171117cb7c18f4100a0db6a3782ff2e096115995733200445cc2e80a4060",
+      "content": "/Users/rohithgilla/.cache/hyperframes/history/7572b019-e1e8-4f69-8ce3-75c7341ad99b/blobs/1b/1b36171117cb7c18f4100a0db6a3782ff2e096115995733200445cc2e80a4060"
+    },
+    "CLAUDE.md": {
+      "hash": "1b36171117cb7c18f4100a0db6a3782ff2e096115995733200445cc2e80a4060",
+      "content": "/Users/rohithgilla/.cache/hyperframes/history/7572b019-e1e8-4f69-8ce3-75c7341ad99b/blobs/1b/1b36171117cb7c18f4100a0db6a3782ff2e096115995733200445cc2e80a4060"
+    },
+    "hyperframes.json": {
+      "hash": "44d4e8dcefebce0a13f5afa82aa270b0b19a1d3f82e434f92616010cee775dc4",
+      "content": "/Users/rohithgilla/.cache/hyperframes/history/7572b019-e1e8-4f69-8ce3-75c7341ad99b/blobs/44/44d4e8dcefebce0a13f5afa82aa270b0b19a1d3f82e434f92616010cee775dc4"
+    },
+    "index.html": {
+      "hash": "0bebdf9b0246b9d43f117b53fef3937ce3bbaf6633276eb8b7d2fd97d043f7ff",
+      "content": "/Users/rohithgilla/.cache/hyperframes/history/7572b019-e1e8-4f69-8ce3-75c7341ad99b/blobs/0b/0bebdf9b0246b9d43f117b53fef3937ce3bbaf6633276eb8b7d2fd97d043f7ff"
+    },
+    "meta.json": {
+      "hash": "24187bccaf9fdbb5f8652c8a8747415d01a90cdaa975e4a04429f81f5d0e9b25",
+      "content": "/Users/rohithgilla/.cache/hyperframes/history/7572b019-e1e8-4f69-8ce3-75c7341ad99b/blobs/24/24187bccaf9fdbb5f8652c8a8747415d01a90cdaa975e4a04429f81f5d0e9b25"
+    },
+    "package.json": {
+      "hash": "214a1824d16716057338f617116065071471a2bf12ce18f018692cd2e598306d",
+      "content": "/Users/rohithgilla/.cache/hyperframes/history/7572b019-e1e8-4f69-8ce3-75c7341ad99b/blobs/21/214a1824d16716057338f617116065071471a2bf12ce18f018692cd2e598306d"
+    },
+    "assets/icon.png": {
+      "hash": "04a44e9190b28c497e638c7225b3a1d067cde5faeb4ef7727883bde4466cae95",
+      "content": "/Users/rohithgilla/.cache/hyperframes/history/7572b019-e1e8-4f69-8ce3-75c7341ad99b/blobs/04/04a44e9190b28c497e638c7225b3a1d067cde5faeb4ef7727883bde4466cae95"
+    }
+  },
+  "revisions": {
+    "830ea6ec-cbbe-49c4-8712-b9ef8ac92ea0": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1793447237387,
+      "endedAt": 1793447237393,
+      "files": {
+        "assets/icon.png": {
+          "before": null,
+          "after": "/Users/rohithgilla/.cache/hyperframes/history/7572b019-e1e8-4f69-8ce3-75c7341ad99b/blobs/04/04a44e9190b28c497e638c7225b3a1d067cde5faeb4ef7727883bde4466cae95"
+        },
+        "index.html": {
+          "before": "/Users/rohithgilla/.cache/hyperframes/history/7572b019-e1e8-4f69-8ce3-75c7341ad99b/blobs/bb/bb26a8f483c4b8ed34f95e1a3fd8bd97e06440351dcb1c24c71d2abdbb1a1d15",
+          "after": "/Users/rohithgilla/.cache/hyperframes/history/7572b019-e1e8-4f69-8ce3-75c7341ad99b/blobs/58/5848b3b553a59784416d397d16e680eb935636945b140d3cbc4b96364169e187"
+        }
+      }
+    },
+    "a531434b-e7c1-4844-8800-3dce1cbad4da": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1793447297859,
+      "endedAt": 1793447297860,
+      "files": {
+        "index.html": {
+          "before": "/Users/rohithgilla/.cache/hyperframes/history/7572b019-e1e8-4f69-8ce3-75c7341ad99b/blobs/58/5848b3b553a59784416d397d16e680eb935636945b140d3cbc4b96364169e187",
+          "after": "/Users/rohithgilla/.cache/hyperframes/history/7572b019-e1e8-4f69-8ce3-75c7341ad99b/blobs/0b/0bebdf9b0246b9d43f117b53fef3937ce3bbaf6633276eb8b7d2fd97d043f7ff"
+        }
+      }
+    }
+  },
+  "checks": {
+    "latest": {
+      "revision": "a531434b-e7c1-4844-8800-3dce1cbad4da",
+      "id": "f8357bb6-aadc-46e3-a266-8dac47e6772b"
+    },
+    "revisions": {
+      "830ea6ec-cbbe-49c4-8712-b9ef8ac92ea0": [
+        {
+          "id": "56a3ff69-1fd0-444c-adb7-8783492fe3da",
+          "scope": "project",
+          "metadata": {
+            "ok": false,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 10000,
+              "contrast": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto"
+            }
+          },
+          "createdAt": 1793447243090,
+          "contentHash": "b671a008948b7fc20f582f3720e6a2ae1f598e9b75e76489113d3f9dc39f2d79",
+          "revision": "830ea6ec-cbbe-49c4-8712-b9ef8ac92ea0",
+          "inputFingerprint": "971405eaf36b6aea23a9f74c362a64b106495879831f7636affa6ba9c3d5f72c",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision",
+          "status": "cleaned",
+          "cleanedAfterRender": "7664111f-8ec7-4144-9d65-b0ce167aa037"
+        }
+      ],
+      "a531434b-e7c1-4844-8800-3dce1cbad4da": [
+        {
+          "id": "f8357bb6-aadc-46e3-a266-8dac47e6772b",
+          "scope": "project",
+          "report": "/Users/rohithgilla/github.com/float-notes/videos/float-intro/.hyperframes/artifacts/checks/f8357bb6-aadc-46e3-a266-8dac47e6772b.json",
+          "metadata": {
+            "ok": true,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 10000,
+              "contrast": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto"
+            }
+          },
+          "createdAt": 1793447300848,
+          "contentHash": "f09bb23ac6db2919f901071124eb3446f087acc233e6f4c81333054b546bc53d",
+          "revision": "a531434b-e7c1-4844-8800-3dce1cbad4da",
+          "inputFingerprint": "3481febe27cc5a7dfc53b36767a4ada87e380a150200fa672075ace832fdbcb3",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        }
+      ]
+    },
+    "unversioned": [
+      {
+        "id": "8f5c7cd2-246d-4ed9-8006-56a3c2f21901",
+        "scope": "project",
+        "report": "/Users/rohithgilla/github.com/float-notes/videos/float-intro/.hyperframes/artifacts/checks/8f5c7cd2-246d-4ed9-8006-56a3c2f21901.json",
+        "metadata": {
+          "ok": true,
+          "browserSkipped": false,
+          "options": {
+            "samples": 9,
+            "atTransitions": false,
+            "maxIssues": 80,
+            "collapseStatic": true,
+            "tolerance": 2,
+            "timeout": 10000,
+            "contrast": true,
+            "strict": false,
+            "snapshots": false,
+            "browserGpuMode": "auto"
+          }
+        },
+        "createdAt": 1793447162739,
+        "contentHash": "b519d8eeb9db8cfc3469d26082451a075e109f3a5888c09590f2d38bcafcdcb4",
+        "revision": null,
+        "inputFingerprint": "34d974b23703ce9c70e0c6987d5103cf3346793d5834fca65eae2c89ff19edad",
+        "inputScope": "local-project-files",
+        "attribution": "unversioned"
+      }
+    ]
+  },
+  "snapshots": {
+    "latest": null,
+    "revisions": {},
+    "unversioned": []
+  },
+  "renders": {
+    "latest": {
+      "id": "7664111f-8ec7-4144-9d65-b0ce167aa037",
+      "completedAt": 1793447322054,
+      "output": "/Users/rohithgilla/github.com/float-notes/videos/float-intro/renders/float-intro_2026-10-31_17-18-26.mp4",
+      "status": "completed",
+      "revision": "a531434b-e7c1-4844-8800-3dce1cbad4da"
+    },
+    "retainedRevisions": [
+      "a531434b-e7c1-4844-8800-3dce1cbad4da"
+    ]
+  },
+  "pendingArtifactCleanup": []
+}

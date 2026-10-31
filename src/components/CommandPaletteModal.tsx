@@ -71,7 +71,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       ? [
           {
             id: 'license-active',
-            label: 'FloatNotes Pro (Active)',
+            label: 'Float Pro (Active)',
             description: 'Manage your lifetime license or view activation status',
             shortcut: 'PRO',
             icon: <Sparkles className="w-4 h-4 fill-current text-amber-400" />,
@@ -85,7 +85,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       : [
           {
             id: 'upgrade-pro',
-            label: 'Upgrade to FloatNotes Pro ($4.99)',
+            label: 'Upgrade to Float Pro ($4.99)',
             description: 'Get Apple notarized binaries, auto-updates via Dodo Payments',
             shortcut: '$4.99',
             icon: <Sparkles className="w-4 h-4 text-amber-400" />,

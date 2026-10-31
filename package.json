@@ -1,5 +1,6 @@
 {
-  "name": "float-notes",
+  "name": "float",
+  "description": "Float — The floating desktop scratchpad inspired by Raycast",
   "private": true,
   "version": "0.1.0",
   "type": "module",

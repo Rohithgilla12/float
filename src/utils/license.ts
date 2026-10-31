@@ -1,11 +1,11 @@
-// FloatNotes Dodo Payments Licensing Engine
+// Float Dodo Payments Licensing Engine
 // Supports public client-side activation, validation, and deactivation
 
-const LICENSE_STORAGE_KEY = 'float_notes_dodo_license_v1';
+const LICENSE_STORAGE_KEY = 'float_dodo_license_v1';
 
-// Default Dodo Payments checkout link for FloatNotes ($4.99 one-time)
+// Default Dodo Payments checkout link for Float ($4.99 one-time)
 // Replace with your actual Dodo Payments product checkout URL from the dashboard
-export const DODO_CHECKOUT_URL = 'https://checkout.dodopayments.com/buy/pdt_floatnotes_lifetime';
+export const DODO_CHECKOUT_URL = 'https://checkout.dodopayments.com/buy/pdt_float_lifetime';
 
 // Set to 'https://test.dodopayments.com' for test environment, 'https://live.dodopayments.com' for production
 export const DODO_API_BASE = 'https://live.dodopayments.com';
@@ -24,7 +24,7 @@ export interface LicenseStatus {
  */
 export function getStoredLicense(): LicenseStatus {
   try {
-    const raw = localStorage.getItem(LICENSE_STORAGE_KEY);
+    const raw = localStorage.getItem(LICENSE_STORAGE_KEY) || localStorage.getItem('float_notes_dodo_license_v1');
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed.isPro) return parsed;
@@ -57,7 +57,7 @@ export async function openExternalLink(url: string): Promise<void> {
  */
 export async function activateDodoLicense(
   licenseKey: string,
-  deviceName: string = 'macOS FloatNotes Device'
+  deviceName: string = 'macOS Float Device'
 ): Promise<{ success: boolean; message: string; status: LicenseStatus }> {
   const cleanKey = licenseKey.trim();
 
@@ -86,7 +86,7 @@ export async function activateDodoLicense(
     saveLicense(status);
     return {
       success: true,
-      message: 'FloatNotes Pro activated successfully (Demo/Test Key)!',
+      message: 'Float Pro activated successfully (Demo/Test Key)!',
       status,
     };
   }
@@ -130,7 +130,7 @@ export async function activateDodoLicense(
           saveLicense(status);
           return {
             success: true,
-            message: 'FloatNotes Pro activated! Thank you for your support.',
+            message: 'Float Pro activated! Thank you for your support.',
             status,
           };
         } else {
@@ -212,6 +212,7 @@ export async function deactivateDodoLicense(): Promise<{ success: boolean; messa
 
   try {
     localStorage.removeItem(LICENSE_STORAGE_KEY);
+    localStorage.removeItem('float_notes_dodo_license_v1');
   } catch {}
 
   return {

@@ -93,7 +93,7 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
         {onOpenLicense && (
           <button
             onClick={onOpenLicense}
-            title={isPro ? 'FloatNotes Pro Active' : 'Upgrade to Pro ($4.99 via Dodo Payments)'}
+            title={isPro ? 'Float Pro Active' : 'Upgrade to Float Pro ($4.99 via Dodo Payments)'}
             className={`btn-press px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold flex items-center gap-1 border transition-all ${
               isPro
                 ? 'bg-amber-500/15 text-amber-500 border-amber-500/30'

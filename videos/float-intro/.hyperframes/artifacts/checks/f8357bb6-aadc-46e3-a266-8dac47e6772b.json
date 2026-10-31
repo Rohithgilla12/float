@@ -1,0 +1,346 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 5,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "composition_file_too_large",
+        "severity": "warning",
+        "message": "This HTML composition file has 314 lines. Smaller sub-compositions are easier to read, iterate on, and diff.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/Users/rohithgilla/github.com/float-notes/videos/float-intro/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Split coherent scenes or layers into separate .html files under compositions/, then mount them from the parent with data-composition-src so each file stays small enough to inspect, revise, and validate independently."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene-hook\"> is a timeline element that contains nested <div id=\"hook-pill\">. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene-hook",
+        "dataAttributes": {},
+        "sourceFile": "/Users/rohithgilla/github.com/float-notes/videos/float-intro/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene-hook\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene-window\"> is a timeline element that contains nested <div id=\"window-headline\">. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene-window",
+        "dataAttributes": {},
+        "sourceFile": "/Users/rohithgilla/github.com/float-notes/videos/float-intro/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene-window\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene-features\"> is a timeline element that contains nested <div id=\"features-headline\">. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene-features",
+        "dataAttributes": {},
+        "sourceFile": "/Users/rohithgilla/github.com/float-notes/videos/float-intro/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene-features\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene-cta\"> is a timeline element that contains nested <div id=\"cta-icon-wrapper\">. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene-cta",
+        "dataAttributes": {},
+        "sourceFile": "/Users/rohithgilla/github.com/float-notes/videos/float-intro/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene-cta\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      }
+    ],
+    "filesScanned": 1
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "duration": 15,
+    "samples": [
+      0.833,
+      2.5,
+      4.167,
+      5.833,
+      7.5,
+      9.167,
+      10.833,
+      12.5,
+      14.167
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 0,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      0.833,
+      4.167,
+      7.5,
+      10.833,
+      14.167
+    ],
+    "checked": 37,
+    "passed": 37
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 1,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 16 text elements stay under it for 0.5 s or more, the smallest \"☑️\" at 16 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "☑️",
+        "selector": "div.slash-item.active > div:nth-of-type(1) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 610.8,
+          "y": 582.94,
+          "width": 19.91,
+          "height": 20.91
+        },
+        "time": 8.5,
+        "times": [
+          0,
+          0,
+          0,
+          3.75,
+          3.875,
+          3.875,
+          3.875,
+          8,
+          8.5,
+          8.5,
+          8.5,
+          8.5,
+          8.5,
+          12,
+          12.125,
+          12.125
+        ],
+        "fontPx": 15.81,
+        "floorPx": 28,
+        "seconds": 2.75,
+        "elements": [
+          {
+            "selector": "div.slash-item.active > div:nth-of-type(1) > span:nth-of-type(1)",
+            "text": "☑️",
+            "fontPx": 15.81,
+            "time": 8.5,
+            "seconds": 2.75
+          },
+          {
+            "selector": "div.slash-item.active > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "Todo Task Item",
+            "fontPx": 15.81,
+            "time": 8.5,
+            "seconds": 2.75
+          },
+          {
+            "selector": "#slash-popup > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "Callout Box",
+            "fontPx": 15.81,
+            "time": 8.5,
+            "seconds": 2.75
+          },
+          {
+            "selector": "#slash-popup > div:nth-of-type(3) > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "Code Block",
+            "fontPx": 15.81,
+            "time": 8.5,
+            "seconds": 2.75
+          },
+          {
+            "selector": "#slash-popup > div:nth-of-type(4) > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "Catppuccin Latte (Light)",
+            "fontPx": 15.81,
+            "time": 8.5,
+            "seconds": 2.75
+          },
+          {
+            "selector": "#cta-badges > div:nth-of-type(1)",
+            "text": "⚡ $4.99 Lifetime License",
+            "fontPx": 17.49,
+            "time": 12.125,
+            "seconds": 2.875
+          },
+          {
+            "selector": "#cta-badges > div:nth-of-type(2)",
+            "text": "⭐️ 100% Open Source (MIT)",
+            "fontPx": 17.49,
+            "time": 12.125,
+            "seconds": 2.875
+          },
+          {
+            "selector": "#hook-pill > span:nth-of-type(2)",
+            "text": "Meet Float • Zero-Latency Desktop Scratchpad",
+            "fontPx": 17.79,
+            "time": 0,
+            "seconds": 3.75
+          },
+          {
+            "selector": "#task-1-text",
+            "text": "Ship Apple Developer ID code signing & notarization",
+            "fontPx": 19.69,
+            "time": 3.875,
+            "seconds": 4
+          },
+          {
+            "selector": "#floating-window > div:nth-of-type(2) > div:nth-of-type(3) > span:nth-of-type(1)",
+            "text": "Launch on Dodo Payments for $4.99 lifetime license",
+            "fontPx": 19.69,
+            "time": 3.875,
+            "seconds": 4
+          },
+          {
+            "selector": "#floating-window > div:nth-of-type(2) > div:nth-of-type(4) > span:nth-of-type(1)",
+            "text": "Publish MIT open source repo on GitHub",
+            "fontPx": 19.69,
+            "time": 3.875,
+            "seconds": 4
+          },
+          {
+            "selector": "#hook-shortcut > span:nth-of-type(1)",
+            "text": "Summon anywhere with",
+            "fontPx": 20.99,
+            "time": 0,
+            "seconds": 3.75
+          },
+          {
+            "selector": "#hook-shortcut > span:nth-of-type(3)",
+            "text": "0ms Latency",
+            "fontPx": 20.99,
+            "time": 0,
+            "seconds": 3.75
+          },
+          {
+            "selector": "#features-headline > p:nth-of-type(1)",
+            "text": "Type anywhere. Switch between Catppuccin Latte, Mocha, and Obsidian.",
+            "fontPx": 21.74,
+            "time": 8,
+            "seconds": 3.25
+          },
+          {
+            "selector": "#window-headline > p:nth-of-type(1)",
+            "text": "Pin above full-screen editors, browsers, and terminal windows.",
+            "fontPx": 22,
+            "time": 3.75,
+            "seconds": 4.125
+          },
+          {
+            "selector": "#cta-tagline",
+            "text": "The floating desktop scratchpad you won't want to close.",
+            "fontPx": 26,
+            "time": 12,
+            "seconds": 3
+          }
+        ]
+      }
+    ],
+    "enabled": true,
+    "step": 0.125,
+    "samples": 120
+  },
+  "audio": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 1,
+    "findings": [
+      {
+        "code": "audio_none",
+        "severity": "info",
+        "message": "The film has no sound: no clip in it plays audio.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0
+      }
+    ]
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}
