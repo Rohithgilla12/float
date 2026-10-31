@@ -40,9 +40,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
       <header className="sticky top-0 z-40 backdrop-blur-md bg-[#0C0D0E]/80 border-b border-white/5">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-black font-bold shadow-lg shadow-amber-500/20">
-              <Sparkles className="w-4 h-4 fill-current" />
-            </div>
+            <img
+              src="/favicon.png"
+              alt="FloatNotes App Icon"
+              className="w-8 h-8 rounded-xl shadow-lg shadow-amber-500/20 border border-white/10"
+            />
             <div className="flex items-center gap-2">
               <span className="font-bold text-base tracking-tight text-white">FloatNotes</span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/60">
