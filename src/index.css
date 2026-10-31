@@ -179,7 +179,7 @@ body {
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-  z-index: 45;
+  z-index: 2;
   opacity: 0.9;
   transition: opacity 150ms ease;
 }
@@ -196,7 +196,23 @@ body {
   );
   opacity: 0.5;
   transition: opacity 200ms ease;
-  z-index: 1;
+  z-index: 0;
+}
+
+/* Custom Sleek Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 /* Overdrive Direction A: Fluid Morphing Command Palette Animation */

@@ -165,14 +165,31 @@ export const App: React.FC = () => {
 
       // Esc: Dismiss Modal, Palette or Close/Hide Window
       if (e.key === 'Escape') {
-        e.preventDefault();
         if (licenseModalOpen) {
+          e.preventDefault();
           haptics.playClick();
           setLicenseModalOpen(false);
-        } else if (actionsPaletteOpen) {
+          return;
+        }
+        if (actionsPaletteOpen) {
+          e.preventDefault();
           haptics.playClick();
           setActionsPaletteOpen(false);
-        } else {
+          return;
+        }
+
+        const isTauri = typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
+        if (isTauri) {
+          const hasPopover = document.querySelector('.slash-popover, .bubble-popover');
+          if (hasPopover) {
+            return;
+          }
+          const activeTag = document.activeElement?.tagName?.toLowerCase();
+          if (activeTag === 'textarea' || activeTag === 'input') {
+            (document.activeElement as HTMLElement)?.blur();
+            return;
+          }
+          e.preventDefault();
           handleCloseWindow();
         }
         return;
@@ -184,12 +201,12 @@ export const App: React.FC = () => {
   }, [licenseModalOpen, actionsPaletteOpen, handleTogglePin, handleCloseWindow, createNote, notes, setActiveNoteId, showToast]);
 
   return (
-    <div className={`theme-${theme} w-screen h-screen flex flex-col overflow-hidden bg-transparent`}>
+    <div className={`theme-${theme} w-full h-full flex flex-col overflow-hidden bg-transparent`}>
       {/* Outer Floating Window Container with Overdrive Specular Glass Shader */}
       <div
         ref={windowShellRef}
         onMouseMove={handleMouseMove}
-        className="window-shell w-full h-full rounded-2xl flex flex-col overflow-hidden relative select-none"
+        className="window-shell w-full h-full rounded-2xl flex flex-col overflow-hidden relative"
       >
         {/* Ambient Specular Glass Glow (Direction B) */}
         <div className="specular-glow" />

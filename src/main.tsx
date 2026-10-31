@@ -17,8 +17,14 @@ const Root: React.FC = () => {
 
   // Inside Tauri Desktop Window, ALWAYS render the native floating App
   if (isTauri) {
+    document.documentElement.classList.add('overflow-hidden');
+    document.body.classList.add('overflow-hidden', 'bg-transparent', 'select-none');
     return <App />;
   }
+
+  // On Web: ensure body is scrollable
+  document.documentElement.classList.remove('overflow-hidden');
+  document.body.classList.remove('overflow-hidden', 'bg-transparent', 'select-none');
 
   // On Web (floatnotes.gilla.fun): either Fullscreen Web App or Landing Page with embedded live demo
   if (fullscreenApp) {

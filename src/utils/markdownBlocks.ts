@@ -1,6 +1,6 @@
 export interface EditorBlock {
   id: string;
-  type: 'h1' | 'h2' | 'h3' | 'task' | 'bullet' | 'code' | 'callout' | 'divider' | 'paragraph';
+  type: 'h1' | 'h2' | 'h3' | 'task' | 'bullet' | 'code' | 'callout' | 'quote' | 'divider' | 'paragraph';
   content: string;
   checked?: boolean;
   language?: string;
@@ -99,11 +99,21 @@ export function parseMarkdownToBlocks(markdown: string): EditorBlock[] {
       continue;
     }
 
-    // Callout / Blockquote
-    if (line.startsWith('> ')) {
+    // Callout (with note prefix)
+    if (line.startsWith('> 💡') || line.startsWith('> [!')) {
       blocks.push({
         id: `block-${i}-${Date.now()}`,
         type: 'callout',
+        content: line.replace(/^>\s*(?:💡\s*\*\*Note:\*\*\s*|\[![A-Z]+\]\s*)?/, ''),
+      });
+      continue;
+    }
+
+    // Blockquote
+    if (line.startsWith('> ')) {
+      blocks.push({
+        id: `block-${i}-${Date.now()}`,
+        type: 'quote',
         content: line.slice(2),
       });
       continue;
@@ -157,6 +167,8 @@ export function serializeBlocksToMarkdown(blocks: EditorBlock[]): string {
         case 'code':
           return `\`\`\`${block.language || 'typescript'}\n${block.content}\n\`\`\``;
         case 'callout':
+          return `> 💡 **Note:** ${block.content}`;
+        case 'quote':
           return `> ${block.content}`;
         case 'divider':
           return `---`;

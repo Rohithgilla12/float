@@ -40,20 +40,40 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     x: number;
     y: number;
     text: string;
+    start: number;
+    end: number;
     blockId: string;
-  }>({ visible: false, x: 0, y: 0, text: '', blockId: '' });
+  }>({ visible: false, x: 0, y: 0, text: '', start: 0, end: 0, blockId: '' });
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const blockInputRefs = useRef<{ [key: string]: HTMLInputElement | HTMLTextAreaElement | null }>({});
+  const blockInputRefs = useRef<{ [key: string]: HTMLTextAreaElement | null }>({});
   const isInternalUpdate = useRef(false);
 
-  // Sync external content changes (if not triggered internally)
+  // Auto-resize single textarea to fit its text height
+  const autoResize = useCallback((el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.max(24, el.scrollHeight)}px`;
+  }, []);
+
+  // Sync external content changes (e.g. initial mount or switching active note)
   useEffect(() => {
     if (isInternalUpdate.current) {
       isInternalUpdate.current = false;
       return;
     }
-    setBlocks(parseMarkdownToBlocks(content));
+    const parsed = parseMarkdownToBlocks(content);
+    setBlocks(parsed);
+    
+    // Safely size textareas without collapsing container scroll
+    requestAnimationFrame(() => {
+      Object.values(blockInputRefs.current).forEach(el => {
+        if (el) {
+          el.style.height = 'auto';
+          el.style.height = `${Math.max(24, el.scrollHeight)}px`;
+        }
+      });
+    });
   }, [content]);
 
   // Propagate block changes to parent markdown
@@ -70,12 +90,15 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       const el = blockInputRefs.current[id];
       if (el) {
         el.focus();
+        autoResize(el);
         if (selectEnd) {
           const len = el.value.length;
           el.setSelectionRange(len, len);
+        } else {
+          el.setSelectionRange(0, 0);
         }
       }
-    }, 10);
+    }, 20);
   };
 
   // Toggle Task Checkbox
@@ -100,10 +123,27 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     }
   };
 
+  // Forward trackpad/wheel scrolls to container so textareas never trap scroll
+  const handleTextareaWheel = (e: React.WheelEvent<HTMLTextAreaElement>) => {
+    const el = e.currentTarget;
+    if (el.scrollHeight <= el.clientHeight) {
+      if (containerRef.current) {
+        containerRef.current.scrollTop += e.deltaY;
+      }
+    }
+  };
+
   // Handle Text Changes & Instant Markdown Transforms
   const handleBlockTextChange = (index: number, text: string) => {
     const block = blocks[index];
     if (!block) return;
+
+    // Immediately size active textarea
+    const currentEl = blockInputRefs.current[block.id];
+    if (currentEl) {
+      currentEl.style.height = 'auto';
+      currentEl.style.height = `${Math.max(24, currentEl.scrollHeight)}px`;
+    }
 
     // Check for inline markdown shortcuts when typing space
     // 1. Heading 1: '# '
@@ -111,6 +151,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       const updated = [...blocks];
       updated[index] = { ...block, type: 'h1', content: text.slice(2) };
       notifyChange(updated);
+      focusBlock(block.id);
       return;
     }
     // 2. Heading 2: '## '
@@ -118,6 +159,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       const updated = [...blocks];
       updated[index] = { ...block, type: 'h2', content: text.slice(3) };
       notifyChange(updated);
+      focusBlock(block.id);
       return;
     }
     // 3. Heading 3: '### '
@@ -125,6 +167,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       const updated = [...blocks];
       updated[index] = { ...block, type: 'h3', content: text.slice(4) };
       notifyChange(updated);
+      focusBlock(block.id);
       return;
     }
     // 4. Task: '[] ' or '- [ ] '
@@ -133,6 +176,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       const cleanText = text.replace(/^(?:\[\]|- \[ \]|[*]\s\[ \])\s*/, '');
       updated[index] = { ...block, type: 'task', checked: false, content: cleanText };
       notifyChange(updated);
+      focusBlock(block.id);
       return;
     }
     // 5. Bullet: '- ' or '* '
@@ -140,13 +184,15 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       const updated = [...blocks];
       updated[index] = { ...block, type: 'bullet', content: text.slice(2) };
       notifyChange(updated);
+      focusBlock(block.id);
       return;
     }
-    // 6. Callout: '> '
-    if (text.startsWith('> ') && block.type !== 'callout') {
+    // 6. Blockquote: '> '
+    if (text.startsWith('> ') && block.type !== 'quote' && block.type !== 'callout') {
       const updated = [...blocks];
-      updated[index] = { ...block, type: 'callout', content: text.slice(2) };
+      updated[index] = { ...block, type: 'quote', content: text.slice(2) };
       notifyChange(updated);
+      focusBlock(block.id);
       return;
     }
 
@@ -161,9 +207,12 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       if (el && containerRef.current) {
         const elRect = el.getBoundingClientRect();
         const containerRect = containerRef.current.getBoundingClientRect();
+        const topOffset = elRect.bottom - containerRect.top + containerRef.current.scrollTop + 4;
+        
+        // Prevent slash popover from overflowing the bottom
         setSlashPos({
-          top: elRect.bottom - containerRect.top + containerRef.current.scrollTop + 4,
-          left: Math.max(16, elRect.left - containerRect.left),
+          top: Math.min(topOffset, containerRect.height + containerRef.current.scrollTop - 260),
+          left: Math.max(16, Math.min(containerRect.width - 290, elRect.left - containerRect.left)),
         });
         setTargetBlockIndex(index);
         setSlashMenuOpen(true);
@@ -179,8 +228,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     }
   };
 
-  // Keyboard Navigation inside blocks
-  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
+  // Keyboard Navigation & Splitting/Merging
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // ⌘K: Raycast Actions Command Center
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
@@ -191,15 +240,65 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     const block = blocks[index];
     if (!block) return;
 
-    // Enter key: Create new block
+    // Inside a Code Block:
+    if (block.type === 'code') {
+      // ⌘Enter / Ctrl+Enter: Exit code block and spawn a paragraph below
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        const newBlock: EditorBlock = {
+          id: `block-${Date.now()}-${Math.random()}`,
+          type: 'paragraph',
+          content: '',
+        };
+        const updated = [
+          ...blocks.slice(0, index + 1),
+          newBlock,
+          ...blocks.slice(index + 1),
+        ];
+        notifyChange(updated);
+        focusBlock(newBlock.id);
+        return;
+      }
+
+      // Normal Enter inside code: let native textarea newline happen
+      if (e.key === 'Enter') {
+        return;
+      }
+    }
+
+    // Tab key: Insert 2 spaces instead of losing focus
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const el = blockInputRefs.current[block.id];
+      if (el) {
+        const start = el.selectionStart ?? 0;
+        const end = el.selectionEnd ?? 0;
+        const newContent = block.content.substring(0, start) + '  ' + block.content.substring(end);
+        const updated = [...blocks];
+        updated[index] = { ...block, content: newContent };
+        notifyChange(updated);
+        setTimeout(() => {
+          el.focus();
+          el.setSelectionRange(start + 2, start + 2);
+          autoResize(el);
+        }, 10);
+      }
+      return;
+    }
+
+    // Enter key: Split block or create new one below
     if (e.key === 'Enter' && !e.shiftKey) {
       if (slashMenuOpen) return; // Allow slash menu to handle Enter
 
       e.preventDefault();
 
+      const el = blockInputRefs.current[block.id];
+      const cursorPos = el ? (el.selectionStart ?? block.content.length) : block.content.length;
+      const currentPart = block.content.slice(0, cursorPos);
+      const nextPart = block.content.slice(cursorPos);
+
       // If in a task block:
       if (block.type === 'task') {
-        // If current task is empty, convert it to a regular paragraph
         if (!block.content.trim()) {
           const updated = [...blocks];
           updated[index] = { ...block, type: 'paragraph', content: '' };
@@ -207,16 +306,20 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           return;
         }
 
-        // Spawn a new empty task item right below
         const newBlock: EditorBlock = {
-          id: `block-${Date.now()}`,
+          id: `block-${Date.now()}-${Math.random()}`,
           type: 'task',
           checked: false,
-          content: '',
+          content: nextPart,
         };
-        const updated = [...blocks.slice(0, index + 1), newBlock, ...blocks.slice(index + 1)];
+        const updated = [
+          ...blocks.slice(0, index),
+          { ...block, content: currentPart },
+          newBlock,
+          ...blocks.slice(index + 1),
+        ];
         notifyChange(updated);
-        focusBlock(newBlock.id);
+        focusBlock(newBlock.id, false);
         return;
       }
 
@@ -228,50 +331,94 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           notifyChange(updated);
           return;
         }
+
         const newBlock: EditorBlock = {
-          id: `block-${Date.now()}`,
+          id: `block-${Date.now()}-${Math.random()}`,
           type: 'bullet',
-          content: '',
+          content: nextPart,
         };
-        const updated = [...blocks.slice(0, index + 1), newBlock, ...blocks.slice(index + 1)];
+        const updated = [
+          ...blocks.slice(0, index),
+          { ...block, content: currentPart },
+          newBlock,
+          ...blocks.slice(index + 1),
+        ];
         notifyChange(updated);
-        focusBlock(newBlock.id);
+        focusBlock(newBlock.id, false);
         return;
       }
 
-      // Default: create a new paragraph below
+      // If in a callout or quote:
+      if (block.type === 'callout' || block.type === 'quote') {
+        if (!block.content.trim()) {
+          const updated = [...blocks];
+          updated[index] = { ...block, type: 'paragraph', content: '' };
+          notifyChange(updated);
+          return;
+        }
+      }
+
+      // Default: create a new paragraph below with the remaining text
       const newBlock: EditorBlock = {
-        id: `block-${Date.now()}`,
+        id: `block-${Date.now()}-${Math.random()}`,
         type: 'paragraph',
-        content: '',
+        content: nextPart,
       };
-      const updated = [...blocks.slice(0, index + 1), newBlock, ...blocks.slice(index + 1)];
+      const updated = [
+        ...blocks.slice(0, index),
+        { ...block, content: currentPart },
+        newBlock,
+        ...blocks.slice(index + 1),
+      ];
       notifyChange(updated);
-      focusBlock(newBlock.id);
+      focusBlock(newBlock.id, false);
       return;
     }
 
-    // Backspace on empty block: convert to paragraph or delete
-    if (e.key === 'Backspace' && !block.content) {
-      if (block.type !== 'paragraph') {
-        e.preventDefault();
-        const updated = [...blocks];
-        updated[index] = { ...block, type: 'paragraph', content: '' };
-        notifyChange(updated);
-        return;
-      } else if (blocks.length > 1) {
-        e.preventDefault();
-        const prevBlock = blocks[index - 1];
-        const updated = blocks.filter((_, i) => i !== index);
-        notifyChange(updated);
-        if (prevBlock) {
-          focusBlock(prevBlock.id, true);
+    // Backspace: Merge with previous block or unformat special block
+    if (e.key === 'Backspace') {
+      const el = blockInputRefs.current[block.id];
+      const cursorPos = el ? el.selectionStart ?? 0 : 0;
+      const selectionEnd = el ? el.selectionEnd ?? 0 : 0;
+
+      // When cursor is at the very beginning of the block:
+      if (cursorPos === 0 && selectionEnd === 0) {
+        // If special block, unformat to regular paragraph first
+        if (block.type !== 'paragraph') {
+          e.preventDefault();
+          const updated = [...blocks];
+          updated[index] = { ...block, type: 'paragraph' };
+          notifyChange(updated);
+          return;
         }
-        return;
+
+        // If it's a paragraph and there is a previous block, merge into it
+        if (index > 0) {
+          e.preventDefault();
+          const prevBlock = blocks[index - 1];
+          const prevLen = prevBlock.content.length;
+          const mergedContent = prevBlock.content + block.content;
+
+          const updated = [
+            ...blocks.slice(0, index - 1),
+            { ...prevBlock, content: mergedContent },
+            ...blocks.slice(index + 1),
+          ];
+          notifyChange(updated);
+          setTimeout(() => {
+            const prevEl = blockInputRefs.current[prevBlock.id];
+            if (prevEl) {
+              prevEl.focus();
+              autoResize(prevEl);
+              prevEl.setSelectionRange(prevLen, prevLen);
+            }
+          }, 15);
+          return;
+        }
       }
     }
 
-    // Arrow Up: navigate to previous block
+    // Arrow Up: navigate to previous block if on first line
     if (e.key === 'ArrowUp') {
       const el = blockInputRefs.current[block.id];
       if (el && el.selectionStart === 0 && index > 0) {
@@ -280,13 +427,37 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       }
     }
 
-    // Arrow Down: navigate to next block
+    // Arrow Down: navigate to next block if on last line
     if (e.key === 'ArrowDown') {
       const el = blockInputRefs.current[block.id];
       if (el && el.selectionStart === el.value.length && index < blocks.length - 1) {
         e.preventDefault();
         focusBlock(blocks[index + 1].id, false);
       }
+    }
+  };
+
+  // Handle Markdown Paste
+  const handlePaste = (index: number, e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const text = e.clipboardData.getData('text');
+    if (!text) return;
+
+    // Inside a code block, let native multiline paste work
+    if (blocks[index]?.type === 'code') {
+      return;
+    }
+
+    // If pasted text contains multiple lines, parse as markdown blocks
+    if (text.includes('\n')) {
+      e.preventDefault();
+      const pastedBlocks = parseMarkdownToBlocks(text);
+      const updated = [
+        ...blocks.slice(0, index),
+        ...pastedBlocks,
+        ...blocks.slice(index + 1),
+      ];
+      notifyChange(updated);
+      focusBlock(pastedBlocks[pastedBlocks.length - 1].id, true);
     }
   };
 
@@ -312,48 +483,86 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           content: cleanContent,
         };
         break;
+
       case 'h1':
-        updated[targetBlockIndex] = { ...block, type: 'h1', content: cleanContent };
+        updated[targetBlockIndex] = {
+          ...block,
+          type: 'h1',
+          content: cleanContent,
+        };
         break;
+
       case 'h2':
-        updated[targetBlockIndex] = { ...block, type: 'h2', content: cleanContent };
+        updated[targetBlockIndex] = {
+          ...block,
+          type: 'h2',
+          content: cleanContent,
+        };
         break;
+
       case 'h3':
-        updated[targetBlockIndex] = { ...block, type: 'h3', content: cleanContent };
+        updated[targetBlockIndex] = {
+          ...block,
+          type: 'h3',
+          content: cleanContent,
+        };
         break;
+
       case 'bullet':
-        updated[targetBlockIndex] = { ...block, type: 'bullet', content: cleanContent };
+        updated[targetBlockIndex] = {
+          ...block,
+          type: 'bullet',
+          content: cleanContent,
+        };
         break;
+
       case 'code':
         updated[targetBlockIndex] = {
           ...block,
           type: 'code',
-          content: cleanContent || '// your code here',
           language: 'typescript',
+          content: cleanContent || '// Write code here\n',
         };
         break;
+
       case 'callout':
         updated[targetBlockIndex] = {
           ...block,
           type: 'callout',
-          content: cleanContent || '💡 Important thought',
+          content: cleanContent,
         };
         break;
+
+      case 'quote':
+        updated[targetBlockIndex] = {
+          ...block,
+          type: 'quote',
+          content: cleanContent,
+        };
+        break;
+
       case 'divider':
-        updated[targetBlockIndex] = { ...block, type: 'divider', content: '' };
-        // Insert a paragraph below divider
+        updated[targetBlockIndex] = {
+          ...block,
+          type: 'divider',
+          content: '',
+        };
         updated.splice(targetBlockIndex + 1, 0, {
           id: `block-${Date.now()}`,
           type: 'paragraph',
           content: '',
         });
         break;
-      case 'timestamp':
+
+      case 'timestamp': {
+        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         updated[targetBlockIndex] = {
           ...block,
-          content: `${cleanContent} 📅 ${new Date().toLocaleString()}`,
+          content: `${cleanContent}${now} `,
         };
         break;
+      }
+
       default:
         break;
     }
@@ -363,30 +572,43 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     focusBlock(block.id);
   };
 
-  // Floating Selection Bubble Menu Detection
+  // Handle Text Selection for Floating Bubble Menu using textarea selection
   const handleSelectText = (blockId: string) => {
-    const selection = window.getSelection();
-    if (!selection || selection.isCollapsed || !selection.toString().trim()) {
+    const el = blockInputRefs.current[blockId];
+    if (!el || !containerRef.current) {
       setBubbleMenu(prev => ({ ...prev, visible: false }));
       return;
     }
 
-    const text = selection.toString();
-    const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-    if (containerRef.current) {
-      const containerRect = containerRef.current.getBoundingClientRect();
-      setBubbleMenu({
-        visible: true,
-        x: rect.left - containerRect.left + rect.width / 2,
-        y: rect.top - containerRect.top + containerRef.current.scrollTop - 42,
-        text,
-        blockId,
-      });
+    const start = el.selectionStart ?? 0;
+    const end = el.selectionEnd ?? 0;
+
+    if (start === end) {
+      setBubbleMenu(prev => ({ ...prev, visible: false }));
+      return;
     }
+
+    const selectedText = el.value.substring(start, end);
+    if (!selectedText.trim()) {
+      setBubbleMenu(prev => ({ ...prev, visible: false }));
+      return;
+    }
+
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+
+    setBubbleMenu({
+      visible: true,
+      x: Math.max(80, Math.min(containerRect.width - 120, elRect.left - containerRect.left + 100)),
+      y: Math.max(10, elRect.top - containerRect.top + containerRef.current.scrollTop - 44),
+      text: selectedText,
+      start,
+      end,
+      blockId,
+    });
   };
 
-  // Bubble Menu Formatting Actions
+  // Apply Inline Formats
   const applyInlineFormat = (format: 'bold' | 'italic' | 'code' | 'strike') => {
     if (!bubbleMenu.blockId || !bubbleMenu.text) return;
     const blockIndex = blocks.findIndex(b => b.id === bubbleMenu.blockId);
@@ -399,17 +621,66 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     if (format === 'strike') wrapper = '~~';
 
     const formatted = `${wrapper}${bubbleMenu.text}${wrapper}`;
-    const newContent = block.content.replace(bubbleMenu.text, formatted);
+    const newContent =
+      block.content.slice(0, bubbleMenu.start) +
+      formatted +
+      block.content.slice(bubbleMenu.end);
+
     const updated = [...blocks];
     updated[blockIndex] = { ...block, content: newContent };
     notifyChange(updated);
     setBubbleMenu(prev => ({ ...prev, visible: false }));
+
+    // Refocus and place cursor after formatted text
+    setTimeout(() => {
+      const el = blockInputRefs.current[block.id];
+      if (el) {
+        el.focus();
+        const newPos = bubbleMenu.start + formatted.length;
+        el.setSelectionRange(newPos, newPos);
+        autoResize(el);
+      }
+    }, 15);
   };
+
+  // Close Slash Menu on outside click
+  useEffect(() => {
+    if (!slashMenuOpen) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.slash-popover')) {
+        setSlashMenuOpen(false);
+      }
+    };
+    window.addEventListener('mousedown', handleOutsideClick);
+    return () => window.removeEventListener('mousedown', handleOutsideClick);
+  }, [slashMenuOpen]);
+
+  // Close Bubble Menu on outside click or scroll
+  useEffect(() => {
+    if (!bubbleMenu.visible) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.bubble-popover')) {
+        setBubbleMenu(prev => ({ ...prev, visible: false }));
+      }
+    };
+    const handleScroll = () => {
+      setBubbleMenu(prev => ({ ...prev, visible: false }));
+    };
+    window.addEventListener('mousedown', handleOutsideClick);
+    const container = containerRef.current;
+    container?.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('mousedown', handleOutsideClick);
+      container?.removeEventListener('scroll', handleScroll);
+    };
+  }, [bubbleMenu.visible]);
 
   return (
     <div
       ref={containerRef}
-      className="flex-1 flex flex-col p-5 overflow-y-auto relative text-[var(--text-primary)] select-text"
+      className="flex-1 min-h-0 flex flex-col p-5 overflow-y-auto relative text-[var(--text-primary)] select-text z-10"
       onClick={e => {
         // If clicking blank space at the bottom of the editor, focus the last block or create a new one
         if (e.target === containerRef.current) {
@@ -436,15 +707,17 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           if (block.type === 'h1') {
             return (
               <div key={block.id} className="relative group my-2">
-                <input
+                <textarea
                   ref={el => (blockInputRefs.current[block.id] = el)}
-                  type="text"
+                  rows={1}
                   value={block.content}
                   onChange={e => handleBlockTextChange(idx, e.target.value)}
                   onKeyDown={e => handleKeyDown(idx, e)}
+                  onPaste={e => handlePaste(idx, e)}
+                  onWheel={handleTextareaWheel}
                   onSelect={() => handleSelectText(block.id)}
                   placeholder="Heading 1..."
-                  className="w-full bg-transparent font-bold text-xl tracking-tight text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0"
+                  className="w-full bg-transparent resize-none overflow-hidden font-bold text-xl tracking-tight text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0 leading-tight selection:bg-[var(--accent-color)]/30"
                 />
               </div>
             );
@@ -454,15 +727,17 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           if (block.type === 'h2') {
             return (
               <div key={block.id} className="relative group my-1.5">
-                <input
+                <textarea
                   ref={el => (blockInputRefs.current[block.id] = el)}
-                  type="text"
+                  rows={1}
                   value={block.content}
                   onChange={e => handleBlockTextChange(idx, e.target.value)}
                   onKeyDown={e => handleKeyDown(idx, e)}
+                  onPaste={e => handlePaste(idx, e)}
+                  onWheel={handleTextareaWheel}
                   onSelect={() => handleSelectText(block.id)}
                   placeholder="Heading 2..."
-                  className="w-full bg-transparent font-bold text-lg text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0"
+                  className="w-full bg-transparent resize-none overflow-hidden font-semibold text-base tracking-tight text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0 leading-snug selection:bg-[var(--accent-color)]/30"
                 />
               </div>
             );
@@ -472,15 +747,17 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           if (block.type === 'h3') {
             return (
               <div key={block.id} className="relative group my-1">
-                <input
+                <textarea
                   ref={el => (blockInputRefs.current[block.id] = el)}
-                  type="text"
+                  rows={1}
                   value={block.content}
                   onChange={e => handleBlockTextChange(idx, e.target.value)}
                   onKeyDown={e => handleKeyDown(idx, e)}
+                  onPaste={e => handlePaste(idx, e)}
+                  onWheel={handleTextareaWheel}
                   onSelect={() => handleSelectText(block.id)}
                   placeholder="Heading 3..."
-                  className="w-full bg-transparent font-semibold text-base text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0"
+                  className="w-full bg-transparent resize-none overflow-hidden font-medium text-sm text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0 leading-normal selection:bg-[var(--accent-color)]/30"
                 />
               </div>
             );
@@ -489,12 +766,12 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           // 4. Task Checklist Block
           if (block.type === 'task') {
             return (
-              <div key={block.id} className="flex items-start gap-2.5 my-1.5 group select-none">
+              <div key={block.id} className="flex items-start gap-2.5 my-1.5 group">
                 {/* Interactive Clickable Checkbox */}
                 <button
                   type="button"
                   onClick={e => handleToggleTask(idx, e)}
-                  className={`w-4 h-4 rounded mt-0.5 flex items-center justify-center text-xs font-bold transition-all shrink-0 btn-press cursor-pointer ${
+                  className={`w-4 h-4 rounded mt-1 flex items-center justify-center text-xs font-bold transition-all shrink-0 btn-press cursor-pointer select-none ${
                     block.checked
                       ? 'border border-[var(--accent-color)] bg-[var(--accent-color)] text-white shadow-sm'
                       : 'border border-[var(--border-highlight)] bg-transparent text-transparent hover:border-[var(--accent-color)]'
@@ -505,15 +782,17 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 </button>
 
                 {/* Editable Task Label */}
-                <input
+                <textarea
                   ref={el => (blockInputRefs.current[block.id] = el)}
-                  type="text"
+                  rows={1}
                   value={block.content}
                   onChange={e => handleBlockTextChange(idx, e.target.value)}
                   onKeyDown={e => handleKeyDown(idx, e)}
+                  onPaste={e => handlePaste(idx, e)}
+                  onWheel={handleTextareaWheel}
                   onSelect={() => handleSelectText(block.id)}
                   placeholder="Task item..."
-                  className={`w-full bg-transparent outline-none text-[13px] leading-relaxed transition-all placeholder-[var(--text-muted)] border-none p-0 ${
+                  className={`w-full bg-transparent resize-none overflow-hidden outline-none text-[13px] leading-relaxed transition-all placeholder-[var(--text-muted)] border-none p-0 selection:bg-[var(--accent-color)]/30 ${
                     block.checked
                       ? 'line-through text-[var(--text-muted)]'
                       : 'text-[var(--text-primary)]'
@@ -527,16 +806,18 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           if (block.type === 'bullet') {
             return (
               <div key={block.id} className="flex items-start gap-2.5 my-1 ml-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-color)] mt-2 shrink-0" />
-                <input
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-color)] mt-2 shrink-0 select-none" />
+                <textarea
                   ref={el => (blockInputRefs.current[block.id] = el)}
-                  type="text"
+                  rows={1}
                   value={block.content}
                   onChange={e => handleBlockTextChange(idx, e.target.value)}
                   onKeyDown={e => handleKeyDown(idx, e)}
+                  onPaste={e => handlePaste(idx, e)}
+                  onWheel={handleTextareaWheel}
                   onSelect={() => handleSelectText(block.id)}
                   placeholder="List item..."
-                  className="w-full bg-transparent text-[13px] text-[var(--text-secondary)] outline-none placeholder-[var(--text-muted)] border-none p-0"
+                  className="w-full bg-transparent resize-none overflow-hidden text-[13px] leading-relaxed text-[var(--text-secondary)] outline-none placeholder-[var(--text-muted)] border-none p-0 selection:bg-[var(--accent-color)]/30"
                 />
               </div>
             );
@@ -547,18 +828,18 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             return (
               <div
                 key={block.id}
-                className="my-3 rounded-xl bg-[var(--code-bg)] border border-[var(--border-subtle)] overflow-hidden shadow-sm"
+                className="my-2.5 rounded-xl bg-[var(--code-bg)] border border-[var(--border-subtle)] overflow-hidden shadow-sm"
               >
-                <div className="px-3 py-1.5 border-b border-[var(--border-subtle)] bg-black/10 flex items-center justify-between text-[11px] font-mono text-[var(--text-muted)]">
-                  <span className="flex items-center gap-1.5">
-                    <Code2 className="w-3.5 h-3.5 text-[var(--accent-color)]" />
-                    <span>{block.language || 'typescript'}</span>
-                  </span>
+                <div className="px-3 py-1 bg-black/20 border-b border-white/5 flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] select-none">
+                  <span>{block.language || 'typescript'}</span>
                   <button
-                    onClick={() => navigator.clipboard?.writeText(block.content)}
-                    className="btn-press px-2 py-0.5 rounded text-[10px] hover:text-[var(--text-primary)] hover:bg-white/10 flex items-center gap-1 transition-colors"
+                    onClick={() => {
+                      navigator.clipboard.writeText(block.content);
+                      haptics.playClick();
+                    }}
+                    className="hover:text-[var(--text-primary)] transition-colors flex items-center gap-1 cursor-pointer"
                   >
-                    <Copy className="w-3 h-3" />
+                    <Copy className="w-2.5 h-2.5" />
                     <span>Copy</span>
                   </button>
                 </div>
@@ -567,6 +848,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   value={block.content}
                   onChange={e => handleBlockTextChange(idx, e.target.value)}
                   onKeyDown={e => handleKeyDown(idx, e)}
+                  onPaste={e => handlePaste(idx, e)}
                   rows={Math.max(2, block.content.split('\n').length)}
                   className="w-full p-3 bg-transparent font-mono text-xs leading-relaxed text-[var(--text-primary)] outline-none resize-none border-none selection:bg-[var(--accent-color)]/30"
                   spellCheck="false"
@@ -582,42 +864,69 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 key={block.id}
                 className="my-2.5 p-3 rounded-xl bg-[var(--accent-glow)] border border-[var(--accent-color)]/25 text-xs flex items-start gap-2.5 shadow-sm"
               >
-                <Lightbulb className="w-4 h-4 text-[var(--accent-color)] mt-0.5 shrink-0" />
-                <input
+                <Lightbulb className="w-4 h-4 text-[var(--accent-color)] mt-0.5 shrink-0 select-none" />
+                <textarea
                   ref={el => (blockInputRefs.current[block.id] = el)}
-                  type="text"
+                  rows={1}
                   value={block.content}
                   onChange={e => handleBlockTextChange(idx, e.target.value)}
                   onKeyDown={e => handleKeyDown(idx, e)}
+                  onPaste={e => handlePaste(idx, e)}
+                  onWheel={handleTextareaWheel}
                   onSelect={() => handleSelectText(block.id)}
                   placeholder="Callout thought..."
-                  className="w-full bg-transparent text-[13px] text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0 font-medium"
+                  className="w-full bg-transparent resize-none overflow-hidden text-[13px] leading-relaxed text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0 font-medium selection:bg-[var(--accent-color)]/30"
                 />
               </div>
             );
           }
 
-          // 8. Divider Block
+          // 8. Blockquote Block
+          if (block.type === 'quote') {
+            return (
+              <div
+                key={block.id}
+                className="my-2 pl-3.5 border-l-2 border-[var(--accent-color)] flex items-start gap-2 italic"
+              >
+                <textarea
+                  ref={el => (blockInputRefs.current[block.id] = el)}
+                  rows={1}
+                  value={block.content}
+                  onChange={e => handleBlockTextChange(idx, e.target.value)}
+                  onKeyDown={e => handleKeyDown(idx, e)}
+                  onPaste={e => handlePaste(idx, e)}
+                  onWheel={handleTextareaWheel}
+                  onSelect={() => handleSelectText(block.id)}
+                  placeholder="Blockquote..."
+                  className="w-full bg-transparent resize-none overflow-hidden text-[13px] leading-relaxed text-[var(--text-secondary)] outline-none placeholder-[var(--text-muted)] border-none p-0 selection:bg-[var(--accent-color)]/30"
+                />
+              </div>
+            );
+          }
+
+          // 9. Divider Block
           if (block.type === 'divider') {
             return (
-              <div key={block.id} className="my-3 py-1 cursor-pointer">
+              <div key={block.id} className="my-3 py-1 cursor-pointer select-none">
                 <hr className="border-[var(--border-subtle)]" />
               </div>
             );
           }
 
-          // 9. Standard Paragraph
+          // 10. Standard Paragraph
           return (
             <div key={block.id} className="relative group my-0.5">
-              <input
+              <textarea
                 ref={el => (blockInputRefs.current[block.id] = el)}
-                type="text"
+                rows={1}
                 value={block.content}
                 onChange={e => handleBlockTextChange(idx, e.target.value)}
                 onKeyDown={e => handleKeyDown(idx, e)}
+                onPaste={e => handlePaste(idx, e)}
+                onWheel={handleTextareaWheel}
                 onSelect={() => handleSelectText(block.id)}
                 placeholder={idx === 0 ? "Start typing note or press '/' for commands..." : ''}
-                className="w-full bg-transparent text-[13px] leading-relaxed text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0"
+                className="w-full bg-transparent resize-none overflow-hidden text-[13px] leading-relaxed text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0 selection:bg-[var(--accent-color)]/30"
               />
             </div>
           );
@@ -627,34 +936,34 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       {/* FLOATING TEXT SELECTION BUBBLE TOOLBAR */}
       {bubbleMenu.visible && (
         <div
-          className="absolute z-40 -translate-x-1/2 flex items-center gap-0.5 p-1 rounded-xl bg-[var(--bg-window-solid)] border border-[var(--border-highlight)] shadow-2xl backdrop-blur-md animate-fadeIn"
+          className="bubble-popover absolute z-40 -translate-x-1/2 flex items-center gap-0.5 p-1 rounded-xl bg-[var(--bg-window-solid)] border border-[var(--border-highlight)] shadow-2xl backdrop-blur-md animate-fadeIn"
           style={{ top: bubbleMenu.y, left: bubbleMenu.x }}
         >
           <button
             onClick={() => applyInlineFormat('bold')}
             title="Bold (⌘B)"
-            className="p-1.5 rounded-lg hover:bg-[var(--bg-surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] btn-press"
+            className="p-1.5 rounded-lg hover:bg-[var(--bg-surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] btn-press cursor-pointer"
           >
             <Bold className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => applyInlineFormat('italic')}
             title="Italic (⌘I)"
-            className="p-1.5 rounded-lg hover:bg-[var(--bg-surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] btn-press"
+            className="p-1.5 rounded-lg hover:bg-[var(--bg-surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] btn-press cursor-pointer"
           >
             <Italic className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => applyInlineFormat('code')}
             title="Inline Code"
-            className="p-1.5 rounded-lg hover:bg-[var(--bg-surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] btn-press"
+            className="p-1.5 rounded-lg hover:bg-[var(--bg-surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] btn-press cursor-pointer"
           >
             <Code2 className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => applyInlineFormat('strike')}
             title="Strikethrough"
-            className="p-1.5 rounded-lg hover:bg-[var(--bg-surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] btn-press"
+            className="p-1.5 rounded-lg hover:bg-[var(--bg-surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] btn-press cursor-pointer"
           >
             <Strikethrough className="w-3.5 h-3.5" />
           </button>
