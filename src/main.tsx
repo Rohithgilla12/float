@@ -26,7 +26,7 @@ const Root: React.FC = () => {
   document.documentElement.classList.remove('overflow-hidden');
   document.body.classList.remove('overflow-hidden', 'bg-transparent', 'select-none');
 
-  // On Web (floatnotes.gilla.fun): either Fullscreen Web App or Landing Page with embedded live demo
+  // On Web (float.gilla.fun): either Fullscreen Web App or Landing Page with embedded live demo
   if (fullscreenApp) {
     return (
       <div className="relative w-screen h-screen bg-[#0C0D0E]">

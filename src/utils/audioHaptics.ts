@@ -1,4 +1,4 @@
-// FloatNotes Web Audio Micro-Haptics Engine
+// Float Web Audio Micro-Haptics Engine
 // Pure synthetic audio - 0 audio assets, 0ms network latency
 
 class AudioHapticsEngine {

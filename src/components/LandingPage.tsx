@@ -244,7 +244,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
             </div>
             <h3 className="font-semibold text-white text-base">Always on Top Pinning</h3>
             <p className="text-xs text-white/60 leading-relaxed">
-              Float permanently over full-screen Xcode, VS Code, Figma, or your browser. Multi-workspace ubiquity lets FloatNotes travel with you across virtual spaces.
+              Float permanently over full-screen Xcode, VS Code, Figma, or your browser. Multi-workspace ubiquity lets Float travel with you across virtual spaces.
             </p>
           </div>
 

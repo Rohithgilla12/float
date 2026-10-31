@@ -120,9 +120,9 @@
 
       .slash-palette {
         position: absolute;
-        top: 260px;
-        left: 80px;
-        width: 420px;
+        top: 140px;
+        left: 44px;
+        width: 440px;
         background: #18191E;
         border: 1px solid rgba(245, 158, 11, 0.4);
         border-radius: 18px;
@@ -341,36 +341,45 @@
           </div>
 
           <div class="window-editor" style="position: relative;">
-            <div class="h1-title">
-              <span style="color: #F59E0B;">/</span>
+            <div class="h1-title" style="margin-bottom: 16px;">
+              <span style="color: #F59E0B;">#</span>
+              <span>Sprint Roadmap</span>
             </div>
 
-            <div id="slash-popup" class="slash-palette">
+            <!-- Active typing line with the slash command -->
+            <div id="slash-line" data-layout-allow-occlusion style="display: flex; align-items: center; gap: 8px; font-size: 20px; color: #FFFFFF; margin-bottom: 14px;">
+              <span style="color: #9CA3AF;">New feature</span>
+              <span data-layout-ignore style="color: #9CA3AF;">—</span>
+              <span id="typed-slash" style="color: #F59E0B; font-weight: 800; font-family: 'Geist Mono', monospace; background: rgba(245, 158, 11, 0.2); padding: 1px 8px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.4);">/</span>
+              <span id="slash-caret" style="display: inline-block; width: 2px; height: 22px; background: #F59E0B;"></span>
+            </div>
+
+            <div id="slash-popup" class="slash-palette" data-layout-allow-occlusion>
               <div class="slash-item active">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                  <span>☑️</span>
-                  <span>Todo Task Item</span>
+                  <span data-layout-ignore>☑️</span>
+                  <span data-layout-ignore>Todo Task Item</span>
                 </div>
                 <span data-layout-ignore style="font-family: monospace; font-size: 12px; opacity: 0.8;">/todo</span>
               </div>
               <div class="slash-item">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                  <span>💡</span>
-                  <span>Callout Box</span>
+                  <span data-layout-ignore>💡</span>
+                  <span data-layout-ignore>Callout Box</span>
                 </div>
                 <span data-layout-ignore style="font-family: monospace; font-size: 12px; opacity: 0.8;">/callout</span>
               </div>
               <div class="slash-item">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                  <span>💻</span>
-                  <span>Code Block</span>
+                  <span data-layout-ignore>💻</span>
+                  <span data-layout-ignore>Code Block</span>
                 </div>
                 <span data-layout-ignore style="font-family: monospace; font-size: 12px; opacity: 0.8;">/code</span>
               </div>
               <div class="slash-item">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                  <span>🎨</span>
-                  <span>Catppuccin Latte (Light)</span>
+                  <span data-layout-ignore>🎨</span>
+                  <span data-layout-ignore>Catppuccin Latte (Light)</span>
                 </div>
                 <span data-layout-ignore style="font-family: monospace; font-size: 12px; opacity: 0.8;">⌥T</span>
               </div>
@@ -474,9 +483,14 @@
         { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.6, ease: "power3.out" },
         7.95
       );
+      tl.fromTo("#typed-slash",
+        { scale: 0, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.16, ease: "back.out(2.2)" },
+        8.18
+      );
       tl.fromTo("#slash-popup", 
-        { opacity: 0, scale: 0.85, y: -15, filter: "blur(10px)" },
-        { opacity: 1, scale: 1, y: 0, filter: "blur(0px)", duration: 0.45, ease: "back.out(1.8)" },
+        { opacity: 0, scale: 0.9, y: -10, filter: "blur(10px)" },
+        { opacity: 1, scale: 1, y: 0, filter: "blur(0px)", duration: 0.42, ease: "back.out(1.8)" },
         8.35
       );
 

@@ -7,8 +7,19 @@ import {
   deleteNoteMarkdownFromDisk,
 } from '../utils/storage';
 
-const STORAGE_KEY = 'float_notes_data_v1';
+const STORAGE_KEY = 'float_notes_data_v2';
+const LEGACY_STORAGE_KEY = 'float_notes_data_v1';
 const ACTIVE_NOTE_KEY = 'float_notes_active_id';
+
+function cleanLegacyContent(content: string): string {
+  return content
+    .replace(/#\s*FloatNotes/gi, '# Float')
+    .replace(/Instant floating desktop scratchpad inspired by Raycast\.?/gi, 'Instant floating desktop scratchpad for macOS.')
+    .replace(/Install emilkowalski skills & impeccable/gi, 'Ultra-fast keyboard navigation (⌘N, ⌘W, ⌘,)')
+    .replace(/Full Light Mode \(Catppuccin Latte & Raycast Paper\)/gi, 'Full Light & Dark Modes (Obsidian, Sonoma, Catppuccin)')
+    .replace(/Raycast Paper/gi, 'Editorial Paper')
+    .replace(/inspired by Raycast/gi, 'built for macOS');
+}
 
 const INITIAL_NOTES: Note[] = [
   {
@@ -64,10 +75,20 @@ window.set_always_on_top(true)?;
 export function useNotes() {
   const [notes, setNotes] = useState<Note[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        const parsed: Note[] = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Clean legacy strings
+          const cleaned = parsed.map(n => ({
+            ...n,
+            title: n.title.replace('FloatNotes', 'Float'),
+            content: cleanLegacyContent(n.content),
+          }));
+          localStorage.removeItem(LEGACY_STORAGE_KEY);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+          return cleaned;
+        }
       }
     } catch (e) {
       console.error('Error loading notes from localStorage:', e);
