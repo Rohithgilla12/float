@@ -105,7 +105,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
         {/* Pill Badge */}
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-white/80 mb-6 backdrop-blur-sm">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Inspired by Raycast Floating Notes &bull; Emil Kowalski Motion Craft</span>
+          <span>Now available for macOS &bull; Built for speed &amp; focus</span>
         </div>
 
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white max-w-3xl mx-auto leading-[1.12]">
@@ -331,7 +331,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
                 <td className="py-3 px-4 text-white/60">Insert todo, headings, code, quotes</td>
               </tr>
               <tr>
-                <td className="py-3 px-4 font-medium text-white">Raycast Actions Palette</td>
+                <td className="py-3 px-4 font-medium text-white">Actions Command Palette</td>
                 <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-amber-300">⌘ K</kbd></td>
                 <td className="py-3 px-4 text-white/60">Copy markdown, switch theme, export</td>
               </tr>
