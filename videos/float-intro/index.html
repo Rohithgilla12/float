@@ -165,6 +165,38 @@
         background: rgba(0, 0, 0, 0.6);
         border: 1px solid rgba(245, 158, 11, 0.5);
       }
+
+      /* Cinematic Visual Treatments */
+      .cinematic-vignette {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(ellipse 80% 80% at 50% 50%, transparent 48%, rgba(0, 0, 0, 0.7) 100%);
+        z-index: 1;
+      }
+
+      .cinematic-grain {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.045'/%3E%3C/svg%3E");
+        mix-blend-mode: overlay;
+        z-index: 2;
+      }
+
+      .anamorphic-streak {
+        position: absolute;
+        top: 360px;
+        left: 50%;
+        transform: translate(-50%, -50%) scaleX(0);
+        width: 1800px;
+        height: 5px;
+        background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.2), #FFFFFF 48%, #FFFFFF 52%, rgba(56, 189, 248, 0.8), transparent);
+        filter: blur(1.5px) drop-shadow(0 0 20px rgba(245, 158, 11, 0.9));
+        pointer-events: none;
+        opacity: 0;
+        z-index: 95;
+      }
     </style>
   </head>
   <body>
@@ -186,6 +218,11 @@
         data-duration="15"
         data-volume="1"
       ></audio>
+
+      <!-- Cinematic Vignette & 35mm Micro Film Grain -->
+      <div data-layout-allow-overflow data-layout-allow-occlusion class="cinematic-vignette"></div>
+      <div data-layout-allow-overflow data-layout-allow-occlusion class="cinematic-grain"></div>
+      <div id="anamorphic-streak" data-layout-allow-overflow data-layout-allow-occlusion class="anamorphic-streak"></div>
 
       <!-- Ambient Glow Orbs -->
       <div data-layout-allow-overflow class="ambient-orb" style="top: 0px; left: 660px; width: 600px; height: 600px; background: rgba(245, 158, 11, 0.15);"></div>
@@ -404,10 +441,11 @@
         3.55
       );
       tl.fromTo("#floating-window", 
-        { opacity: 0, y: 100, scale: 0.9, filter: "blur(16px)" },
-        { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 0.7, ease: "power4.out" },
+        { opacity: 0, y: 130, rotationX: 8, rotationY: -6, transformPerspective: 1600, scale: 0.88, filter: "blur(18px)" },
+        { opacity: 1, y: 0, rotationX: 2, rotationY: -1.5, scale: 1, filter: "blur(0px)", duration: 0.85, ease: "power4.out" },
         3.65
       );
+      tl.to("#floating-window", { rotationX: 0, rotationY: 0, duration: 2.7, ease: "none" }, 4.5);
 
       // Task 1 check interaction at t = 5.2s
       tl.to("#task-1-box", { scale: 1.25, duration: 0.12, ease: "power2.out" }, 5.2);
@@ -447,10 +485,22 @@
 
       // SCENE 4: CTA & BRAND LOCKUP (11.2s - 15s)
       tl.to("#scene-cta", { opacity: 1, duration: 0.1 }, 11.2);
+      
+      // Anamorphic Lens Flare flash precisely on 11.25s sub-bass impact
+      tl.fromTo("#anamorphic-streak",
+        { scaleX: 0.05, opacity: 0, filter: "blur(4px)" },
+        { scaleX: 1.15, opacity: 1, filter: "blur(1.5px)", duration: 0.12, ease: "power4.out" },
+        11.25
+      );
+      tl.to("#anamorphic-streak",
+        { scaleX: 1.8, opacity: 0, duration: 0.65, ease: "power2.out" },
+        11.37
+      );
+
       tl.fromTo("#cta-icon-wrapper", 
-        { opacity: 0, scale: 0.5, filter: "blur(20px)", y: 30 },
-        { opacity: 1, scale: 1, filter: "blur(0px)", y: 0, duration: 0.65, ease: "back.out(1.5)" },
-        11.3
+        { opacity: 0, scale: 0.38, rotationZ: -10, filter: "blur(24px)", y: 40 },
+        { opacity: 1, scale: 1, rotationZ: 0, filter: "blur(0px)", y: 0, duration: 0.72, ease: "elastic.out(1, 0.75)" },
+        11.25
       );
       tl.fromTo("#cta-name", 
         { opacity: 0, y: 20, filter: "blur(10px)" },
