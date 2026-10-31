@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pin, Plus, Moon, Sun, MoreHorizontal, Sparkles } from 'lucide-react';
+import { Pin, Plus, Moon, Sun, MoreHorizontal, Sparkles, Settings } from 'lucide-react';
 import { Note } from '../types/note';
 import { ThemeConfig } from '../types/theme';
 
@@ -13,6 +13,7 @@ interface WindowHeaderProps {
   currentTheme: ThemeConfig;
   onToggleThemeMode: () => void;
   onOpenActions: () => void;
+  onOpenSettings?: () => void;
   onCloseWindow?: () => void;
   onMinimizeWindow?: () => void;
   isPro?: boolean;
@@ -29,6 +30,7 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
   currentTheme,
   onToggleThemeMode,
   onOpenActions,
+  onOpenSettings,
   onCloseWindow,
   onMinimizeWindow,
   isPro,
@@ -108,11 +110,22 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
         {/* Quick Light/Dark Toggle */}
         <button
           onClick={onToggleThemeMode}
-          title={currentTheme.isDark ? 'Switch to Light Mode (Catppuccin Latte)' : 'Switch to Dark Mode (Raycast Obsidian)'}
+          title={currentTheme.isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           className="btn-press p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] transition-colors"
         >
           {currentTheme.isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
         </button>
+
+        {/* Settings Modal (⌘,) */}
+        {onOpenSettings && (
+          <button
+            onClick={onOpenSettings}
+            title="Settings & Keybinds (⌘,)"
+            className="btn-press p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] transition-colors"
+          >
+            <Settings className="w-3.5 h-3.5" />
+          </button>
+        )}
 
         {/* Always on Top Pin Button */}
         <button

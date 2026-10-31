@@ -9,7 +9,7 @@
   --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15);
 }
 
-/* 1. Raycast Obsidian (Dark) */
+/* 1. Obsidian HUD (Dark) */
 .theme-obsidian {
   --bg-window: rgba(13, 15, 18, 0.88);
   --bg-window-solid: #0d0f12;
@@ -78,7 +78,7 @@
   --is-dark: 0;
 }
 
-/* 4. Raycast Paper (Light Clean) */
+/* 4. Editorial Paper (Light Clean) */
 .theme-paper {
   --bg-window: rgba(255, 255, 255, 0.95);
   --bg-window-solid: #ffffff;

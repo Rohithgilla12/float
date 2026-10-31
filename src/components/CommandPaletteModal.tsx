@@ -9,6 +9,7 @@ import {
   Search,
   Sparkles,
   Key,
+  Settings,
 } from 'lucide-react';
 import { ThemeId, THEMES } from '../types/theme';
 import { haptics } from '../utils/audioHaptics';
@@ -26,6 +27,7 @@ interface CommandPaletteModalProps {
   onExportNote: () => void;
   isPro?: boolean;
   onOpenLicense?: () => void;
+  onOpenSettings?: () => void;
 }
 
 interface ActionItem {
@@ -51,6 +53,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
   onExportNote,
   isPro,
   onOpenLicense,
+  onOpenSettings,
 }) => {
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -149,6 +152,22 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         setSelectedIndex(0);
       },
     },
+    ...(onOpenSettings
+      ? [
+          {
+            id: 'settings',
+            label: 'Settings & Keybinds',
+            description: 'Storage folder, custom keyboard shortcuts, license & themes',
+            shortcut: '⌘,',
+            icon: <Settings className="w-4 h-4 text-cyan-400" />,
+            category: 'Preferences',
+            action: () => {
+              onClose();
+              onOpenSettings();
+            },
+          },
+        ]
+      : []),
     {
       id: 'new',
       label: 'Create New Note',

@@ -1,5 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Note } from '../types/note';
+import {
+  getStoredSettings,
+  initStorageDirectory,
+  saveNoteMarkdownToDisk,
+  deleteNoteMarkdownFromDisk,
+} from '../utils/storage';
 
 const STORAGE_KEY = 'float_notes_data_v1';
 const ACTIVE_NOTE_KEY = 'float_notes_active_id';
@@ -8,20 +14,17 @@ const INITIAL_NOTES: Note[] = [
   {
     id: 'note-1',
     title: '⚡ Quick Scratchpad',
-    content: `# FloatNotes ✨
-Instant floating desktop scratchpad inspired by Raycast.
+    content: `# Float ✨
+Instant floating desktop scratchpad for macOS.
 
-- [x] Install emilkowalski skills & impeccable
-- [x] Full Light Mode (Catppuccin Latte & Raycast Paper)
-- [ ] Connect global hotkey ⌥Space
-- [ ] Build multi-note switching
-
-> 💡 **Tip:** Press \`/\` on any line to open the slash command menu!
+- [x] Full Light & Dark Modes (Obsidian, Sonoma, Catppuccin)
+- [x] Global Hotkey ⌥Space
+- [x] Multi-tab switching & disk sync
+- [ ] Try pressing \`/\` on any line for slash commands
 
 \`\`\`rust
-// Tauri v2 Floating Window
+// Fast floating window
 window.set_always_on_top(true)?;
-window.set_visible_on_all_workspaces(true)?;
 \`\`\`
 `,
     createdAt: Date.now() - 3600000,
@@ -33,8 +36,8 @@ window.set_visible_on_all_workspaces(true)?;
     content: `# Daily Goals 🚀
 
 - [ ] Review PRs on GitHub
-- [ ] Implement slash command fuzzy filter
-- [ ] Test cross-platform build
+- [ ] Check keyboard shortcuts in Settings (⌘,)
+- [ ] Test local markdown file saving in Documents/Float
 - [ ] Enjoy coffee break ☕
 `,
     createdAt: Date.now() - 7200000,
@@ -42,13 +45,16 @@ window.set_visible_on_all_workspaces(true)?;
   },
   {
     id: 'note-3',
-    title: '📝 Meeting Notes',
-    content: `# Sync with Team 👥
+    title: '📝 Architecture',
+    content: `# Architecture & Shortcuts 👥
 
-- **Date:** Today
-- **Discussion:**
-  - Fast keyboard shortcuts (⌥Space to toggle, ⌘K for action bar)
-  - Seamless desktop stickiness (Always on Top)
+- **Shortcut Keybinds:**
+  - ⌥Space: Toggle Float Window
+  - ⌘N / ⌘T: New Note Tab
+  - ⌘W: Close Current Note Tab
+  - ⌘K / ⌘O: Quick Switcher / Palette
+  - ⌘,: Settings & Keybinds
+  - ⌥P: Pin / Always on Top
 `,
     createdAt: Date.now() - 86400000,
     updatedAt: Date.now() - 3600000,
@@ -78,8 +84,24 @@ export function useNotes() {
   });
 
   const [lastSaved, setLastSaved] = useState<number>(Date.now());
+  const initialDiskSyncDone = useRef(false);
 
-  // Save to localStorage
+  // Initialize storage directory and sync on mount
+  useEffect(() => {
+    initStorageDirectory().then(dir => {
+      if (!initialDiskSyncDone.current && dir) {
+        initialDiskSyncDone.current = true;
+        const settings = getStoredSettings();
+        if (settings.autoSaveToDisk) {
+          notes.forEach(note => {
+            saveNoteMarkdownToDisk(dir, note.title, note.content);
+          });
+        }
+      }
+    });
+  }, [notes]);
+
+  // Save to localStorage and Disk
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
@@ -109,12 +131,20 @@ export function useNotes() {
           newTitle = firstLine.replace(/^#\s+/, '').slice(0, 30);
         }
 
-        return {
+        const updatedNote = {
           ...note,
           title: newTitle || 'Untitled Note',
           content: newContent,
           updatedAt: Date.now(),
         };
+
+        // Auto-save to disk in background
+        const settings = getStoredSettings();
+        if (settings.autoSaveToDisk && settings.notesDir) {
+          saveNoteMarkdownToDisk(settings.notesDir, updatedNote.title, updatedNote.content);
+        }
+
+        return updatedNote;
       })
     );
   }, [activeNoteId]);
@@ -129,20 +159,55 @@ export function useNotes() {
     };
     setNotes(prev => [newNote, ...prev]);
     setActiveNoteId(newNote.id);
+
+    const settings = getStoredSettings();
+    if (settings.autoSaveToDisk && settings.notesDir) {
+      saveNoteMarkdownToDisk(settings.notesDir, newNote.title, newNote.content);
+    }
   }, []);
 
   const deleteActiveNote = useCallback(() => {
+    const current = notes.find(n => n.id === activeNoteId);
+    const settings = getStoredSettings();
+    if (current && settings.notesDir) {
+      deleteNoteMarkdownFromDisk(settings.notesDir, current.title);
+    }
+
     if (notes.length <= 1) {
-      // Clear instead of delete last note
+      // Clear content so there is always one active note
       updateActiveNoteContent('# Scratchpad\n\n');
       return;
     }
+
     setNotes(prev => {
       const filtered = prev.filter(n => n.id !== activeNoteId);
       setActiveNoteId(filtered[0]?.id || '');
       return filtered;
     });
-  }, [activeNoteId, notes.length, updateActiveNoteContent]);
+  }, [activeNoteId, notes, updateActiveNoteContent]);
+
+  // Close tab / note (⌘W)
+  const closeActiveNote = useCallback(() => {
+    deleteActiveNote();
+  }, [deleteActiveNote]);
+
+  // Switch to next tab (⌘])
+  const switchToNextNote = useCallback(() => {
+    const idx = notes.findIndex(n => n.id === activeNoteId);
+    if (idx !== -1) {
+      const nextIdx = (idx + 1) % notes.length;
+      setActiveNoteId(notes[nextIdx].id);
+    }
+  }, [notes, activeNoteId]);
+
+  // Switch to previous tab (⌘[)
+  const switchToPrevNote = useCallback(() => {
+    const idx = notes.findIndex(n => n.id === activeNoteId);
+    if (idx !== -1) {
+      const prevIdx = (idx - 1 + notes.length) % notes.length;
+      setActiveNoteId(notes[prevIdx].id);
+    }
+  }, [notes, activeNoteId]);
 
   return {
     notes,
@@ -152,6 +217,9 @@ export function useNotes() {
     updateActiveNoteContent,
     createNote,
     deleteActiveNote,
+    closeActiveNote,
+    switchToNextNote,
+    switchToPrevNote,
     lastSaved,
   };
 }

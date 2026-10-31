@@ -6,6 +6,7 @@ import { NoteEditor } from './components/NoteEditor';
 import { ActionBar } from './components/ActionBar';
 import { CommandPaletteModal } from './components/CommandPaletteModal';
 import { LicenseModal } from './components/LicenseModal';
+import { SettingsModal } from './components/SettingsModal';
 import { ParticleBurstCanvas, ParticleCanvasHandle } from './components/ParticleBurstCanvas';
 import { haptics } from './utils/audioHaptics';
 import { getStoredLicense, LicenseStatus } from './utils/license';
@@ -19,6 +20,9 @@ export const App: React.FC = () => {
     updateActiveNoteContent,
     createNote,
     deleteActiveNote,
+    closeActiveNote,
+    switchToNextNote,
+    switchToPrevNote,
   } = useNotes();
 
   const { theme, themeConfig, setTheme, toggleLightDark } = useTheme();
@@ -26,6 +30,7 @@ export const App: React.FC = () => {
   const [isPinned, setIsPinned] = useState(true);
   const [actionsPaletteOpen, setActionsPaletteOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [licenseStatus, setLicenseStatus] = useState<LicenseStatus>(getStoredLicense);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -127,27 +132,60 @@ export const App: React.FC = () => {
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      // ⌘K: Actions Palette
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      // ⌘, : Open Settings & Keybinds
+      if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+        e.preventDefault();
+        haptics.playClick();
+        setSettingsModalOpen(prev => !prev);
+        return;
+      }
+
+      // ⌘K or ⌘O: Actions Palette / Quick Switcher
+      if ((e.metaKey || e.ctrlKey) && (e.key.toLowerCase() === 'k' || e.key.toLowerCase() === 'o')) {
         e.preventDefault();
         haptics.playClick();
         setActionsPaletteOpen(prev => !prev);
         return;
       }
 
-      // ⌥P: Toggle Pin
+      // ⌥P: Toggle Pin (Always on Top)
       if (e.altKey && e.key.toLowerCase() === 'p') {
         e.preventDefault();
         handleTogglePin();
         return;
       }
 
-      // ⌘N: New Note
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
+      // ⌘N or ⌘T: New Note Tab
+      if ((e.metaKey || e.ctrlKey) && (e.key.toLowerCase() === 'n' || e.key.toLowerCase() === 't')) {
         e.preventDefault();
         haptics.playClick();
         createNote();
         showToast('✨ Created new note');
+        return;
+      }
+
+      // ⌘W: Close Current Note Tab
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'w') {
+        e.preventDefault();
+        haptics.playClick();
+        closeActiveNote();
+        showToast('🗑️ Closed note tab');
+        return;
+      }
+
+      // ⌘] or ⌘} : Switch to Next Tab
+      if ((e.metaKey || e.ctrlKey) && (e.key === ']' || (e.shiftKey && e.key === '}'))) {
+        e.preventDefault();
+        haptics.playClick();
+        switchToNextNote();
+        return;
+      }
+
+      // ⌘[ or ⌘{ : Switch to Previous Tab
+      if ((e.metaKey || e.ctrlKey) && (e.key === '[' || (e.shiftKey && e.key === '{'))) {
+        e.preventDefault();
+        haptics.playClick();
+        switchToPrevNote();
         return;
       }
 
@@ -165,6 +203,12 @@ export const App: React.FC = () => {
 
       // Esc: Dismiss Modal, Palette or Close/Hide Window
       if (e.key === 'Escape') {
+        if (settingsModalOpen) {
+          e.preventDefault();
+          haptics.playClick();
+          setSettingsModalOpen(false);
+          return;
+        }
         if (licenseModalOpen) {
           e.preventDefault();
           haptics.playClick();
@@ -198,7 +242,20 @@ export const App: React.FC = () => {
 
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [licenseModalOpen, actionsPaletteOpen, handleTogglePin, handleCloseWindow, createNote, notes, setActiveNoteId, showToast]);
+  }, [
+    settingsModalOpen,
+    licenseModalOpen,
+    actionsPaletteOpen,
+    handleTogglePin,
+    handleCloseWindow,
+    createNote,
+    closeActiveNote,
+    switchToNextNote,
+    switchToPrevNote,
+    notes,
+    setActiveNoteId,
+    showToast,
+  ]);
 
   return (
     <div className={`theme-${theme} w-full h-full flex flex-col overflow-hidden bg-transparent`}>
@@ -238,6 +295,10 @@ export const App: React.FC = () => {
             haptics.playClick();
             setActionsPaletteOpen(true);
           }}
+          onOpenSettings={() => {
+            haptics.playClick();
+            setSettingsModalOpen(true);
+          }}
           onCloseWindow={handleCloseWindow}
           onMinimizeWindow={handleMinimizeWindow}
           isPro={licenseStatus.isPro}
@@ -265,7 +326,7 @@ export const App: React.FC = () => {
           }}
         />
 
-        {/* Bottom Raycast Action Bar */}
+        {/* Bottom Action Bar */}
         <ActionBar
           content={activeNote.content}
           onOpenActions={() => {
@@ -274,7 +335,7 @@ export const App: React.FC = () => {
           }}
         />
 
-        {/* Raycast ⌘K Actions Command Palette */}
+        {/* ⌘K Actions Command Palette */}
         <CommandPaletteModal
           isOpen={actionsPaletteOpen}
           onClose={() => setActionsPaletteOpen(false)}
@@ -303,6 +364,28 @@ export const App: React.FC = () => {
             haptics.playClick();
             setLicenseModalOpen(true);
           }}
+          onOpenSettings={() => {
+            haptics.playClick();
+            setSettingsModalOpen(true);
+          }}
+        />
+
+        {/* Settings Modal (Storage, Shortcuts, License & Appearance) */}
+        <SettingsModal
+          isOpen={settingsModalOpen}
+          onClose={() => setSettingsModalOpen(false)}
+          currentTheme={theme}
+          onSelectTheme={t => {
+            haptics.playClick();
+            setTheme(t);
+            showToast(`Switched to ${t}`);
+          }}
+          licenseStatus={licenseStatus}
+          onLicenseChanged={status => {
+            setLicenseStatus(status);
+            showToast(status.isPro ? '⚡ Float Pro Activated!' : 'License updated');
+          }}
+          onShowToast={showToast}
         />
 
         {/* Dodo Payments License Modal */}
@@ -312,7 +395,7 @@ export const App: React.FC = () => {
           licenseStatus={licenseStatus}
           onLicenseChanged={status => {
             setLicenseStatus(status);
-            showToast(status.isPro ? '⚡ FloatNotes Pro Activated!' : 'License updated');
+            showToast(status.isPro ? '⚡ Float Pro Activated!' : 'License updated');
           }}
         />
 

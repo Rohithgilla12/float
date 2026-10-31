@@ -1,6 +1,6 @@
 {
   "name": "float",
-  "description": "Float — The floating desktop scratchpad inspired by Raycast",
+  "description": "Float — The fastest floating desktop scratchpad for macOS",
   "private": true,
   "version": "0.1.0",
   "type": "module",

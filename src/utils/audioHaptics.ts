@@ -94,7 +94,7 @@ class AudioHapticsEngine {
     } catch {}
   }
 
-  // Raycast tactile button / key click
+  // Tactile button / key click
   public playClick(): void {
     const ctx = this.getContext();
     if (!ctx) return;

@@ -27,7 +27,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
   };
 
   const handleGitHub = () => {
-    openExternalLink('https://github.com/rohithgilla/float-notes');
+    openExternalLink('https://github.com/Rohithgilla12/float');
   };
 
   return (
@@ -277,7 +277,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
             </div>
             <h3 className="font-semibold text-white text-base">First-Class Light Mode</h3>
             <p className="text-xs text-white/60 leading-relaxed">
-              Catppuccin Latte and Raycast Paper light themes are built with high-contrast slate typography and zero glare. Switch effortlessly between daylight and dusk.
+              Catppuccin Latte and Editorial Paper light themes are built with high-contrast slate typography and zero glare. Switch effortlessly between daylight and dusk.
             </p>
           </div>
 

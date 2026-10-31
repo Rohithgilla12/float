@@ -11,7 +11,7 @@ export interface ThemeConfig {
 export const THEMES: Record<ThemeId, ThemeConfig> = {
   obsidian: {
     id: 'obsidian',
-    name: 'Raycast Obsidian',
+    name: 'Obsidian HUD',
     isDark: true,
     accent: '#FF6363',
     tagline: 'Iconic pitch-black HUD with coral-red glow',
@@ -32,10 +32,10 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
   },
   paper: {
     id: 'paper',
-    name: 'Raycast Paper',
+    name: 'Editorial Paper',
     isDark: false,
     accent: '#E11D48',
-    tagline: 'Crisp architectural white with slate typography',
+    tagline: 'Crisp architectural white with crimson accents',
   },
   sonoma: {
     id: 'sonoma',

@@ -60,6 +60,81 @@ fn open_url(url: String) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn get_default_notes_dir() -> Result<String, String> {
+    let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+    let path = std::path::Path::new(&home).join("Documents").join("Float");
+    let _ = std::fs::create_dir_all(&path);
+    Ok(path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+fn save_note_file(file_path: String, content: String) -> Result<(), String> {
+    if let Some(parent) = std::path::Path::new(&file_path).parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    std::fs::write(&file_path, content).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn delete_note_file(file_path: String) -> Result<(), String> {
+    if std::path::Path::new(&file_path).exists() {
+        let _ = std::fs::remove_file(&file_path);
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn reveal_in_finder(path: String) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        let _ = std::process::Command::new("open")
+            .arg(&path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(target_os = "windows")]
+    {
+        let _ = std::process::Command::new("explorer")
+            .arg(&path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        let _ = std::process::Command::new("xdg-open")
+            .arg(&path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn pick_folder(_default_path: Option<String>) -> Result<Option<String>, String> {
+    #[cfg(target_os = "macos")]
+    {
+        let script = r#"POSIX path of (choose folder with prompt "Select folder to store Float notes:")"#;
+        let output = std::process::Command::new("osascript")
+            .arg("-e")
+            .arg(script)
+            .output()
+            .map_err(|e| e.to_string())?;
+        if output.status.success() {
+            let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            if !path.is_empty() {
+                let _ = std::fs::create_dir_all(&path);
+                return Ok(Some(path));
+            }
+        }
+        Ok(None)
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        Ok(default_path)
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -106,7 +181,12 @@ pub fn run() {
             toggle_window,
             hide_window,
             minimize_window,
-            open_url
+            open_url,
+            get_default_notes_dir,
+            save_note_file,
+            delete_note_file,
+            reveal_in_finder,
+            pick_folder
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

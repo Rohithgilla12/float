@@ -44,7 +44,7 @@ export const ActionBar: React.FC<ActionBarProps> = ({
 
         <button
           onClick={onOpenActions}
-          title="Raycast Actions Palette (⌘K)"
+          title="Actions Palette (⌘K)"
           className="btn-press px-2.5 py-1 rounded-lg bg-[var(--accent-glow)] text-[var(--accent-color)] border border-[var(--accent-color)]/30 font-semibold flex items-center gap-1.5 shadow-sm transition-all"
         >
           <span>Actions</span>

@@ -1,13 +1,12 @@
-# ⚡ FloatNotes
+# ⚡ Float
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tauri v2](https://img.shields.io/badge/Tauri-v2-FFC131?logo=tauri&logoColor=white)](https://v2.tauri.app/)
-[![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Craft: Emil Kowalski](https://img.shields.io/badge/Design_Craft-Emil_Kowalski-FF6363)](https://skills.sh/emilkowalski/skills)
 
-> **The fastest, most beautiful cross-platform floating desktop notes app, inspired by Raycast Floating Notes.**  
-> Crafted with **Tauri v2 (Rust)**, **React 19 + TypeScript**, **Tailwind CSS**, and **Emil Kowalski's design engineering principles**.
+> **The fastest, most beautiful floating desktop scratchpad for macOS.**  
+> Crafted with **Tauri v2 (Rust)**, **React + TypeScript**, and **Tailwind CSS**. Built for speed, fluid motion, and zero friction.
 
 ---
 
@@ -20,32 +19,41 @@
   - Smooth window dragging via `data-tauri-drag-region`.
 - **Global Hotkey Summoning**:
   - Press `⌥ + Space` (Option+Space or Alt+Space) anywhere on your system to instantly summon or dismiss your floating scratchpad.
-  - **0ms keyboard latency:** No slow fade-in or scaling on summon.
+  - **0ms keyboard latency:** Instant keystroke-to-screen responsiveness.
 - **Unified Live WYSIWYG Editor**:
   - Always in rendered preview mode—zero clunky "edit vs preview" toggle.
   - Interactive clickable checkboxes with fluid spring tick and strikethrough.
   - Auto-formatting as you type (`# `, `## `, `### `, `[] `, `- `, `> `).
-- **Raycast-Style Slash Commands (`/`)**:
+- **Native Local File Storage (`.md`)**:
+  - Automatically saves notes to local disk at `~/Documents/Float` (or your custom directory).
+  - Pure raw Markdown files readable directly by Obsidian, VS Code, iA Writer, or Finder with zero lock-in.
+  - Native macOS folder picker in Settings.
+- **Instant Slash Commands (`/`)**:
   - Type `/` anywhere to reveal the fuzzy-searchable command menu.
   - Insert `/todo`, `/h1`..`/h3`, `/code`, `/callout`, `/quote`, `/bullet`, `/divider`, `/timestamp`.
-- **Overdrive Sensory Polish (A + B)**:
+- **Sensory Polish & Tactile Haptics**:
   - **Synthesized Web Audio Micro-Haptics:** Real-time tactile mechanical clicks for task checks, key presses, and shortcuts via `AudioContext`.
   - **Sub-Pixel Specular Glass Shader:** Real-time cursor coordinates track along the 1px border, casting a specular light sheen.
   - **Task Particle Bursts:** 60 FPS micro sparkles radiate when completing checklist items.
   - **Fluid Morphing Palette:** The `⌘K` command sheet springs smoothly from the trigger origin.
-- **Raycast Action Bar & Palette (`⌘K`)**:
-  - Bottom status footer showing sync status, word count, character count.
-  - Full `⌘K` command center for copying markdown, pinning, theme switching, and exporting.
+- **Settings & Shortcut Customization (`⌘,`)**:
+  - Dedicated Settings modal with 4 intuitive panels:
+    - **Storage & Files**: Choose your disk directory, reveal in Finder, toggle auto-save.
+    - **Shortcuts**: View and customize keyboard shortcuts for note lifecycle.
+    - **License & Pro**: Manage Float Pro lifetime license via Dodo Payments.
+    - **Appearance**: One-click theme switching with live preview chips.
 - **Multi-Theme Engine with First-Class Light Mode ☀️**:
-  - **Raycast Obsidian** (Dark): Pitch-black HUD, sub-pixel glass borders, coral-red accent glow.
-  - **Catppuccin Mocha** (Dark): Developer favorite soothing pastel dark theme.
+  - **Obsidian HUD** (Dark): Pitch-black HUD, sub-pixel glass borders, coral-red accent glow.
+  - **Catppuccin Mocha** (Dark): Soothing low-contrast pastel midnight theme.
   - **Catppuccin Latte** (Light): Warm daytime off-white paper canvas with lavender Mauve accents.
-  - **Raycast Paper** (Light): High-contrast architectural office white with crisp slate typography.
-  - **Spatial Sonoma** (Glass): Apple frosted acrylic glass with specular reflections.
+  - **Editorial Paper** (Light): High-contrast architectural office white with crisp typography.
+  - **Spatial Sonoma** (Glass): macOS frosted acrylic glass with specular reflections.
   - **Linear Monastic** (Slate): Ultra-clean, distraction-free markdown retreat.
-- **Multi-Note Switcher**:
+- **Multi-Tab Note Lifecycle**:
   - Header note tabs with `+` button.
-  - Switch notes with `⌘1` .. `⌘9`.
+  - Switch notes with `⌘1` .. `⌘9` or `⌘[` / `⌘]`.
+  - Create note with `⌘N` / `⌘T`.
+  - Close active note tab with `⌘W`.
 
 ---
 
@@ -54,14 +62,17 @@
 | Shortcut | Action |
 | :--- | :--- |
 | `⌥ + Space` | Summon / Dismiss Floating Note anywhere on system |
-| `Esc` | Dismiss open menus, or close/hide floating note |
-| `/` | Trigger Raycast Slash Command Menu |
-| `⌘K` | Open Raycast Actions Command Center |
+| `⌘,` | Open Settings & Keybinds Modal |
+| `⌘N` / `⌘T` | Create a New Note Tab |
+| `⌘W` | Close Active Note Tab |
+| `⌘[` / `⌘]` | Switch to Previous / Next Note Tab |
+| `⌘1` .. `⌘9` | Quick-switch directly to Note 1 through 9 |
+| `⌘K` / `⌘O` | Open Actions Command Palette / Switcher |
 | `⌥P` | Toggle Pin on Desktop (Always on Top) |
-| `⌘N` | Create a New Note |
-| `⌘1` .. `⌘9` | Quick-switch between open notes |
+| `/` | Trigger Slash Command Menu |
 | `⌘C` | Copy Note Markdown to Clipboard |
 | `⌘E` | Export Note to `.md` File |
+| `Esc` | Dismiss open menus / popovers, or hide window |
 
 ---
 
@@ -85,7 +96,7 @@ npm run tauri build
 
 ## 💰 Open Source & $4.99 Lifetime License
 
-FloatNotes follows the open source commercial model popularized by indie macOS tools like **Maccy** and **Shottr**:
+Float follows the open source commercial model popularized by indie macOS tools like **Maccy** and **Shottr**:
 - The code is **100% Open Source** on GitHub under the [MIT License](LICENSE).
 - Pre-built, signed, and Apple-notarized `.dmg` binaries with automatic updates are available for a **$4.99 one-time lifetime license** powered by **Dodo Payments**.
 

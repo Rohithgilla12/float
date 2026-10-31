@@ -230,7 +230,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
   // Keyboard Navigation & Splitting/Merging
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // ⌘K: Raycast Actions Command Center
+    // ⌘K: Actions Command Center
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
       onOpenActions();
@@ -970,7 +970,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         </div>
       )}
 
-      {/* RAYCAST SLASH COMMAND MENU POPUP */}
+      {/* SLASH COMMAND MENU POPUP */}
       <SlashCommandMenu
         isOpen={slashMenuOpen}
         onClose={() => setSlashMenuOpen(false)}
