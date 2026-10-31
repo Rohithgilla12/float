@@ -14,17 +14,26 @@ import {
   Volume2,
   VolumeX,
   ExternalLink,
+  BookOpen,
+  ArrowRight,
 } from 'lucide-react';
 import App from '../App';
+import { BLOG_POSTS } from '../data/blogPosts';
 import { DODO_CHECKOUT_URL, openExternalLink } from '../utils/license';
 
 const R2_VIDEO_URL = 'https://pub-f69e073835364d8883ded4ff1d09e386.r2.dev/float-intro.mp4';
 
 interface LandingPageProps {
   onOpenAppFullscreen: () => void;
+  onOpenBlog?: () => void;
+  onSelectBlogPost?: (slug: string) => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({
+  onOpenAppFullscreen,
+  onOpenBlog,
+  onSelectBlogPost,
+}) => {
   const [heroView, setHeroView] = useState<'sandbox' | 'video'>('sandbox');
   const [isVideoMuted, setIsVideoMuted] = useState(true);
 
@@ -79,6 +88,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
             <a href="#pricing" className="hover:text-white transition-colors">
               Pricing ($4.99)
             </a>
+            {onOpenBlog && (
+              <button
+                onClick={onOpenBlog}
+                className="hover:text-amber-400 font-medium transition-colors cursor-pointer"
+              >
+                Blog
+              </button>
+            )}
           </nav>
 
           <div className="flex items-center gap-3">
@@ -530,6 +547,64 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
         </div>
       </section>
 
+      {/* From the Blog & Guides Section */}
+      <section id="blog-preview" className="py-20 px-6 max-w-5xl mx-auto border-t border-white/5">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
+          <div>
+            <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 font-mono">
+              ESSAYS & GUIDES
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white mt-3">
+              Deep-dives for macOS power users.
+            </h2>
+            <p className="mt-2 text-sm text-white/60">
+              Architectural guides, comparisons, and workflows for keyboard-driven thinkers.
+            </p>
+          </div>
+
+          {onOpenBlog && (
+            <button
+              onClick={onOpenBlog}
+              className="px-4 py-2 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-xs text-white/80 transition-colors flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+              <span>View All Articles</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {BLOG_POSTS.slice(0, 3).map(post => (
+            <article
+              key={post.slug}
+              onClick={() => onSelectBlogPost ? onSelectBlogPost(post.slug) : onOpenBlog?.()}
+              className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-amber-500/30 hover:bg-white/[0.04] transition-all cursor-pointer flex flex-col justify-between group"
+            >
+              <div>
+                <div className="flex items-center justify-between text-[11px] text-white/50 mb-3 font-mono">
+                  <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-amber-400">
+                    {post.category}
+                  </span>
+                  <span>{post.readTime}</span>
+                </div>
+                <h3 className="font-bold text-white text-base group-hover:text-amber-300 transition-colors leading-snug">
+                  {post.title}
+                </h3>
+                <p className="mt-2.5 text-xs text-white/60 leading-relaxed line-clamp-3">
+                  {post.description}
+                </p>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-amber-400 font-medium">
+                <span>Read article</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="py-12 px-6 border-t border-white/5 text-center text-xs text-white/40 font-mono space-y-3">
         <div className="flex items-center justify-center gap-4 text-white/60">
@@ -537,7 +612,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAppFullscreen })
             float.gilla.fun
           </a>
           <span>&bull;</span>
-          <a href="https://github.com/rohithgilla/float-notes" className="hover:text-white transition-colors">
+          {onOpenBlog && (
+            <>
+              <button onClick={onOpenBlog} className="hover:text-white transition-colors cursor-pointer">
+                Blog
+              </button>
+              <span>&bull;</span>
+            </>
+          )}
+          <a href="https://github.com/Rohithgilla12/float" className="hover:text-white transition-colors">
             GitHub
           </a>
           <span>&bull;</span>
