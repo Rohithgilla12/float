@@ -149,21 +149,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </p>
 
         {/* CTA Button Group */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <button
             onClick={handleBuy}
-            className="flex items-center gap-2.5 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-bold text-sm shadow-xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+            className="flex items-center gap-2.5 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-bold text-sm shadow-xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
           >
             <Download className="w-4 h-4" />
             <span>Download for macOS &bull; $4.99</span>
           </button>
 
           <button
+            onClick={() => document.getElementById('film')?.scrollIntoView({ behavior: 'smooth' })}
+            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 text-sm font-medium hover:border-white/20 transition-all cursor-pointer"
+          >
+            <Play className="w-4 h-4 fill-current text-amber-400" />
+            <span>Watch 15s Film</span>
+          </button>
+
+          <button
             onClick={handleGitHub}
-            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 text-sm font-medium hover:border-white/20 transition-all"
+            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 text-sm font-medium hover:border-white/20 transition-all cursor-pointer"
           >
             <Github className="w-4 h-4" />
-            <span>Star on GitHub (MIT)</span>
+            <span>Star on GitHub</span>
           </button>
         </div>
 
@@ -188,7 +196,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </button>
 
             <button
-              onClick={() => setHeroView('video')}
+              onClick={() => {
+                setHeroView('video');
+                document.getElementById('film')?.scrollIntoView({ behavior: 'smooth' });
+              }}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                 heroView === 'video'
                   ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'

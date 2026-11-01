@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BlogPost } from '../data/blogPosts';
 import { ArrowLeft, Calendar, Clock, Share2, Download, Sparkles } from 'lucide-react';
 import { DODO_CHECKOUT_URL, openExternalLink } from '../utils/license';
+import { renderMarkdownToHtml } from '../utils/markdownRenderer';
 
 interface BlogPostViewProps {
   post: BlogPost;
@@ -36,20 +37,6 @@ export const BlogPostView: React.FC<BlogPostViewProps> = ({
     openExternalLink(DODO_CHECKOUT_URL);
   };
 
-  // Convert markdown to clean styled HTML
-  const formatMarkdown = (md: string) => {
-    // Process markdown sections
-    return md
-      .replace(/^### (.*$)/gim, '<h3 class="text-xl sm:text-2xl font-bold text-white mt-10 mb-4 tracking-tight">$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-12 mb-5 tracking-tight border-b border-white/10 pb-3">$1</h2>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-white">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em class="italic text-amber-200">$1</em>')
-      .replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-white/10 text-amber-300 font-mono text-[13px]">$1</code>')
-      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-amber-400 hover:text-amber-300 underline underline-offset-4 font-medium transition-colors">$1</a>')
-      .replace(/^- (.*$)/gim, '<li class="flex items-start gap-2.5 my-2"><span class="text-amber-400 font-bold shrink-0 mt-0.5">&bull;</span><span>$1</span></li>')
-      .replace(/^\d+\. (.*$)/gim, '<li class="flex items-start gap-2 my-2"><span class="font-mono text-amber-400 shrink-0 font-bold">#</span><span>$1</span></li>')
-      .replace(/^> (.*$)/gim, '<blockquote class="border-l-2 border-amber-400 pl-4 py-2 my-6 bg-amber-500/5 rounded-r-xl text-white/80 italic text-sm">$1</blockquote>');
-  };
 
   return (
     <div className="min-h-screen bg-[#0C0D0E] text-[#ECEFF4] font-sans antialiased selection:bg-amber-500/30 selection:text-amber-200">
@@ -89,7 +76,7 @@ export const BlogPostView: React.FC<BlogPostViewProps> = ({
       </header>
 
       {/* Article Container */}
-      <main className="relative z-10 py-16 px-6 max-w-3xl mx-auto">
+      <main className="relative z-10 py-16 px-6 max-w-4xl mx-auto">
         {/* Meta Header */}
         <div className="space-y-4">
           <div className="flex items-center gap-3 text-xs font-mono text-white/60">
@@ -126,8 +113,8 @@ export const BlogPostView: React.FC<BlogPostViewProps> = ({
 
         {/* Article Body */}
         <div
-          className="mt-12 text-sm sm:text-base text-white/80 leading-[1.8] space-y-5 prose prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: formatMarkdown(post.content) }}
+          className="mt-12 text-sm sm:text-base text-white/80 leading-[1.8] space-y-4"
+          dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(post.content) }}
         />
 
         {/* In-Article Call to Action Card */}
