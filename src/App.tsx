@@ -7,9 +7,13 @@ import { ActionBar } from './components/ActionBar';
 import { CommandPaletteModal } from './components/CommandPaletteModal';
 import { LicenseModal } from './components/LicenseModal';
 import { SettingsModal } from './components/SettingsModal';
+import { ImageExportModal } from './components/ImageExportModal';
 import { ParticleBurstCanvas, ParticleCanvasHandle } from './components/ParticleBurstCanvas';
 import { haptics } from './utils/audioHaptics';
 import { getStoredLicense, LicenseStatus } from './utils/license';
+import { speechEngine } from './utils/speechRecognition';
+
+const OPACITY_STORAGE_KEY = 'float_window_opacity';
 
 export const App: React.FC = () => {
   const {
@@ -31,11 +35,26 @@ export const App: React.FC = () => {
   const [actionsPaletteOpen, setActionsPaletteOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [imageExportOpen, setImageExportOpen] = useState(false);
+  const [isDictating, setIsDictating] = useState(false);
+  const [isFocusMode, setIsFocusMode] = useState(false);
+  const [opacity, setOpacity] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(OPACITY_STORAGE_KEY);
+      if (saved) {
+        const val = parseFloat(saved);
+        if (!isNaN(val) && val >= 0.3 && val <= 1.0) return val;
+      }
+    } catch {}
+    return 1.0;
+  });
   const [licenseStatus, setLicenseStatus] = useState<LicenseStatus>(getStoredLicense);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const particleCanvasRef = useRef<ParticleCanvasHandle>(null);
   const windowShellRef = useRef<HTMLDivElement>(null);
+  const activeNoteRef = useRef(activeNote);
+  activeNoteRef.current = activeNote;
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
@@ -96,6 +115,76 @@ export const App: React.FC = () => {
     }
   }, [showToast]);
 
+  // Window Opacity & Ghost Mode
+  const handleAdjustOpacity = useCallback((delta: number) => {
+    haptics.playClick();
+    setOpacity(prev => {
+      const next = Math.max(0.4, Math.min(1.0, Number((prev + delta).toFixed(2))));
+      try {
+        localStorage.setItem(OPACITY_STORAGE_KEY, String(next));
+      } catch {}
+      showToast(`👻 Ghost Mode: ${Math.round(next * 100)}% Opacity`);
+      return next;
+    });
+  }, [showToast]);
+
+  const handleCycleOpacity = useCallback(() => {
+    haptics.playClick();
+    setOpacity(prev => {
+      let next = 1.0;
+      if (prev >= 0.95) next = 0.85;
+      else if (prev >= 0.80) next = 0.70;
+      else if (prev >= 0.65) next = 0.50;
+      else next = 1.0;
+      try {
+        localStorage.setItem(OPACITY_STORAGE_KEY, String(next));
+      } catch {}
+      showToast(`👻 Ghost Mode: ${Math.round(next * 100)}% Opacity`);
+      return next;
+    });
+  }, [showToast]);
+
+  const handleSetOpacity = useCallback((val: number) => {
+    const clamped = Math.max(0.4, Math.min(1.0, val));
+    setOpacity(clamped);
+    try {
+      localStorage.setItem(OPACITY_STORAGE_KEY, String(clamped));
+    } catch {}
+  }, []);
+
+  // Web Speech Real-Time Dictation Mode
+  const handleToggleDictation = useCallback(() => {
+    haptics.playClick();
+    if (!speechEngine.isSupported()) {
+      showToast('⚠️ Speech recognition not supported in this browser/OS');
+      return;
+    }
+    if (isDictating) {
+      speechEngine.stop();
+      setIsDictating(false);
+      showToast('🎙️ Dictation stopped');
+    } else {
+      const started = speechEngine.start(
+        (text) => {
+          if (text) {
+            const currentContent = activeNoteRef.current.content;
+            const sep = currentContent.endsWith('\n') || !currentContent ? '' : '\n';
+            updateActiveNoteContent(`${currentContent}${sep}${text}`);
+          }
+        },
+        (listening) => {
+          setIsDictating(listening);
+        }
+      );
+      if (started) {
+        setIsDictating(true);
+        showToast('🎙️ Dictating... speak clearly');
+      } else {
+        showToast('⚠️ Could not access microphone');
+      }
+    }
+  }, [isDictating, showToast, updateActiveNoteContent]);
+
   // Copy Note Markdown to Clipboard
   const handleCopyNote = useCallback(async () => {
     haptics.playClick();
@@ -132,6 +221,44 @@ export const App: React.FC = () => {
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // ⌘⇧E: Export as Image Card
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        haptics.playClick();
+        setImageExportOpen(prev => !prev);
+        return;
+      }
+
+      // ⌥D: Voice Dictation (Speech-to-Text)
+      if (e.altKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        handleToggleDictation();
+        return;
+      }
+
+      // ⌥[ / ⌥]: Ghost Mode Opacity
+      if (e.altKey && (e.key === '[' || e.key === '“')) {
+        e.preventDefault();
+        handleAdjustOpacity(-0.1);
+        return;
+      }
+      if (e.altKey && (e.key === ']' || e.key === '‘')) {
+        e.preventDefault();
+        handleAdjustOpacity(0.1);
+        return;
+      }
+
+      // ⌘⇧F: Zen Focus Mode
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        haptics.playClick();
+        setIsFocusMode(prev => {
+          showToast(!prev ? '🧘 Zen Focus Mode: ON' : 'Zen Focus Mode: OFF');
+          return !prev;
+        });
+        return;
+      }
+
       // ⌘, : Open Settings & Keybinds
       if ((e.metaKey || e.ctrlKey) && e.key === ',') {
         e.preventDefault();
@@ -201,8 +328,14 @@ export const App: React.FC = () => {
         return;
       }
 
-      // Esc: Dismiss Modal, Palette or Close/Hide Window
+      // Esc: Dismiss Modal, Palette, Exit Focus or Close/Hide Window
       if (e.key === 'Escape') {
+        if (imageExportOpen) {
+          e.preventDefault();
+          haptics.playClick();
+          setImageExportOpen(false);
+          return;
+        }
         if (settingsModalOpen) {
           e.preventDefault();
           haptics.playClick();
@@ -219,6 +352,13 @@ export const App: React.FC = () => {
           e.preventDefault();
           haptics.playClick();
           setActionsPaletteOpen(false);
+          return;
+        }
+        if (isFocusMode) {
+          e.preventDefault();
+          haptics.playClick();
+          setIsFocusMode(false);
+          showToast('Zen Focus Mode: OFF');
           return;
         }
 
@@ -246,6 +386,8 @@ export const App: React.FC = () => {
     settingsModalOpen,
     licenseModalOpen,
     actionsPaletteOpen,
+    imageExportOpen,
+    isFocusMode,
     handleTogglePin,
     handleCloseWindow,
     createNote,
@@ -255,15 +397,18 @@ export const App: React.FC = () => {
     notes,
     setActiveNoteId,
     showToast,
+    handleToggleDictation,
+    handleAdjustOpacity,
   ]);
 
   return (
     <div className={`theme-${theme} w-full h-full flex flex-col overflow-hidden bg-transparent`}>
-      {/* Outer Floating Window Container with Overdrive Specular Glass Shader */}
+      {/* Outer Floating Window Container with Overdrive Specular Glass Shader & Ghost Mode Opacity */}
       <div
         ref={windowShellRef}
         onMouseMove={handleMouseMove}
-        className="window-shell w-full h-full rounded-2xl flex flex-col overflow-hidden relative"
+        style={{ opacity }}
+        className="window-shell w-full h-full rounded-2xl flex flex-col overflow-hidden relative transition-opacity duration-150"
       >
         {/* Ambient Specular Glass Glow (Direction B) */}
         <div className="specular-glow" />
@@ -271,42 +416,57 @@ export const App: React.FC = () => {
         {/* Micro-Particle Burst Canvas (Overdrive Direction B) */}
         <ParticleBurstCanvas ref={particleCanvasRef} />
 
-        {/* Top Header Bar */}
-        <WindowHeader
-          notes={notes}
-          activeNoteId={activeNoteId}
-          onSelectNote={id => {
-            haptics.playClick();
-            setActiveNoteId(id);
-          }}
-          onCreateNote={() => {
-            haptics.playClick();
-            createNote();
-            showToast('✨ Created new note');
-          }}
-          isPinned={isPinned}
-          onTogglePin={handleTogglePin}
-          currentTheme={themeConfig}
-          onToggleThemeMode={() => {
-            haptics.playClick();
-            toggleLightDark();
-          }}
-          onOpenActions={() => {
-            haptics.playClick();
-            setActionsPaletteOpen(true);
-          }}
-          onOpenSettings={() => {
-            haptics.playClick();
-            setSettingsModalOpen(true);
-          }}
-          onCloseWindow={handleCloseWindow}
-          onMinimizeWindow={handleMinimizeWindow}
-          isPro={licenseStatus.isPro}
-          onOpenLicense={() => {
-            haptics.playClick();
-            setLicenseModalOpen(true);
-          }}
-        />
+        {/* Top Header Bar (Hidden in Zen Focus Mode) */}
+        {!isFocusMode ? (
+          <WindowHeader
+            notes={notes}
+            activeNoteId={activeNoteId}
+            onSelectNote={id => {
+              haptics.playClick();
+              setActiveNoteId(id);
+            }}
+            onCreateNote={() => {
+              haptics.playClick();
+              createNote();
+              showToast('✨ Created new note');
+            }}
+            isPinned={isPinned}
+            onTogglePin={handleTogglePin}
+            currentTheme={themeConfig}
+            onToggleThemeMode={() => {
+              haptics.playClick();
+              toggleLightDark();
+            }}
+            onOpenActions={() => {
+              haptics.playClick();
+              setActionsPaletteOpen(true);
+            }}
+            onOpenSettings={() => {
+              haptics.playClick();
+              setSettingsModalOpen(true);
+            }}
+            onCloseWindow={handleCloseWindow}
+            onMinimizeWindow={handleMinimizeWindow}
+            isPro={licenseStatus.isPro}
+            onOpenLicense={() => {
+              haptics.playClick();
+              setLicenseModalOpen(true);
+            }}
+          />
+        ) : (
+          /* Subtle Zen Exit Button in top right */
+          <button
+            onClick={() => {
+              haptics.playClick();
+              setIsFocusMode(false);
+              showToast('Zen Focus Mode: OFF');
+            }}
+            className="absolute top-3 right-3 z-30 px-2.5 py-1 rounded-lg bg-black/60 hover:bg-black/90 text-white/50 hover:text-white border border-white/15 text-[10px] font-mono transition-all flex items-center gap-1 shadow-lg cursor-pointer"
+            title="Exit Zen Focus Mode (Esc or ⌘⇧F)"
+          >
+            <span>Exit Zen (Esc)</span>
+          </button>
+        )}
 
         {/* Note Editor Area with Task Particle Bursts (Overdrive Direction B) & Audio Haptics (Direction A) */}
         <NoteEditor
@@ -326,14 +486,24 @@ export const App: React.FC = () => {
           }}
         />
 
-        {/* Bottom Action Bar */}
-        <ActionBar
-          content={activeNote.content}
-          onOpenActions={() => {
-            haptics.playClick();
-            setActionsPaletteOpen(true);
-          }}
-        />
+        {/* Bottom Action Bar (Hidden in Zen Focus Mode) */}
+        {!isFocusMode && (
+          <ActionBar
+            content={activeNote.content}
+            onOpenActions={() => {
+              haptics.playClick();
+              setActionsPaletteOpen(true);
+            }}
+            onOpenImageExport={() => {
+              haptics.playClick();
+              setImageExportOpen(true);
+            }}
+            isDictating={isDictating}
+            onToggleDictation={handleToggleDictation}
+            opacity={opacity}
+            onCycleOpacity={handleCycleOpacity}
+          />
+        )}
 
         {/* ⌘K Actions Command Palette */}
         <CommandPaletteModal
@@ -368,6 +538,25 @@ export const App: React.FC = () => {
             haptics.playClick();
             setSettingsModalOpen(true);
           }}
+          onOpenImageExport={() => setImageExportOpen(true)}
+          isDictating={isDictating}
+          onToggleDictation={handleToggleDictation}
+          opacity={opacity}
+          onCycleOpacity={handleCycleOpacity}
+          isFocusMode={isFocusMode}
+          onToggleFocusMode={() => {
+            setIsFocusMode(prev => !prev);
+            showToast(!isFocusMode ? '🧘 Zen Focus Mode: ON' : 'Zen Focus Mode: OFF');
+          }}
+        />
+
+        {/* Ray.so / Carbon Style Visual Image Card Exporter */}
+        <ImageExportModal
+          isOpen={imageExportOpen}
+          onClose={() => setImageExportOpen(false)}
+          note={activeNote}
+          themeConfig={themeConfig}
+          onShowToast={showToast}
         />
 
         {/* Settings Modal (Storage, Shortcuts, License & Appearance) */}
@@ -386,6 +575,8 @@ export const App: React.FC = () => {
             showToast(status.isPro ? '⚡ Float Pro Activated!' : 'License updated');
           }}
           onShowToast={showToast}
+          opacity={opacity}
+          onChangeOpacity={handleSetOpacity}
         />
 
         {/* Dodo Payments License Modal */}

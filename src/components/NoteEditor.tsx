@@ -12,6 +12,7 @@ import { EditorBlock, parseMarkdownToBlocks, serializeBlocksToMarkdown } from '.
 import { SlashCommand } from '../types/note';
 import { SlashCommandMenu } from './SlashCommandMenu';
 import { haptics } from '../utils/audioHaptics';
+import { evaluateMathExpression } from '../utils/mathEvaluator';
 
 interface NoteEditorProps {
   content: string;
@@ -194,6 +195,16 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       notifyChange(updated);
       focusBlock(block.id);
       return;
+    }
+
+    // Inline Math / Calculation Evaluation
+    if (text.endsWith('=') || text.endsWith('= ')) {
+      const math = evaluateMathExpression(text);
+      if (math) {
+        haptics.playSuccess();
+        const sep = text.endsWith('= ') ? '' : ' ';
+        text = `${text}${sep}${math.formattedResult}`;
+      }
     }
 
     // Normal Text Update

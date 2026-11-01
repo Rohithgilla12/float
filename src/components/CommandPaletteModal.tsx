@@ -10,6 +10,10 @@ import {
   Sparkles,
   Key,
   Settings,
+  Image as ImageIcon,
+  Mic,
+  Eye,
+  Maximize2,
 } from 'lucide-react';
 import { ThemeId, THEMES } from '../types/theme';
 import { haptics } from '../utils/audioHaptics';
@@ -28,6 +32,13 @@ interface CommandPaletteModalProps {
   isPro?: boolean;
   onOpenLicense?: () => void;
   onOpenSettings?: () => void;
+  onOpenImageExport?: () => void;
+  isDictating?: boolean;
+  onToggleDictation?: () => void;
+  opacity?: number;
+  onCycleOpacity?: () => void;
+  isFocusMode?: boolean;
+  onToggleFocusMode?: () => void;
 }
 
 interface ActionItem {
@@ -54,6 +65,13 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
   isPro,
   onOpenLicense,
   onOpenSettings,
+  onOpenImageExport,
+  isDictating,
+  onToggleDictation,
+  opacity = 1.0,
+  onCycleOpacity,
+  isFocusMode,
+  onToggleFocusMode,
 }) => {
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -115,6 +133,69 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
 
   const mainActions: ActionItem[] = [
     ...licensingActions,
+    ...(onOpenImageExport
+      ? [
+          {
+            id: 'export-image',
+            label: 'Export as Image Card...',
+            description: 'Generate beautiful Ray.so / Carbon style shareable card',
+            shortcut: '⌘⇧E',
+            icon: <ImageIcon className="w-4 h-4 text-pink-400" />,
+            category: 'Primary Actions',
+            action: () => {
+              onClose();
+              onOpenImageExport();
+            },
+          },
+        ]
+      : []),
+    ...(onToggleDictation
+      ? [
+          {
+            id: 'dictate',
+            label: isDictating ? 'Stop Voice Dictation' : 'Voice Dictation (Speech-to-Text)',
+            description: 'Capture notes hands-free in real time with speech recognition',
+            shortcut: '⌥D',
+            icon: <Mic className={`w-4 h-4 ${isDictating ? 'text-rose-400 animate-pulse' : 'text-amber-400'}`} />,
+            category: 'Primary Actions',
+            action: () => {
+              onClose();
+              onToggleDictation();
+            },
+          },
+        ]
+      : []),
+    ...(onCycleOpacity
+      ? [
+          {
+            id: 'ghost-mode',
+            label: `Ghost Mode (${Math.round(opacity * 100)}% Opacity)`,
+            description: 'Adjust window glass transparency to see behind Float',
+            shortcut: '⌥[ / ⌥]',
+            icon: <Eye className="w-4 h-4 text-cyan-400" />,
+            category: 'Preferences',
+            action: () => {
+              onCycleOpacity();
+            },
+          },
+        ]
+      : []),
+    ...(onToggleFocusMode
+      ? [
+          {
+            id: 'focus-mode',
+            label: isFocusMode ? 'Exit Zen Focus Mode' : 'Zen Focus Mode',
+            description: 'Distraction-free floating paper with auto-hidden chrome',
+            shortcut: '⌘⇧F',
+            icon: <Maximize2 className="w-4 h-4 text-indigo-400" />,
+            category: 'Preferences',
+            action: () => {
+              onClose();
+              onToggleFocusMode();
+            },
+          },
+        ]
+      : []),
     {
       id: 'copy',
       label: 'Copy Markdown',

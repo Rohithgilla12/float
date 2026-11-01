@@ -10,6 +10,8 @@ import {
   RefreshCw,
   LogOut,
   X,
+  Volume2,
+  Eye,
 } from 'lucide-react';
 import { ThemeId, THEMES } from '../types/theme';
 import { LicenseStatus, activateDodoLicense, deactivateDodoLicense, openExternalLink, DODO_CHECKOUT_URL } from '../utils/license';
@@ -21,7 +23,7 @@ import {
   initStorageDirectory,
 } from '../utils/storage';
 import { getKeybindSettings, saveKeybindSettings, KeybindSettings } from '../utils/keybinds';
-import { haptics } from '../utils/audioHaptics';
+import { haptics, SoundProfile } from '../utils/audioHaptics';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -31,6 +33,8 @@ interface SettingsModalProps {
   licenseStatus: LicenseStatus;
   onLicenseChanged: (status: LicenseStatus) => void;
   onShowToast: (msg: string) => void;
+  opacity?: number;
+  onChangeOpacity?: (opacity: number) => void;
 }
 
 type SettingsTab = 'storage' | 'shortcuts' | 'license' | 'appearance';
@@ -43,10 +47,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   licenseStatus,
   onLicenseChanged,
   onShowToast,
+  opacity = 1.0,
+  onChangeOpacity,
 }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('storage');
   const [storageSettings, setStorageSettings] = useState(getStoredSettings);
   const [keybinds, setKeybinds] = useState<KeybindSettings>(getKeybindSettings);
+  const [soundProfile, setSoundProfile] = useState<SoundProfile>(haptics.profile);
   const [licenseInput, setLicenseInput] = useState('');
   const [licenseLoading, setLicenseLoading] = useState(false);
   const [licenseMsg, setLicenseMsg] = useState<{ text: string; isError: boolean } | null>(null);
@@ -395,6 +402,61 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </span>
               </div>
 
+              {/* Voice Dictation */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-black/10 border border-[var(--border-subtle)]">
+                <div>
+                  <div className="text-xs font-semibold">Voice Dictation (Speech-to-Text)</div>
+                  <div className="text-[11px] text-[var(--text-muted)]">Real-time hands-free speech input into note</div>
+                </div>
+                <span className="px-2.5 py-1 rounded-lg bg-[var(--kbd-bg)] border border-[var(--kbd-border)] text-xs font-mono font-semibold text-[var(--text-primary)]">
+                  ⌥D
+                </span>
+              </div>
+
+              {/* Image Card Exporter */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-black/10 border border-[var(--border-subtle)]">
+                <div>
+                  <div className="text-xs font-semibold">Export as Image Card</div>
+                  <div className="text-[11px] text-[var(--text-muted)]">Ray.so &amp; Carbon style Retina image card</div>
+                </div>
+                <span className="px-2.5 py-1 rounded-lg bg-[var(--kbd-bg)] border border-[var(--kbd-border)] text-xs font-mono font-semibold text-[var(--text-primary)]">
+                  ⌘⇧E
+                </span>
+              </div>
+
+              {/* Ghost Mode Opacity */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-black/10 border border-[var(--border-subtle)]">
+                <div>
+                  <div className="text-xs font-semibold">Ghost Mode Opacity</div>
+                  <div className="text-[11px] text-[var(--text-muted)]">Decrease / Increase window transparency</div>
+                </div>
+                <span className="px-2.5 py-1 rounded-lg bg-[var(--kbd-bg)] border border-[var(--kbd-border)] text-xs font-mono font-semibold text-[var(--text-primary)]">
+                  ⌥[ / ⌥]
+                </span>
+              </div>
+
+              {/* Zen Focus Mode */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-black/10 border border-[var(--border-subtle)]">
+                <div>
+                  <div className="text-xs font-semibold">Zen Focus Mode</div>
+                  <div className="text-[11px] text-[var(--text-muted)]">Distraction-free paper with hidden chrome</div>
+                </div>
+                <span className="px-2.5 py-1 rounded-lg bg-[var(--kbd-bg)] border border-[var(--kbd-border)] text-xs font-mono font-semibold text-[var(--text-primary)]">
+                  ⌘⇧F
+                </span>
+              </div>
+
+              {/* Inline Math */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-black/10 border border-[var(--border-subtle)]">
+                <div>
+                  <div className="text-xs font-semibold">Inline Math Calculation</div>
+                  <div className="text-[11px] text-[var(--text-muted)]">Type math expression followed by '=' (e.g. 15% of 850 =)</div>
+                </div>
+                <span className="px-2.5 py-1 rounded-lg bg-[var(--kbd-bg)] border border-[var(--kbd-border)] text-xs font-mono font-semibold text-[var(--text-primary)]">
+                  =
+                </span>
+              </div>
+
               {/* Global Hotkey */}
               <div className="flex items-center justify-between p-3 rounded-xl bg-black/10 border border-[var(--border-subtle)]">
                 <div>
@@ -482,37 +544,134 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* TAB 4: APPEARANCE */}
           {activeTab === 'appearance' && (
-            <div className="space-y-4">
-              <h3 className="text-xs font-semibold">Select Desktop Theme</h3>
-              <div className="grid grid-cols-2 gap-2.5">
-                {Object.values(THEMES).map(theme => {
-                  const isActive = theme.id === currentTheme;
-                  return (
+            <div className="space-y-6">
+              {/* Desktop Theme Selection */}
+              <div>
+                <h3 className="text-xs font-semibold mb-2">Select Desktop Theme</h3>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {Object.values(THEMES).map(theme => {
+                    const isActive = theme.id === currentTheme;
+                    return (
+                      <button
+                        key={theme.id}
+                        onClick={() => {
+                          haptics.playClick();
+                          onSelectTheme(theme.id);
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between h-20 ${
+                          isActive
+                            ? 'border-amber-500/50 bg-amber-500/10 shadow-sm'
+                            : 'border-[var(--border-subtle)] bg-black/10 hover:border-white/20'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-xs font-bold text-white">{theme.name}</span>
+                          <span
+                            className="w-3.5 h-3.5 rounded-full border border-white/20"
+                            style={{ backgroundColor: theme.accent }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-[var(--text-muted)] font-mono">
+                          {theme.isDark ? '🌙 Dark' : '☀️ Light'} &bull; {theme.tagline}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Sound & Micro-Haptics Section */}
+              <div className="pt-4 border-t border-[var(--border-subtle)]">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Volume2 className="w-3.5 h-3.5 text-amber-400" />
+                  <h3 className="text-xs font-semibold">Sound &amp; Micro-Haptics Profile</h3>
+                </div>
+                <p className="text-[11px] text-[var(--text-muted)] mb-3">
+                  Synthetic Web Audio physical feedback calibrated for instant typing delight.
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: 'thock', name: '🔨 Thock', desc: 'Deep mechanical switch' },
+                    { id: 'crisp', name: '⚡ Crisp', desc: 'Metallic precision click' },
+                    { id: 'bubble', name: '💧 Bubble', desc: 'Gentle organic pop' },
+                    { id: 'silent', name: '🔇 Silent', desc: 'Mute audio haptics' },
+                  ].map(p => {
+                    const isSelected = soundProfile === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => {
+                          haptics.setProfile(p.id as SoundProfile);
+                          setSoundProfile(p.id as SoundProfile);
+                          onShowToast(`🔊 Sound profile: ${p.name}`);
+                        }}
+                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? 'bg-amber-500/15 border-amber-500/50 text-white shadow-sm'
+                            : 'bg-black/10 border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <span className="text-xs font-bold">{p.name}</span>
+                        <span className="text-[10px] text-[var(--text-muted)] mt-1">{p.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Window Opacity & Ghost Mode Section */}
+              <div className="pt-4 border-t border-[var(--border-subtle)]">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <Eye className="w-3.5 h-3.5 text-cyan-400" />
+                    <h3 className="text-xs font-semibold">Ghost Mode Transparency</h3>
+                  </div>
+                  <span className="font-mono text-xs font-bold text-cyan-400">
+                    {Math.round(opacity * 100)}%
+                  </span>
+                </div>
+                <p className="text-[11px] text-[var(--text-muted)] mb-3">
+                  Adjust window glass transparency to easily read underlying documentation or terminal output.
+                </p>
+                <div className="flex items-center gap-2 mb-3">
+                  <input
+                    type="range"
+                    min="40"
+                    max="100"
+                    step="5"
+                    value={Math.round(opacity * 100)}
+                    onChange={e => {
+                      const val = parseInt(e.target.value, 10) / 100;
+                      onChangeOpacity?.(val);
+                    }}
+                    className="flex-1 accent-amber-500 cursor-pointer"
+                  />
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { label: '100% Solid', val: 1.0 },
+                    { label: '85% Frosted', val: 0.85 },
+                    { label: '70% Ghost', val: 0.70 },
+                    { label: '50% Sheer', val: 0.50 },
+                  ].map(preset => (
                     <button
-                      key={theme.id}
+                      key={preset.val}
+                      type="button"
                       onClick={() => {
                         haptics.playClick();
-                        onSelectTheme(theme.id);
+                        onChangeOpacity?.(preset.val);
                       }}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between h-20 ${
-                        isActive
-                          ? 'border-amber-500/50 bg-amber-500/10 shadow-sm'
-                          : 'border-[var(--border-subtle)] bg-black/10 hover:border-white/20'
+                      className={`py-1.5 px-2 rounded-lg text-[11px] font-mono border transition-all cursor-pointer text-center ${
+                        Math.abs(opacity - preset.val) < 0.03
+                          ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300 font-bold'
+                          : 'bg-black/10 border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-white'
                       }`}
                     >
-                      <div className="flex items-center justify-between w-full">
-                        <span className="text-xs font-bold text-white">{theme.name}</span>
-                        <span
-                          className="w-3.5 h-3.5 rounded-full border border-white/20"
-                          style={{ backgroundColor: theme.accent }}
-                        />
-                      </div>
-                      <span className="text-[10px] text-[var(--text-muted)] font-mono">
-                        {theme.isDark ? '🌙 Dark' : '☀️ Light'} &bull; {theme.tagline}
-                      </span>
+                      {preset.label}
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
             </div>
           )}

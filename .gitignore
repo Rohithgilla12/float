@@ -33,4 +33,5 @@ videos/float-intro/sfx/
 
 # Cloudflare Wrangler & HyperFrames temp
 .wrangler/
-.hyperframes/artifacts/
+.hyperframes/
+videos/**/.hyperframes/

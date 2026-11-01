@@ -104,6 +104,22 @@ const COMMANDS: SlashCommand[] = [
     category: 'Utility',
     insertText: `📅 ${new Date().toLocaleString()}\n`,
   },
+  {
+    id: 'calc',
+    label: 'Math Calculation',
+    description: 'Inline math: type e.g. 240 * 15 = or 15% of 850 =',
+    icon: 'Sparkles',
+    category: 'Utility',
+    insertText: '125 * 4 = 500\n',
+  },
+  {
+    id: 'table',
+    label: 'Markdown Table',
+    description: '2x2 formatted comparison grid',
+    icon: 'Code2',
+    category: 'Blocks',
+    insertText: '| Item | Status |\n| :--- | :--- |\n| Task 1 | Done |\n| Task 2 | Next |\n',
+  },
 ];
 
 export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({

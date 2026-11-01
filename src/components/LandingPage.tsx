@@ -16,6 +16,9 @@ import {
   ExternalLink,
   BookOpen,
   ArrowRight,
+  Calculator,
+  Mic,
+  Image as ImageIcon,
 } from 'lucide-react';
 import App from '../App';
 import { BLOG_POSTS } from '../data/blogPosts';
@@ -131,7 +134,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         {/* Pill Badge */}
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-white/80 mb-6 backdrop-blur-sm">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Now available for macOS &bull; Built for speed &amp; focus</span>
+          <span>✨ Just Released: Inline Math, Voice Dictation, Image Cards &amp; Ghost Mode</span>
         </div>
 
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white max-w-3xl mx-auto leading-[1.12]">
@@ -329,9 +332,42 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
               <ShieldCheck className="w-5 h-5" />
             </div>
-            <h3 className="font-semibold text-white text-base">Apple Signed & Notarized</h3>
+            <h3 className="font-semibold text-white text-base">Apple Signed &amp; Notarized</h3>
             <p className="text-xs text-white/60 leading-relaxed">
               Certified by Apple Gatekeeper with Hardened Runtime entitlements. Seamless 1-click installation with zero security warnings or overrides.
+            </p>
+          </div>
+
+          {/* Card 7: Inline Math */}
+          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-amber-500/30 transition-colors space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+              <Calculator className="w-5 h-5" />
+            </div>
+            <h3 className="font-semibold text-white text-base">Inline Math &amp; Evaluator</h3>
+            <p className="text-xs text-white/60 leading-relaxed">
+              Type <code className="text-amber-300 font-mono text-[11px]">45 * 12 =</code> or <code className="text-amber-300 font-mono text-[11px]">15% of 850 =</code> right in your text. Float solves it inline instantly with zero latency.
+            </p>
+          </div>
+
+          {/* Card 8: Image Card Exporter */}
+          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-pink-500/30 transition-colors space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-400 flex items-center justify-center">
+              <ImageIcon className="w-5 h-5" />
+            </div>
+            <h3 className="font-semibold text-white text-base">Ray.so Visual Image Cards</h3>
+            <p className="text-xs text-white/60 leading-relaxed">
+              Generate 2x Retina shareable cards (<kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[10px] text-white">⌘⇧E</kbd>) with 4 luxury gradients for sharing on X (Twitter), Slack, or Linear.
+            </p>
+          </div>
+
+          {/* Card 9: Voice Dictation & Ghost Mode */}
+          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-cyan-500/30 transition-colors space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center">
+              <Mic className="w-5 h-5" />
+            </div>
+            <h3 className="font-semibold text-white text-base">Ghost Mode &amp; Dictation</h3>
+            <p className="text-xs text-white/60 leading-relaxed">
+              Adjust window transparency (<kbd className="px-1 py-0.5 rounded bg-white/10 font-mono text-[10px] text-white">⌥[</kbd>/<kbd className="px-1 py-0.5 rounded bg-white/10 font-mono text-[10px] text-white">⌥]</kbd>) to see through your notes, and speak hands-free with real-time speech dictation (<kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[10px] text-white">⌥D</kbd>).
             </p>
           </div>
         </div>
@@ -387,6 +423,31 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <td className="py-3 px-4 font-medium text-white">Switch Notes</td>
                 <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-amber-300">⌘ 1 .. 9</kbd></td>
                 <td className="py-3 px-4 text-white/60">Instantly jump to note tab by index</td>
+              </tr>
+              <tr>
+                <td className="py-3 px-4 font-medium text-white">Export Image Card</td>
+                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-pink-300">⌘⇧ E</kbd></td>
+                <td className="py-3 px-4 text-white/60">Generate 2x Retina Ray.so style card</td>
+              </tr>
+              <tr>
+                <td className="py-3 px-4 font-medium text-white">Voice Dictation</td>
+                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-rose-300">⌥ D</kbd></td>
+                <td className="py-3 px-4 text-white/60">Real-time speech-to-text capture</td>
+              </tr>
+              <tr>
+                <td className="py-3 px-4 font-medium text-white">Ghost Mode Opacity</td>
+                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-cyan-300">⌥ [ / ⌥ ]</kbd></td>
+                <td className="py-3 px-4 text-white/60">Adjust window glass transparency</td>
+              </tr>
+              <tr>
+                <td className="py-3 px-4 font-medium text-white">Zen Focus Mode</td>
+                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-indigo-300">⌘⇧ F</kbd></td>
+                <td className="py-3 px-4 text-white/60">Hide chrome for distraction-free writing</td>
+              </tr>
+              <tr>
+                <td className="py-3 px-4 font-medium text-white">Inline Math Calculation</td>
+                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-emerald-300">=</kbd></td>
+                <td className="py-3 px-4 text-white/60">Type math followed by '=' to evaluate</td>
               </tr>
               <tr>
                 <td className="py-3 px-4 font-medium text-white">Close / Dismiss</td>
