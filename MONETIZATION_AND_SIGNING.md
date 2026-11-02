@@ -161,3 +161,18 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 GitHub Actions will automatically build, sign with Apple Developer ID, notarize with Apple, and generate a downloadable `.dmg` release!
+
+---
+
+## 3. Release credentials inventory (no secret values here)
+
+| What | Where it lives | Used by |
+| :--- | :--- | :--- |
+| Developer ID Application certificate, Rohith Gilla (7D2V3RM56T) | macOS login keychain on the dev Mac; exported copy in GitHub secrets `APPLE_CERTIFICATE` + `APPLE_CERTIFICATE_PASSWORD` | Code signing in CI and local `tauri build` |
+| Apple ID for notarisation | gillarohith@gmail.com. App-specific password `float-notary` in 1Password and in GitHub secret `APPLE_PASSWORD`; keychain profile `float-notary` on the dev Mac (`xcrun notarytool --keychain-profile float-notary`) | Notarisation in CI and locally |
+| Updater signing keypair | `~/.tauri/float-updater.key` (private, no password) and `.key.pub` on the dev Mac; private key in GitHub secret `TAURI_SIGNING_PRIVATE_KEY`; public key in `src-tauri/tauri.conf.json` | Signing `latest.json` so installed apps trust updates |
+| Team ID and identity string | GitHub secrets `APPLE_TEAM_ID`, `APPLE_SIGNING_IDENTITY` | CI |
+
+If the dev Mac is lost: the certificate and updater key can be restored from the GitHub secrets only if you saved copies elsewhere, so keep the p12 and `float-updater.key` in 1Password too. A new updater key would strand existing installs, which would then need a manual reinstall.
+
+Release: bump `version` in `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`, then `git tag vX.Y.Z && git push origin vX.Y.Z`. The workflow drafts the GitHub release; publish it to go live.
