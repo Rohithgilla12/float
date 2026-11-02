@@ -3,9 +3,8 @@
 
 const LICENSE_STORAGE_KEY = 'float_dodo_license_v1';
 
-// Default Dodo Payments checkout link for Float ($4.99 one-time)
-// Replace with your actual Dodo Payments product checkout URL from the dashboard
-export const DODO_CHECKOUT_URL = 'https://checkout.dodopayments.com/buy/pdt_float_lifetime';
+// Live Dodo Payments checkout link for Float ($4.99 one-time)
+export const DODO_CHECKOUT_URL = 'https://dodo.pe/float-lifetime';
 
 // Set to 'https://test.dodopayments.com' for test environment, 'https://live.dodopayments.com' for production
 export const DODO_API_BASE = 'https://live.dodopayments.com';
