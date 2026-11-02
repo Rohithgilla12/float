@@ -220,7 +220,7 @@ pub fn run() {
             let show = MenuItem::with_id(app, "show", "Show Float (⌥Space)", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "Quit Float", true, Some("CmdOrCtrl+Q"))?;
             let menu = Menu::with_items(app, &[&show, &PredefinedMenuItem::separator(app)?, &quit])?;
-            let mut tray = TrayIconBuilder::with_id("float-tray")
+            let tray = TrayIconBuilder::with_id("float-tray")
                 .tooltip("Float")
                 .menu(&menu)
                 .on_menu_event(|app, event| match event.id.as_ref() {
@@ -232,10 +232,9 @@ pub fn run() {
                     "quit" => app.exit(0),
                     _ => {}
                 });
-            if let Some(icon) = app.default_window_icon() {
-                tray = tray.icon(icon.clone());
-            }
-            tray.build(app)?;
+            // Template image: macOS tints it to match light and dark menu bars.
+            let tray_icon = tauri::image::Image::from_bytes(include_bytes!("../icons/tray-template.png"))?;
+            tray.icon(tray_icon).icon_as_template(true).build(app)?;
 
             Ok(())
         })
