@@ -92,12 +92,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               Pricing ($4.99)
             </a>
             {onOpenBlog && (
-              <button
-                onClick={onOpenBlog}
+              <a
+                href="/blog"
+                onClick={(e) => {
+                  if (!e.metaKey && !e.ctrlKey && e.button === 0) {
+                    e.preventDefault();
+                    onOpenBlog();
+                  }
+                }}
                 className="hover:text-amber-400 font-medium transition-colors cursor-pointer"
               >
                 Blog
-              </button>
+              </a>
             )}
           </nav>
 
@@ -635,23 +641,36 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           {onOpenBlog && (
-            <button
-              onClick={onOpenBlog}
+            <a
+              href="/blog"
+              onClick={(e) => {
+                if (!e.metaKey && !e.ctrlKey && e.button === 0) {
+                  e.preventDefault();
+                  onOpenBlog();
+                }
+              }}
               className="px-4 py-2 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-xs text-white/80 transition-colors flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
             >
               <BookOpen className="w-3.5 h-3.5 text-amber-400" />
               <span>View All Articles</span>
               <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+            </a>
           )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {BLOG_POSTS.slice(0, 3).map(post => (
-            <article
+            <a
               key={post.slug}
-              onClick={() => onSelectBlogPost ? onSelectBlogPost(post.slug) : onOpenBlog?.()}
-              className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-amber-500/30 hover:bg-white/[0.04] transition-all cursor-pointer flex flex-col justify-between group"
+              href={`/blog/${post.slug}`}
+              onClick={(e) => {
+                if (!e.metaKey && !e.ctrlKey && e.button === 0) {
+                  e.preventDefault();
+                  if (onSelectBlogPost) onSelectBlogPost(post.slug);
+                  else onOpenBlog?.();
+                }
+              }}
+              className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-amber-500/30 hover:bg-white/[0.04] transition-all cursor-pointer flex flex-col justify-between group no-underline text-inherit"
             >
               <div>
                 <div className="flex items-center justify-between text-[11px] text-white/50 mb-3 font-mono">
@@ -672,7 +691,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <span>Read article</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
-            </article>
+            </a>
           ))}
         </div>
       </section>
@@ -686,9 +705,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <span>&bull;</span>
           {onOpenBlog && (
             <>
-              <button onClick={onOpenBlog} className="hover:text-white transition-colors cursor-pointer">
+              <a
+                href="/blog"
+                onClick={(e) => {
+                  if (!e.metaKey && !e.ctrlKey && e.button === 0) {
+                    e.preventDefault();
+                    onOpenBlog();
+                  }
+                }}
+                className="hover:text-white transition-colors cursor-pointer"
+              >
                 Blog
-              </button>
+              </a>
               <span>&bull;</span>
             </>
           )}

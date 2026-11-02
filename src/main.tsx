@@ -7,42 +7,47 @@ import { BlogPostView } from './components/BlogPostView';
 import { BLOG_POSTS } from './data/blogPosts';
 import './index.css';
 
+const getInitialRouteState = () => {
+  if (typeof window === 'undefined') {
+    return { route: 'home' as const, slug: '', fullscreen: false };
+  }
+  const pathname = window.location.pathname;
+  const search = new URLSearchParams(window.location.search);
+
+  if (search.get('app') === 'true') {
+    return { route: 'home' as const, slug: '', fullscreen: true };
+  }
+
+  if (pathname.startsWith('/blog/')) {
+    const slug = pathname.replace('/blog/', '').replace(/\/$/, '');
+    if (slug) {
+      return { route: 'post' as const, slug, fullscreen: false };
+    }
+  }
+
+  if (pathname === '/blog' || pathname === '/blog/' || search.get('blog') === 'true') {
+    const slugParam = search.get('post');
+    if (slugParam) {
+      return { route: 'post' as const, slug: slugParam, fullscreen: false };
+    }
+    return { route: 'blog' as const, slug: '', fullscreen: false };
+  }
+
+  return { route: 'home' as const, slug: '', fullscreen: false };
+};
+
 const Root: React.FC = () => {
   const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
-  const [fullscreenApp, setFullscreenApp] = useState(false);
-  const [currentRoute, setCurrentRoute] = useState<'home' | 'blog' | 'post'>('home');
-  const [activeSlug, setActiveSlug] = useState<string>('');
+  const initial = getInitialRouteState();
+  const [fullscreenApp, setFullscreenApp] = useState(initial.fullscreen);
+  const [currentRoute, setCurrentRoute] = useState<'home' | 'blog' | 'post'>(initial.route);
+  const [activeSlug, setActiveSlug] = useState<string>(initial.slug);
 
   const syncRouteFromUrl = () => {
-    const pathname = window.location.pathname;
-    const search = new URLSearchParams(window.location.search);
-
-    if (search.get('app') === 'true') {
-      setFullscreenApp(true);
-      return;
-    }
-
-    if (pathname.startsWith('/blog/')) {
-      const slug = pathname.replace('/blog/', '').replace(/\/$/, '');
-      if (slug) {
-        setActiveSlug(slug);
-        setCurrentRoute('post');
-        return;
-      }
-    }
-
-    if (pathname === '/blog' || pathname === '/blog/' || search.get('blog') === 'true') {
-      const slugParam = search.get('post');
-      if (slugParam) {
-        setActiveSlug(slugParam);
-        setCurrentRoute('post');
-      } else {
-        setCurrentRoute('blog');
-      }
-      return;
-    }
-
-    setCurrentRoute('home');
+    const state = getInitialRouteState();
+    setFullscreenApp(state.fullscreen);
+    setCurrentRoute(state.route);
+    setActiveSlug(state.slug);
   };
 
   useEffect(() => {

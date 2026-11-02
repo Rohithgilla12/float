@@ -18,6 +18,16 @@ export const BlogPostView: React.FC<BlogPostViewProps> = ({
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     document.title = `${post.metaTitle} | Float`;
+
+    // Dynamically sync meta description and canonical for client-side navigation
+    const descMeta = document.querySelector('meta[name="description"]');
+    if (descMeta) {
+      descMeta.setAttribute('content', post.description);
+    }
+    const canonicalLink = document.querySelector('link[rel="canonical"]');
+    if (canonicalLink) {
+      canonicalLink.setAttribute('href', `https://float.gilla.fun/blog/${post.slug}`);
+    }
   }, [post]);
 
   const handleShare = () => {
@@ -49,13 +59,19 @@ export const BlogPostView: React.FC<BlogPostViewProps> = ({
       {/* Header */}
       <header className="sticky top-0 z-40 backdrop-blur-md bg-[#0C0D0E]/80 border-b border-white/5">
         <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-          <button
-            onClick={onBackToBlog}
+          <a
+            href="/blog"
+            onClick={(e) => {
+              if (!e.metaKey && !e.ctrlKey && e.button === 0) {
+                e.preventDefault();
+                onBackToBlog();
+              }
+            }}
             className="px-3 py-1.5 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-xs text-white/80 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>All Articles</span>
-          </button>
+          </a>
 
           <div className="flex items-center gap-2">
             <button
@@ -139,23 +155,35 @@ export const BlogPostView: React.FC<BlogPostViewProps> = ({
               <span>Download for macOS &bull; $4.99 via Dodo Payments</span>
             </button>
 
-            <button
-              onClick={onBackToHome}
+            <a
+              href="/"
+              onClick={(e) => {
+                if (!e.metaKey && !e.ctrlKey && e.button === 0) {
+                  e.preventDefault();
+                  onBackToHome();
+                }
+              }}
               className="px-6 py-3 rounded-xl border border-white/15 hover:bg-white/5 text-white font-medium text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Try Live Interactive Sandbox</span>
-            </button>
+            </a>
           </div>
         </div>
 
         {/* Back Link */}
         <div className="mt-12 text-center">
-          <button
-            onClick={onBackToBlog}
+          <a
+            href="/blog"
+            onClick={(e) => {
+              if (!e.metaKey && !e.ctrlKey && e.button === 0) {
+                e.preventDefault();
+                onBackToBlog();
+              }
+            }}
             className="text-xs text-white/50 hover:text-amber-400 transition-colors font-mono cursor-pointer"
           >
             &larr; Back to all blog articles
-          </button>
+          </a>
         </div>
       </main>
 

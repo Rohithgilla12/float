@@ -1,0 +1,6 @@
+# Float Desktop Scratchpad Robots Configuration
+User-agent: *
+Allow: /
+
+# Canonical XML Sitemap
+Sitemap: https://float.gilla.fun/sitemap.xml

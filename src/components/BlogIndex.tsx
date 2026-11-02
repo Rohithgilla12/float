@@ -33,18 +33,33 @@ export const BlogIndex: React.FC<BlogIndexProps> = ({ onSelectPost, onBackToLand
       {/* Header */}
       <header className="sticky top-0 z-40 backdrop-blur-md bg-[#0C0D0E]/80 border-b border-white/5">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={onBackToLanding}>
+          <a
+            href="/"
+            onClick={(e) => {
+              if (!e.metaKey && !e.ctrlKey && e.button === 0) {
+                e.preventDefault();
+                onBackToLanding();
+              }
+            }}
+            className="flex items-center gap-3 cursor-pointer"
+          >
             <img src="/favicon.png" alt="Float Icon" className="w-7 h-7 rounded-lg border border-white/10" />
             <span className="font-bold text-white text-base tracking-tight">Float Blog</span>
-          </div>
+          </a>
 
-          <button
-            onClick={onBackToLanding}
+          <a
+            href="/"
+            onClick={(e) => {
+              if (!e.metaKey && !e.ctrlKey && e.button === 0) {
+                e.preventDefault();
+                onBackToLanding();
+              }
+            }}
             className="px-3.5 py-1.5 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-xs text-white/80 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Home</span>
-          </button>
+          </a>
         </div>
       </header>
 
@@ -98,10 +113,16 @@ export const BlogIndex: React.FC<BlogIndexProps> = ({ onSelectPost, onBackToLand
         <div className="space-y-6">
           {filteredPosts.length > 0 ? (
             filteredPosts.map(post => (
-              <article
+              <a
                 key={post.slug}
-                onClick={() => onSelectPost(post.slug)}
-                className="p-7 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-amber-500/40 hover:bg-white/[0.04] transition-all cursor-pointer group relative overflow-hidden"
+                href={`/blog/${post.slug}`}
+                onClick={(e) => {
+                  if (!e.metaKey && !e.ctrlKey && e.button === 0) {
+                    e.preventDefault();
+                    onSelectPost(post.slug);
+                  }
+                }}
+                className="block p-7 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-amber-500/40 hover:bg-white/[0.04] transition-all cursor-pointer group relative overflow-hidden no-underline text-inherit"
               >
                 <div className="flex items-center justify-between text-xs text-white/50 mb-3 font-mono">
                   <div className="flex items-center gap-3">
@@ -138,7 +159,7 @@ export const BlogIndex: React.FC<BlogIndexProps> = ({ onSelectPost, onBackToLand
                     <ArrowRight className="w-3.5 h-3.5" />
                   </span>
                 </div>
-              </article>
+              </a>
             ))
           ) : (
             <div className="text-center py-16 text-white/40 font-mono text-xs">
