@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.2.0"
+version = "0.2.1"
 description = "Float: the floating desktop scratchpad for macOS"
 authors = ["Rohith Gilla"]
 license = "MIT"
