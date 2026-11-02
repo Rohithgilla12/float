@@ -63,7 +63,7 @@ const Root: React.FC = () => {
 
   // Inside Tauri Desktop Window, ALWAYS render the native floating App
   if (isTauri) {
-    document.documentElement.classList.add('overflow-hidden');
+    document.documentElement.classList.add('overflow-hidden', 'desktop-app');
     document.body.classList.add('overflow-hidden', 'bg-transparent', 'select-none');
     return <App />;
   }
