@@ -182,7 +182,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
 
         <p className="mt-3 text-xs text-white/40 font-mono">
-          One-time payment &bull; Free lifetime updates &bull; Apple Notarized DMG &bull; Powered by Dodo Payments
+          One-time payment &bull; Free lifetime updates &bull; Apple Signed DMG &bull; <a href="https://github.com/Rohithgilla12/float/releases/download/v0.1.0/Float-0.1.0-macOS-arm64.dmg" className="text-amber-400/80 hover:text-amber-300 underline underline-offset-2 transition-colors">Download .dmg (v0.1.0)</a>
         </p>
 
         {/* Interactive Live App Demo or Video Teaser */}
@@ -562,13 +562,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </ul>
             </div>
 
-            <button
-              onClick={handleGitHub}
-              className="w-full py-2.5 rounded-xl border border-white/15 hover:bg-white/5 text-white font-medium text-xs transition-colors flex items-center justify-center gap-2"
-            >
-              <Github className="w-4 h-4" />
-              <span>Clone on GitHub</span>
-            </button>
+            <div className="flex flex-col gap-2">
+              <a
+                href="https://github.com/Rohithgilla12/float/releases/download/v0.1.0/Float-0.1.0-macOS-arm64.dmg"
+                className="w-full py-2.5 rounded-xl border border-white/15 hover:bg-white/10 text-white font-medium text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Download className="w-4 h-4 text-white/70" />
+                <span>Download Free .dmg (v0.1.0)</span>
+              </a>
+              <button
+                onClick={handleGitHub}
+                className="w-full py-2 rounded-xl text-white/50 hover:text-white text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Github className="w-3.5 h-3.5" />
+                <span>Clone on GitHub</span>
+              </button>
+            </div>
           </div>
 
           {/* Paid Pro Binary */}
