@@ -4,6 +4,7 @@ import App from './App';
 import { LandingPage } from './components/LandingPage';
 import { BlogIndex } from './components/BlogIndex';
 import { BlogPostView } from './components/BlogPostView';
+import { LegalPage } from './components/LegalPage';
 import { BLOG_POSTS } from './data/blogPosts';
 import './index.css';
 
@@ -25,6 +26,10 @@ const getInitialRouteState = () => {
     }
   }
 
+  if (pathname === '/legal' || pathname === '/legal/') {
+    return { route: 'legal' as const, slug: '', fullscreen: false };
+  }
+
   if (pathname === '/blog' || pathname === '/blog/' || search.get('blog') === 'true') {
     const slugParam = search.get('post');
     if (slugParam) {
@@ -40,7 +45,7 @@ const Root: React.FC = () => {
   const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
   const initial = getInitialRouteState();
   const [fullscreenApp, setFullscreenApp] = useState(initial.fullscreen);
-  const [currentRoute, setCurrentRoute] = useState<'home' | 'blog' | 'post'>(initial.route);
+  const [currentRoute, setCurrentRoute] = useState<'home' | 'blog' | 'post' | 'legal'>(initial.route);
   const [activeSlug, setActiveSlug] = useState<string>(initial.slug);
 
   const syncRouteFromUrl = () => {
@@ -98,6 +103,10 @@ const Root: React.FC = () => {
         <App />
       </div>
     );
+  }
+
+  if (currentRoute === 'legal') {
+    return <LegalPage onBackToHome={navigateToHome} />;
   }
 
   // Blog Post View

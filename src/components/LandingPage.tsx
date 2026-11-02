@@ -1,30 +1,85 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  Sparkles,
   Download,
   Github,
-  CheckCircle2,
   Pin,
-  Command,
-  Palette,
-  ShieldCheck,
-  Maximize2,
   Play,
-  Monitor,
-  Volume2,
-  VolumeX,
-  ExternalLink,
-  BookOpen,
   ArrowRight,
-  Calculator,
-  Mic,
-  Image as ImageIcon,
+  Check,
+  Menu,
+  X,
+  FileText,
+  Keyboard,
+  Star,
+  ChevronDown,
 } from 'lucide-react';
 import App from '../App';
 import { BLOG_POSTS } from '../data/blogPosts';
 import { DODO_CHECKOUT_URL, openExternalLink } from '../utils/license';
 
 const R2_VIDEO_URL = 'https://pub-f69e073835364d8883ded4ff1d09e386.r2.dev/float-intro.mp4';
+const GITHUB_URL = 'https://github.com/Rohithgilla12/float';
+const PRICE = '$4.99';
+
+const NAV_LINKS = [
+  { href: '#features', label: 'Features' },
+  { href: '#shortcuts', label: 'Shortcuts' },
+  { href: '#pricing', label: 'Pricing' },
+  { href: '#faq', label: 'FAQ' },
+];
+
+const SHORTCUTS: Array<[string, string, string]> = [
+  ['Summon or dismiss', '⌥ Space', 'Works from any app, system-wide'],
+  ['Pin on top', '⌥ P', 'Stay above full-screen windows'],
+  ['Slash commands', '/', 'Todo, headings, code, quote, callout'],
+  ['Command palette', '⌘ K', 'Copy, export, theme, settings'],
+  ['New note', '⌘ N', 'Fresh tab, cursor ready'],
+  ['Switch note', '⌘ 1 – 9', 'Jump straight to a tab'],
+  ['Image card', '⌘⇧ E', 'Share a note as a 2x PNG'],
+  ['Dictate', '⌥ D', 'Speech to text into the note'],
+  ['Ghost mode', '⌥ [  ⌥ ]', 'Lower or raise window opacity'],
+  ['Zen mode', '⌘⇧ F', 'Hide every bit of chrome'],
+  ['Inline maths', '=', 'Type 15% of 850 = and get the answer'],
+  ['Close', 'Esc', 'Closes a menu first, then the window'],
+];
+
+const EXTRAS = [
+  'Six themes, two of them proper light modes',
+  'Inline maths: 45 * 12 = answers itself',
+  'Voice dictation with ⌥ D',
+  'Ghost mode: see through the window',
+  'Shareable image cards in one keystroke',
+  'Zen mode hides every control',
+  '⌘ K palette for everything else',
+  'Tabs for several notes at once',
+];
+
+const FAQ: Array<[string, string]> = [
+  [
+    'Which Macs does Float run on?',
+    'Apple Silicon Macs (M1 or later) on macOS 11 Big Sur or newer. There is no Intel build yet. If you need one, open an issue on GitHub and I will prioritise it by demand.',
+  ],
+  [
+    'Is the app signed?',
+    'Yes. The .dmg is signed with my Apple Developer ID (Rohith Gilla). Notarisation is in progress; until it lands, macOS may ask you to confirm the first launch via right-click, then Open.',
+  ],
+  [
+    'Where are my notes stored?',
+    'As plain .md files in ~/Documents/Float, or any folder you choose in Settings. No account, no sync server, nothing leaves your Mac. Open the same files in Obsidian, VS Code, or iA Writer.',
+  ],
+  [
+    'What do I get for the $4.99 that I do not get from the source code?',
+    'The pre-built, signed .dmg, a licence key, and free updates for life. Everything in the app is in the open-source repo; you are paying to skip installing Rust, Node, and Xcode, and to support the project.',
+  ],
+  [
+    'Is it a subscription?',
+    'No. One payment, one licence, yours for good. Dodo Payments handles checkout and tax as merchant of record.',
+  ],
+  [
+    'What if it is not for me?',
+    'Email within 14 days of purchase and you get a full refund, no questions asked. See the refund policy in the footer.',
+  ],
+];
 
 interface LandingPageProps {
   onOpenAppFullscreen: () => void;
@@ -32,716 +87,536 @@ interface LandingPageProps {
   onSelectBlogPost?: (slug: string) => void;
 }
 
+const routeClick = (handler?: () => void) => (e: React.MouseEvent) => {
+  if (handler && !e.metaKey && !e.ctrlKey && e.button === 0) {
+    e.preventDefault();
+    handler();
+  }
+};
+
+const Kbd: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
+  <kbd className={`inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/10 border border-white/15 font-mono text-[12px] leading-none text-white ${className}`}>
+    {children}
+  </kbd>
+);
+
+const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-amber-400/90">{children}</p>
+);
+
+function useGitHubStars(repo: string) {
+  const [stars, setStars] = useState<number | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`https://api.github.com/repos/${repo}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => {
+        if (!cancelled && data && typeof data.stargazers_count === 'number' && data.stargazers_count >= 10) {
+          setStars(data.stargazers_count);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [repo]);
+  return stars;
+}
+
+const DesktopBackdrop: React.FC = () => (
+  <div aria-hidden className="absolute inset-0 overflow-hidden rounded-3xl bg-[#101216] border border-white/10">
+    <div className="h-7 flex items-center gap-4 px-4 text-[11px] text-white/45 bg-black/40 border-b border-white/5 font-medium">
+      <span className="text-white/80"></span>
+      <span className="text-white/80">Xcode</span>
+      <span>File</span>
+      <span>Edit</span>
+      <span>View</span>
+      <span>Navigate</span>
+      <span className="ml-auto font-mono">⌥ Space</span>
+    </div>
+    <div className="absolute left-6 top-12 right-6 bottom-0 rounded-t-xl bg-[#15171c] border border-white/[0.07] border-b-0 overflow-hidden">
+      <div className="h-8 flex items-center gap-2 px-3 border-b border-white/5">
+        <span className="w-2.5 h-2.5 rounded-full bg-white/10" />
+        <span className="w-2.5 h-2.5 rounded-full bg-white/10" />
+        <span className="w-2.5 h-2.5 rounded-full bg-white/10" />
+        <span className="ml-3 text-[11px] text-white/35 font-mono">ContentView.swift</span>
+      </div>
+      <div className="p-4 space-y-2.5 font-mono text-[11px] text-white/25 leading-none">
+        {[52, 70, 38, 62, 44, 80, 30, 66, 48, 58, 36, 72, 42, 64, 50].map((w, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <span className="w-4 text-right text-white/15">{i + 12}</span>
+            <span className="h-2 rounded-sm bg-white/[0.07]" style={{ width: `${w}%`, marginLeft: i % 4 === 0 ? 0 : 16 }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const NotePreview: React.FC = () => (
+  <div className="rounded-2xl border border-white/10 bg-[#0d0f12] shadow-2xl overflow-hidden text-left">
+    <div className="h-9 flex items-center gap-1.5 px-3 border-b border-white/5">
+      <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
+      <span className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
+      <span className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+      <span className="ml-3 text-[11px] text-white/40 font-mono">Standup</span>
+    </div>
+    <div className="p-5 space-y-3 text-[13px] text-white/80">
+      <p className="text-lg font-bold text-white"># Tuesday standup</p>
+      <p className="flex items-center gap-2 text-white/40 line-through">
+        <span className="w-4 h-4 rounded bg-amber-500 text-black grid place-items-center"><Check className="w-3 h-3" /></span>
+        Review the auth PR
+      </p>
+      <p className="flex items-center gap-2">
+        <span className="w-4 h-4 rounded border border-white/25" />
+        Ship the release notes
+      </p>
+      <p className="text-white/70">
+        Budget left: <span className="font-mono text-white/50">1200 - 15% of 1200 =</span>{' '}
+        <span className="font-mono text-amber-300">1020</span>
+      </p>
+      <div className="relative pt-1">
+        <p className="text-white/50 font-mono">/</p>
+        <div className="absolute left-0 top-7 w-48 rounded-xl border border-white/10 bg-[#15181e] shadow-xl p-1.5 text-[12px]">
+          <div className="px-2.5 py-1.5 rounded-lg bg-amber-500/15 text-amber-200 flex justify-between"><span>Todo</span><span className="text-white/30 font-mono">/todo</span></div>
+          <div className="px-2.5 py-1.5 text-white/60 flex justify-between"><span>Heading</span><span className="text-white/30 font-mono">/h1</span></div>
+          <div className="px-2.5 py-1.5 text-white/60 flex justify-between"><span>Code</span><span className="text-white/30 font-mono">/code</span></div>
+        </div>
+      </div>
+      <div className="h-24" />
+    </div>
+  </div>
+);
+
+const FilesPreview: React.FC = () => (
+  <div className="rounded-2xl border border-white/10 bg-[#101216] shadow-2xl overflow-hidden text-left">
+    <div className="h-9 flex items-center px-3 border-b border-white/5 gap-2 text-[11px] text-white/45">
+      <span className="font-medium text-white/70">Finder</span>
+      <span>›</span>
+      <span>Documents</span>
+      <span>›</span>
+      <span className="text-white/80">Float</span>
+    </div>
+    <ul className="p-2 text-[13px] divide-y divide-white/5">
+      {[
+        ['standup.md', 'Today, 09:12', '1 KB'],
+        ['release-checklist.md', 'Today, 08:40', '2 KB'],
+        ['ideas.md', 'Yesterday', '6 KB'],
+        ['architecture-notes.md', 'Mon', '14 KB'],
+      ].map(([name, when, size]) => (
+        <li key={name} className="flex items-center gap-3 px-2 py-2 text-white/70">
+          <FileText className="w-4 h-4 text-amber-400/80 shrink-0" />
+          <span className="font-mono text-white/85">{name}</span>
+          <span className="ml-auto text-white/35 text-[11px]">{when}</span>
+          <span className="w-12 text-right text-white/35 text-[11px]">{size}</span>
+        </li>
+      ))}
+    </ul>
+    <div className="px-4 py-2.5 border-t border-white/5 text-[11px] text-white/40">
+      Opens in Obsidian, VS Code, iA Writer, or anything that reads Markdown.
+    </div>
+  </div>
+);
+
+const StackPreview: React.FC = () => (
+  <div className="relative h-72 text-left">
+    <div className="absolute inset-x-0 top-0 h-56 rounded-2xl bg-[#13161b] border border-white/[0.08] p-4">
+      <div className="flex gap-1.5 mb-4">
+        <span className="w-2.5 h-2.5 rounded-full bg-white/10" />
+        <span className="w-2.5 h-2.5 rounded-full bg-white/10" />
+        <span className="w-2.5 h-2.5 rounded-full bg-white/10" />
+        <span className="ml-3 text-[11px] text-white/30">Figma — Onboarding v3</span>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <div className="h-20 rounded-lg bg-white/[0.04]" />
+        <div className="h-20 rounded-lg bg-white/[0.04]" />
+        <div className="h-20 rounded-lg bg-white/[0.04]" />
+      </div>
+    </div>
+    <div className="absolute right-4 top-16 w-64 rounded-2xl bg-[#0d0f12] border border-white/15 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.9)] p-4">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[11px] text-white/40 font-mono">Design review</span>
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-bold">
+          <Pin className="w-3 h-3" /> PINNED
+        </span>
+      </div>
+      <div className="space-y-2 text-[12px] text-white/75">
+        <p className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded border border-white/25" />Button radius 12 → 10</p>
+        <p className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded border border-white/25" />Ask about empty state</p>
+        <p className="flex items-center gap-2 text-white/35 line-through"><span className="w-3.5 h-3.5 rounded bg-amber-500" />Check contrast on CTA</p>
+      </div>
+    </div>
+  </div>
+);
+
 export const LandingPage: React.FC<LandingPageProps> = ({
   onOpenAppFullscreen,
   onOpenBlog,
   onSelectBlogPost,
 }) => {
-  const [heroView, setHeroView] = useState<'sandbox' | 'video'>('sandbox');
-  const [isVideoMuted, setIsVideoMuted] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const stars = useGitHubStars('Rohithgilla12/float');
 
-  const handleBuy = () => {
-    openExternalLink(DODO_CHECKOUT_URL);
-  };
+  const handleBuy = () => openExternalLink(DODO_CHECKOUT_URL);
+  const handleGitHub = () => openExternalLink(GITHUB_URL);
+  const scrollToFilm = () => document.getElementById('film')?.scrollIntoView({ behavior: 'smooth' });
 
-  const handleGitHub = () => {
-    openExternalLink('https://github.com/Rohithgilla12/float');
-  };
+  const buyButton = (extra = '') => (
+    <button
+      onClick={handleBuy}
+      className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-400 hover:bg-amber-300 text-black font-semibold shadow-[0_10px_30px_-10px_rgba(245,158,11,0.6)] transition-all active:scale-[0.98] cursor-pointer ${extra}`}
+    >
+      <Download className="w-4 h-4" />
+      <span>Get Float for Mac · {PRICE}</span>
+    </button>
+  );
 
   return (
     <div className="min-h-screen bg-[#0C0D0E] text-[#ECEFF4] font-sans antialiased selection:bg-amber-500/30 selection:text-amber-200">
-      
-      {/* Background Ambient Glows */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-gradient-to-b from-amber-500/10 via-purple-500/5 to-transparent blur-3xl opacity-70" />
-        <div className="absolute top-[600px] -left-40 w-[600px] h-[600px] bg-blue-500/5 blur-3xl rounded-full" />
-        <div className="absolute top-[800px] -right-40 w-[600px] h-[600px] bg-emerald-500/5 blur-3xl rounded-full" />
+        <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-[1000px] h-[520px] bg-gradient-to-b from-amber-500/10 to-transparent blur-3xl" />
       </div>
 
-      {/* Navigation Header */}
       <header className="sticky top-0 z-40 backdrop-blur-md bg-[#0C0D0E]/80 border-b border-white/5">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img
-              src="/favicon.png"
-              alt="Float App Icon"
-              className="w-8 h-8 rounded-xl shadow-lg shadow-amber-500/20 border border-white/10"
-            />
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-base tracking-tight text-white">Float</span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/60">
-                v0.1.0
-              </span>
-            </div>
-          </div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+          <a href="/" className="flex items-center gap-2.5">
+            <img src="/favicon.png" alt="" className="w-8 h-8 rounded-xl border border-white/10" />
+            <span className="font-bold text-base tracking-tight text-white">Float</span>
+          </a>
 
-          <nav className="hidden md:flex items-center gap-6 text-xs text-white/70">
-            <a href="#demo" className="hover:text-white transition-colors">
-              Live Demo
-            </a>
-            <a href="#features" className="hover:text-white transition-colors">
-              Features
-            </a>
-            <a href="#film" className="hover:text-white transition-colors">
-              Film
-            </a>
-            <a href="#shortcuts" className="hover:text-white transition-colors">
-              Shortcuts
-            </a>
-            <a href="#pricing" className="hover:text-white transition-colors">
-              Pricing ($4.99)
-            </a>
+          <nav className="hidden md:flex items-center gap-7 text-[13px] text-white/65">
+            {NAV_LINKS.map(l => (
+              <a key={l.href} href={l.href} className="hover:text-white transition-colors">{l.label}</a>
+            ))}
             {onOpenBlog && (
-              <a
-                href="/blog"
-                onClick={(e) => {
-                  if (!e.metaKey && !e.ctrlKey && e.button === 0) {
-                    e.preventDefault();
-                    onOpenBlog();
-                  }
-                }}
-                className="hover:text-amber-400 font-medium transition-colors cursor-pointer"
-              >
-                Blog
-              </a>
+              <a href="/blog" onClick={routeClick(onOpenBlog)} className="hover:text-white transition-colors">Blog</a>
             )}
+            <a href={GITHUB_URL} onClick={e => { e.preventDefault(); handleGitHub(); }} className="hover:text-white transition-colors inline-flex items-center gap-1.5">
+              <Github className="w-3.5 h-3.5" />
+              <span>{stars !== null ? stars.toLocaleString() : 'GitHub'}</span>
+            </a>
           </nav>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleGitHub}
-              title="View on GitHub"
-              className="p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
-            >
-              <Github className="w-4 h-4" />
-            </button>
-
-            <button
-              onClick={onOpenAppFullscreen}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
-            >
-              <Maximize2 className="w-3.5 h-3.5" />
-              <span>Full App</span>
-            </button>
-
+          <div className="flex items-center gap-2">
             <button
               onClick={handleBuy}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black shadow-md shadow-amber-500/20 transition-all transform active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold bg-amber-400 hover:bg-amber-300 text-black transition-colors active:scale-95"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Get for Mac &bull; $4.99</span>
+              <span className="hidden sm:inline">Get Float ·</span>
+              <span>{PRICE}</span>
+            </button>
+            <button
+              onClick={() => setMenuOpen(v => !v)}
+              aria-label="Menu"
+              className="md:hidden p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/5"
+            >
+              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
+        {menuOpen && (
+          <nav className="md:hidden border-t border-white/5 bg-[#0C0D0E] px-4 py-3 flex flex-col text-sm text-white/80">
+            {NAV_LINKS.map(l => (
+              <a key={l.href} href={l.href} onClick={() => setMenuOpen(false)} className="py-2.5">{l.label}</a>
+            ))}
+            {onOpenBlog && <a href="/blog" onClick={routeClick(() => { setMenuOpen(false); onOpenBlog(); })} className="py-2.5">Blog</a>}
+            <a href={GITHUB_URL} className="py-2.5">GitHub</a>
+          </nav>
+        )}
       </header>
 
-      {/* Hero Section */}
-      <section className="relative z-10 pt-16 pb-12 px-6 max-w-5xl mx-auto text-center">
-        {/* Pill Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-white/80 mb-6 backdrop-blur-sm">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>✨ Just Released: Inline Math, Voice Dictation, Image Cards &amp; Ghost Mode</span>
-        </div>
+      <section className="relative z-10 pt-16 sm:pt-24 pb-10 px-6 max-w-6xl mx-auto">
+        <div className="max-w-3xl mx-auto text-center">
+          <h1 className="text-[2.6rem] leading-[1.05] sm:text-6xl font-extrabold tracking-tight text-white">
+            A scratchpad that stays on top of whatever you're doing.
+          </h1>
+          <p className="mt-6 text-lg sm:text-xl text-white/65 leading-relaxed">
+            Press <Kbd className="text-[13px] mx-0.5">⌥ Space</Kbd> from any app and start typing. Float sits above full-screen editors, browsers, and calls, and saves every note as a plain Markdown file on your Mac.
+          </p>
 
-        <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white max-w-3xl mx-auto leading-[1.12]">
-          The floating desktop scratchpad{' '}
-          <span className="bg-gradient-to-r from-amber-400 via-amber-200 to-white bg-clip-text text-transparent">
-            you won't want to close.
-          </span>
-        </h1>
-
-        <p className="mt-5 text-base sm:text-lg text-white/60 max-w-2xl mx-auto leading-relaxed">
-          Summon instantly with <kbd className="px-2 py-0.5 rounded bg-white/10 border border-white/15 text-white/90 font-mono text-xs">⌥ Space</kbd>. Pin above full-screen editors, write in pure live WYSIWYG markdown, and trigger slash commands with instant sensory micro-haptics.
-        </p>
-
-        {/* CTA Button Group */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <button
-            onClick={handleBuy}
-            className="flex items-center gap-2.5 px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-bold text-sm shadow-xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-          >
-            <Download className="w-4 h-4" />
-            <span>Download for macOS &bull; $4.99</span>
-          </button>
-
-          <button
-            onClick={() => document.getElementById('film')?.scrollIntoView({ behavior: 'smooth' })}
-            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 text-sm font-medium hover:border-white/20 transition-all cursor-pointer"
-          >
-            <Play className="w-4 h-4 fill-current text-amber-400" />
-            <span>Watch 15s Film</span>
-          </button>
-
-          <button
-            onClick={handleGitHub}
-            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 text-sm font-medium hover:border-white/20 transition-all cursor-pointer"
-          >
-            <Github className="w-4 h-4" />
-            <span>Star on GitHub</span>
-          </button>
-        </div>
-
-        <p className="mt-3 text-xs text-white/40 font-mono">
-          One-time payment &bull; Free lifetime updates &bull; Apple Signed DMG &bull; <a href="https://github.com/Rohithgilla12/float/releases/download/v0.1.0/Float-0.1.0-macOS-arm64.dmg" className="text-amber-400/80 hover:text-amber-300 underline underline-offset-2 transition-colors">Download .dmg (v0.1.0)</a>
-        </p>
-
-        {/* Interactive Live App Demo or Video Teaser */}
-        <div id="demo" className="mt-14 relative mx-auto max-w-2xl">
-          {/* Segmented View Switcher */}
-          <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
+            {buyButton('px-7 py-3.5 text-[15px]')}
             <button
-              onClick={() => setHeroView('sandbox')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                heroView === 'sandbox'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                  : 'bg-white/5 text-white/60 hover:text-white border border-transparent hover:border-white/10'
-              }`}
+              onClick={scrollToFilm}
+              className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl text-white/80 hover:text-white text-[15px] font-medium hover:bg-white/5 transition-colors cursor-pointer"
             >
-              <Monitor className="w-3.5 h-3.5" />
-              <span>Interactive Sandbox</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setHeroView('video');
-                document.getElementById('film')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                heroView === 'video'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                  : 'bg-white/5 text-white/60 hover:text-white border border-transparent hover:border-white/10'
-              }`}
-            >
-              <Play className="w-3.5 h-3.5 fill-current" />
-              <span>Watch 15s Launch Teaser</span>
+              <Play className="w-4 h-4 fill-current" />
+              <span>Watch the 15-second film</span>
             </button>
           </div>
+          <p className="mt-4 text-[13px] text-white/40">
+            One-time payment · Free updates for life · Apple Silicon, macOS 11+ · Open source (MIT)
+          </p>
+        </div>
 
-          {/* Glowing Shadow Frame */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/30 via-purple-500/20 to-blue-500/30 rounded-3xl blur-xl opacity-70 transition duration-1000" />
-          
-          {/* Floating Mockup Window Wrapper */}
-          <div className="relative rounded-2xl border border-white/20 shadow-2xl bg-[#141517] overflow-hidden text-left h-[460px]">
-            {heroView === 'sandbox' ? (
-              /* Embedded Live React Float App */
+        <div id="demo" className="relative mt-16 mx-auto max-w-5xl">
+          <div className="hidden md:block relative h-[600px]">
+            <DesktopBackdrop />
+            <div className="absolute right-10 top-16 w-[560px] h-[460px] rounded-2xl shadow-[0_40px_90px_-20px_rgba(0,0,0,0.95),0_0_0_1px_rgba(255,255,255,0.12)] overflow-hidden text-left">
               <App />
-            ) : (
-              /* 15s HyperFrames Rendered Video streaming from Cloudflare R2 */
-              <div className="w-full h-full flex flex-col items-center justify-center bg-black relative group">
-                <video
-                  src={R2_VIDEO_URL}
-                  autoPlay
-                  loop
-                  muted={isVideoMuted}
-                  playsInline
-                  controls
-                  className="w-full h-full object-cover rounded-2xl"
-                />
-                <button
-                  onClick={() => setIsVideoMuted(!isVideoMuted)}
-                  className="absolute bottom-4 right-4 z-20 px-3 py-1.5 rounded-xl bg-black/80 hover:bg-black text-white text-xs font-semibold backdrop-blur-md border border-white/20 flex items-center gap-1.5 shadow-xl transition-all cursor-pointer"
-                >
-                  {isVideoMuted ? <VolumeX className="w-3.5 h-3.5 text-amber-400" /> : <Volume2 className="w-3.5 h-3.5 text-amber-400" />}
-                  <span>{isVideoMuted ? 'Unmute Sound' : 'Mute'}</span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-3 flex items-center justify-between text-xs text-white/50 px-2 font-mono">
-            <span>
-              {heroView === 'sandbox'
-                ? '👆 Live interactive sandbox — click checkboxes, type, or press /'
-                : '🎬 15s Launch Film rendered with HyperFrames • Streamed globally via Cloudflare R2'}
-            </span>
-            {heroView === 'sandbox' ? (
-              <button
-                onClick={onOpenAppFullscreen}
-                className="hover:text-amber-400 flex items-center gap-1 transition-colors cursor-pointer"
-              >
-                <span>Full Screen</span>
-                <Maximize2 className="w-3 h-3" />
+            </div>
+            <div className="absolute left-10 bottom-8 max-w-xs text-left">
+              <p className="text-sm text-white/80 font-medium">This one is live.</p>
+              <p className="text-[13px] text-white/45 mt-1">Click a checkbox, type a line, press <Kbd>/</Kbd>. It is the real app running in your browser.</p>
+              <button onClick={onOpenAppFullscreen} className="mt-3 text-[13px] text-amber-400 hover:text-amber-300 inline-flex items-center gap-1 cursor-pointer">
+                Open full screen <ArrowRight className="w-3.5 h-3.5" />
               </button>
-            ) : (
-              <a
-                href={R2_VIDEO_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="hover:text-amber-400 flex items-center gap-1 transition-colors"
-              >
-                <span>Direct 1080p Stream</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            )}
+            </div>
+          </div>
+
+          <div className="md:hidden rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl">
+            <video
+              src={R2_VIDEO_URL}
+              poster="/assets/preview-poster.jpg"
+              controls
+              playsInline
+              preload="metadata"
+              className="w-full aspect-video object-cover"
+            />
           </div>
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section id="features" className="py-20 px-6 max-w-5xl mx-auto border-t border-white/5">
-        <div className="text-center mb-16">
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-            Designed for Speed, Engineered for Craft.
-          </h2>
-          <p className="mt-2 text-sm text-white/60">
-            Every interaction is calibrated against zero-latency desktop standards.
-          </p>
+      <section id="features" className="relative z-10 py-24 px-6 max-w-6xl mx-auto space-y-24 sm:space-y-32">
+        <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+          <div>
+            <SectionLabel>Always on top</SectionLabel>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-white leading-tight">
+              Stop alt-tabbing to take a note.
+            </h2>
+            <p className="mt-4 text-[15px] sm:text-base text-white/60 leading-relaxed">
+              Pin Float with <Kbd>⌥ P</Kbd> and it floats above full-screen Xcode, Figma, your browser, or a video call. It follows you across Spaces and monitors, and gets out of the way with <Kbd>Esc</Kbd>.
+            </p>
+          </div>
+          <StackPreview />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Card 1 */}
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-amber-500/30 transition-colors space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
-              <Command className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-white text-base">0ms Global Hotkey</h3>
-            <p className="text-xs text-white/60 leading-relaxed">
-              Summon or dismiss your floating pad anywhere on macOS with <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[11px] text-white">⌥ Space</kbd>. Zero animations on summon ensure instant keyboard readiness.
+        <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+          <div className="md:order-2">
+            <SectionLabel>Type, don't format</SectionLabel>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-white leading-tight">
+              Markdown that renders as you write.
+            </h2>
+            <p className="mt-4 text-[15px] sm:text-base text-white/60 leading-relaxed">
+              No edit and preview toggle. Headings, checklists, and code render live in the same line you are typing in. Press <Kbd>/</Kbd> for todos, headings, callouts, and code blocks; finish a sum with <Kbd>=</Kbd> and Float answers it inline.
             </p>
           </div>
+          <div className="md:order-1"><NotePreview /></div>
+        </div>
 
-          {/* Card 2 */}
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-amber-500/30 transition-colors space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
-              <Pin className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-white text-base">Always on Top Pinning</h3>
-            <p className="text-xs text-white/60 leading-relaxed">
-              Float permanently over full-screen Xcode, VS Code, Figma, or your browser. Multi-workspace ubiquity lets Float travel with you across virtual spaces.
+        <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+          <div>
+            <SectionLabel>Plain files, no lock-in</SectionLabel>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-white leading-tight">
+              Your notes are .md files in a folder you choose.
+            </h2>
+            <p className="mt-4 text-[15px] sm:text-base text-white/60 leading-relaxed">
+              Float writes to <span className="font-mono text-white/80 text-[14px]">~/Documents/Float</span> by default, or point it at your Obsidian vault. No account, no sync server, nothing leaves your Mac. Delete the app and your notes are still there.
             </p>
           </div>
+          <FilesPreview />
+        </div>
 
-          {/* Card 3 */}
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-amber-500/30 transition-colors space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5" />
+        <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-8 sm:p-10">
+          <div className="sm:flex items-end justify-between gap-6">
+            <div>
+              <SectionLabel>Also in the box</SectionLabel>
+              <h2 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-white">The small things, done properly.</h2>
             </div>
-            <h3 className="font-semibold text-white text-base">Unified Live WYSIWYG</h3>
-            <p className="text-xs text-white/60 leading-relaxed">
-              Never flip between edit and preview mode again. Click checkboxes directly in preview mode with fluid spring feedback and instant strikethrough.
+            <p className="mt-3 sm:mt-0 text-[13px] text-white/45 max-w-xs">
+              Summon has no animation on purpose. For something you open 100 times a day, a fade is lag.
             </p>
           </div>
-
-          {/* Card 4 */}
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-amber-500/30 transition-colors space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-white text-base">Sensory Micro-Haptics</h3>
-            <p className="text-xs text-white/60 leading-relaxed">
-              Synthesized Web Audio clicks give physical weight to checkbox taps. Sub-pixel cursor-following specular border shaders reflect subtle light as you move.
-            </p>
-          </div>
-
-          {/* Card 5 */}
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-amber-500/30 transition-colors space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center">
-              <Palette className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-white text-base">First-Class Light Mode</h3>
-            <p className="text-xs text-white/60 leading-relaxed">
-              Catppuccin Latte and Editorial Paper light themes are built with high-contrast slate typography and zero glare. Switch effortlessly between daylight and dusk.
-            </p>
-          </div>
-
-          {/* Card 6 */}
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-amber-500/30 transition-colors space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-white text-base">Apple Signed &amp; Notarized</h3>
-            <p className="text-xs text-white/60 leading-relaxed">
-              Certified by Apple Gatekeeper with Hardened Runtime entitlements. Seamless 1-click installation with zero security warnings or overrides.
-            </p>
-          </div>
-
-          {/* Card 7: Inline Math */}
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-amber-500/30 transition-colors space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
-              <Calculator className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-white text-base">Inline Math &amp; Evaluator</h3>
-            <p className="text-xs text-white/60 leading-relaxed">
-              Type <code className="text-amber-300 font-mono text-[11px]">45 * 12 =</code> or <code className="text-amber-300 font-mono text-[11px]">15% of 850 =</code> right in your text. Float solves it inline instantly with zero latency.
-            </p>
-          </div>
-
-          {/* Card 8: Image Card Exporter */}
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-pink-500/30 transition-colors space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-400 flex items-center justify-center">
-              <ImageIcon className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-white text-base">Ray.so Visual Image Cards</h3>
-            <p className="text-xs text-white/60 leading-relaxed">
-              Generate 2x Retina shareable cards (<kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[10px] text-white">⌘⇧E</kbd>) with 4 luxury gradients for sharing on X (Twitter), Slack, or Linear.
-            </p>
-          </div>
-
-          {/* Card 9: Voice Dictation & Ghost Mode */}
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-cyan-500/30 transition-colors space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center">
-              <Mic className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-white text-base">Ghost Mode &amp; Dictation</h3>
-            <p className="text-xs text-white/60 leading-relaxed">
-              Adjust window transparency (<kbd className="px-1 py-0.5 rounded bg-white/10 font-mono text-[10px] text-white">⌥[</kbd>/<kbd className="px-1 py-0.5 rounded bg-white/10 font-mono text-[10px] text-white">⌥]</kbd>) to see through your notes, and speak hands-free with real-time speech dictation (<kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-[10px] text-white">⌥D</kbd>).
-            </p>
-          </div>
+          <ul className="mt-8 grid sm:grid-cols-2 gap-x-10 gap-y-3 text-[15px] text-white/75">
+            {EXTRAS.map(item => (
+              <li key={item} className="flex items-start gap-3">
+                <Check className="w-4 h-4 mt-1 text-amber-400 shrink-0" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
-      {/* Keyboard Shortcuts Table */}
-      <section id="shortcuts" className="py-20 px-6 max-w-4xl mx-auto border-t border-white/5">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-            Keyboard-First Muscle Memory
-          </h2>
-          <p className="mt-2 text-sm text-white/60">
-            Keep your hands on the keyboard for everything.
-          </p>
+      <section id="shortcuts" className="relative z-10 py-20 px-6 max-w-4xl mx-auto">
+        <div className="flex items-end justify-between gap-6 mb-10">
+          <div>
+            <SectionLabel>Shortcuts</SectionLabel>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-white">Hands stay on the keyboard.</h2>
+          </div>
+          <Keyboard className="hidden sm:block w-8 h-8 text-white/20" />
         </div>
-
-        <div className="rounded-2xl border border-white/10 overflow-hidden bg-white/[0.01]">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-white/10 bg-white/[0.02] text-white/50 font-mono">
-                <th className="py-3 px-4">Action</th>
-                <th className="py-3 px-4">Shortcut</th>
-                <th className="py-3 px-4">Behavior</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5 font-sans">
-              <tr>
-                <td className="py-3 px-4 font-medium text-white">Summon / Dismiss</td>
-                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-amber-300">⌥ Space</kbd></td>
-                <td className="py-3 px-4 text-white/60">Global system-wide hotkey toggle</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-medium text-white">Always on Top (Pin)</td>
-                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-amber-300">⌥ P</kbd></td>
-                <td className="py-3 px-4 text-white/60">Float above all fullscreen apps</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-medium text-white">Slash Commands Menu</td>
-                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-amber-300">/</kbd></td>
-                <td className="py-3 px-4 text-white/60">Insert todo, headings, code, quotes</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-medium text-white">Actions Command Palette</td>
-                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-amber-300">⌘ K</kbd></td>
-                <td className="py-3 px-4 text-white/60">Copy markdown, switch theme, export</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-medium text-white">New Scratchpad</td>
-                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-amber-300">⌘ N</kbd></td>
-                <td className="py-3 px-4 text-white/60">Spawn a fresh blank note tab</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-medium text-white">Switch Notes</td>
-                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-amber-300">⌘ 1 .. 9</kbd></td>
-                <td className="py-3 px-4 text-white/60">Instantly jump to note tab by index</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-medium text-white">Export Image Card</td>
-                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-pink-300">⌘⇧ E</kbd></td>
-                <td className="py-3 px-4 text-white/60">Generate 2x Retina Ray.so style card</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-medium text-white">Voice Dictation</td>
-                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-rose-300">⌥ D</kbd></td>
-                <td className="py-3 px-4 text-white/60">Real-time speech-to-text capture</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-medium text-white">Ghost Mode Opacity</td>
-                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-cyan-300">⌥ [ / ⌥ ]</kbd></td>
-                <td className="py-3 px-4 text-white/60">Adjust window glass transparency</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-medium text-white">Zen Focus Mode</td>
-                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-indigo-300">⌘⇧ F</kbd></td>
-                <td className="py-3 px-4 text-white/60">Hide chrome for distraction-free writing</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-medium text-white">Inline Math Calculation</td>
-                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-emerald-300">=</kbd></td>
-                <td className="py-3 px-4 text-white/60">Type math followed by '=' to evaluate</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-medium text-white">Close / Dismiss</td>
-                <td className="py-3 px-4"><kbd className="px-2 py-0.5 rounded bg-white/10 font-mono text-[11px] text-amber-300">Esc</kbd></td>
-                <td className="py-3 px-4 text-white/60">Dismiss palette first, or hide window</td>
-              </tr>
+        <div className="rounded-2xl border border-white/10 overflow-hidden">
+          <table className="w-full text-left text-[14px]">
+            <tbody className="divide-y divide-white/5">
+              {SHORTCUTS.map(([action, keys, note]) => (
+                <tr key={action} className="hover:bg-white/[0.02]">
+                  <td className="py-3.5 px-5 font-medium text-white whitespace-nowrap">{action}</td>
+                  <td className="py-3.5 px-5"><Kbd className="text-amber-300 text-[13px]">{keys}</Kbd></td>
+                  <td className="py-3.5 px-5 text-white/50 hidden sm:table-cell">{note}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       </section>
 
-      {/* 15-Second Launch Film Showcase (Streamed from Cloudflare R2) */}
-      <section id="film" className="py-20 px-6 max-w-5xl mx-auto border-t border-white/5">
-        <div className="text-center mb-12">
-          <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 font-mono">
-            15-SECOND PRODUCT FILM
-          </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white mt-3">
-            Pure flow. Zero friction.
-          </h2>
-          <p className="mt-2 text-sm text-white/60 max-w-xl mx-auto">
-            Rendered at 1080p 60 FPS with custom synthesized audio, keyframe foley, and 35mm grain. Streamed globally with instant seeking via Cloudflare R2.
+      <section id="film" className="relative z-10 py-20 px-6 max-w-5xl mx-auto">
+        <div className="text-center mb-10">
+          <SectionLabel>15 seconds</SectionLabel>
+          <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-white">Summon, write, pin, done.</h2>
+          <p className="mt-3 text-[15px] text-white/55 max-w-md mx-auto">
+            Sound on. The clicks you hear are the ones the app makes.
           </p>
         </div>
-
-        <div className="relative rounded-3xl border border-white/15 overflow-hidden shadow-2xl bg-black max-w-4xl mx-auto group">
-          <div className="aspect-video w-full">
-            <video
-              src={R2_VIDEO_URL}
-              controls
-              playsInline
-              preload="metadata"
-              poster="/assets/preview-poster.jpg"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="p-4 bg-white/[0.03] border-t border-white/10 flex items-center justify-between text-xs text-white/60 font-mono">
-            <span>Float Launch Film &bull; 1080p H.264 &bull; 48kHz Stereo</span>
-            <a
-              href={R2_VIDEO_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors"
-            >
-              <span>Download Raw MP4</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
+        <div className="rounded-3xl border border-white/10 overflow-hidden shadow-2xl bg-black">
+          <video
+            src={R2_VIDEO_URL}
+            controls
+            playsInline
+            preload="metadata"
+            poster="/assets/preview-poster.jpg"
+            className="w-full aspect-video object-cover"
+          />
         </div>
       </section>
 
-      {/* Pricing Comparison Section */}
-      <section id="pricing" className="py-20 px-6 max-w-4xl mx-auto border-t border-white/5">
-        <div className="text-center mb-16">
-          <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 font-mono">
-            SIMPLE, HONEST PRICING
-          </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white mt-3">
-            Open Source Code. $4.99 Official Binary.
-          </h2>
-          <p className="mt-2 text-sm text-white/60">
-            No subscriptions. No recurring charges. Forever.
-          </p>
+      <section id="pricing" className="relative z-10 py-24 px-6 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <SectionLabel>Pricing</SectionLabel>
+          <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-white">Open source. {PRICE} for the signed app.</h2>
+          <p className="mt-3 text-[15px] text-white/55">One payment. No subscription. The code is MIT-licensed on GitHub.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-          {/* Free Open Source */}
-          <div className="p-8 rounded-3xl bg-white/[0.02] border border-white/10 flex flex-col justify-between space-y-6">
-            <div>
-              <div className="flex justify-between items-center">
-                <h3 className="font-bold text-lg text-white">Build From Source</h3>
-                <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/70 font-mono text-xs">MIT License</span>
+        <div className="grid md:grid-cols-5 gap-6 items-stretch">
+          <div className="md:col-span-3 p-8 rounded-3xl bg-gradient-to-b from-amber-500/[0.09] to-transparent border border-amber-500/30 flex flex-col">
+            <div className="flex items-baseline justify-between">
+              <h3 className="font-bold text-xl text-white">Float for Mac</h3>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-4xl font-extrabold text-white">{PRICE}</span>
+                <span className="text-[13px] text-white/45">once</span>
               </div>
-              <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-extrabold text-white">$0</span>
-                <span className="text-xs text-white/50">/ forever</span>
-              </div>
-              <p className="mt-2 text-xs text-white/60 leading-relaxed">
-                For developers who prefer compiling with Cargo and Node.
-              </p>
-
-              <ul className="mt-6 space-y-3 text-xs text-white/70">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-white/40 shrink-0" />
-                  <span>Full source code on GitHub</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-white/40 shrink-0" />
-                  <span>All themes, shortcuts & features</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-white/40 shrink-0" />
-                  <span>Manual builds via <code className="text-white/90">cargo build</code></span>
-                </li>
-              </ul>
             </div>
-
-            <div className="flex flex-col gap-2">
-              <a
-                href="https://github.com/Rohithgilla12/float/releases/download/v0.1.0/Float-0.1.0-macOS-arm64.dmg"
-                className="w-full py-2.5 rounded-xl border border-white/15 hover:bg-white/10 text-white font-medium text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Download className="w-4 h-4 text-white/70" />
-                <span>Download Free .dmg (v0.1.0)</span>
-              </a>
-              <button
-                onClick={handleGitHub}
-                className="w-full py-2 rounded-xl text-white/50 hover:text-white text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Github className="w-3.5 h-3.5" />
-                <span>Clone on GitHub</span>
-              </button>
-            </div>
+            <ul className="mt-7 space-y-3 text-[15px] text-white/80 flex-1">
+              {[
+                'Pre-built .dmg, signed with an Apple Developer ID',
+                'Licence key delivered by email straight after checkout',
+                'Free updates for life',
+                'Apple Silicon, macOS 11 or newer',
+                '14-day refund if it is not for you',
+              ].map(line => (
+                <li key={line} className="flex items-start gap-3">
+                  <Check className="w-4 h-4 mt-1 text-amber-400 shrink-0" />
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-8">{buyButton('w-full py-3.5 text-[15px]')}</div>
+            <p className="mt-3 text-center text-[12px] text-white/35">Checkout and tax handled by Dodo Payments.</p>
           </div>
 
-          {/* Paid Pro Binary */}
-          <div className="p-8 rounded-3xl bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent border-2 border-amber-500/40 relative flex flex-col justify-between space-y-6 shadow-2xl shadow-amber-500/10">
-            <div className="absolute -top-3 right-8 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-black font-bold text-[10px] uppercase tracking-wider">
-              Recommended
+          <div className="md:col-span-2 p-8 rounded-3xl bg-white/[0.02] border border-white/10 flex flex-col">
+            <div className="flex items-baseline justify-between">
+              <h3 className="font-bold text-xl text-white">Build it yourself</h3>
+              <span className="text-4xl font-extrabold text-white">$0</span>
             </div>
-
-            <div>
-              <div className="flex justify-between items-center">
-                <h3 className="font-bold text-lg text-white">Float Pro Lifetime</h3>
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-mono text-xs">Official .dmg</span>
-              </div>
-              <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-extrabold text-white">$4.99</span>
-                <span className="text-xs text-white/50">/ one-time license</span>
-              </div>
-              <p className="mt-2 text-xs text-white/60 leading-relaxed">
-                Pre-built, signed, and notarized universal binary for macOS.
-              </p>
-
-              <ul className="mt-6 space-y-3 text-xs text-white/80">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span className="font-semibold text-white">Apple Developer Signed & Notarized</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>Gatekeeper approved &bull; zero security warnings</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>Automatic background updates</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>Instant license key delivery via Dodo Payments</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>Supports independent open-source craftsmanship</span>
-                </li>
-              </ul>
-            </div>
-
+            <p className="mt-4 text-[14px] text-white/55 leading-relaxed flex-1">
+              Same app, same features. Clone the repo and build with Rust, Node, and Xcode. You will see a Gatekeeper warning for an unsigned local build, which is normal.
+            </p>
             <button
-              onClick={handleBuy}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 transform active:scale-98"
+              onClick={handleGitHub}
+              className="mt-8 w-full py-3 rounded-2xl border border-white/15 hover:bg-white/5 text-white text-[14px] font-medium transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Download className="w-4 h-4" />
-              <span>Buy for macOS &bull; $4.99 via Dodo Payments</span>
+              <Github className="w-4 h-4" />
+              <span>Clone on GitHub</span>
             </button>
           </div>
         </div>
       </section>
 
-      {/* From the Blog & Guides Section */}
-      <section id="blog-preview" className="py-20 px-6 max-w-5xl mx-auto border-t border-white/5">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
-          <div>
-            <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 font-mono">
-              ESSAYS & GUIDES
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white mt-3">
-              Deep-dives for macOS power users.
-            </h2>
-            <p className="mt-2 text-sm text-white/60">
-              Architectural guides, comparisons, and workflows for keyboard-driven thinkers.
-            </p>
-          </div>
+      <section id="faq" className="relative z-10 py-20 px-6 max-w-3xl mx-auto">
+        <SectionLabel>Questions</SectionLabel>
+        <h2 className="mt-3 mb-8 text-3xl sm:text-4xl font-bold tracking-tight text-white">Before you buy.</h2>
+        <div className="divide-y divide-white/10 border-y border-white/10">
+          {FAQ.map(([q, a]) => (
+            <details key={q} className="group py-5">
+              <summary className="flex items-center justify-between gap-4 cursor-pointer list-none text-[16px] font-medium text-white">
+                <span>{q}</span>
+                <ChevronDown className="w-4 h-4 text-white/40 transition-transform group-open:rotate-180 shrink-0" />
+              </summary>
+              <p className="mt-3 text-[15px] text-white/60 leading-relaxed">{a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
 
+      <section className="relative z-10 py-16 px-6 max-w-3xl mx-auto">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-8 sm:flex items-center gap-6">
+          <img src="/icon.png" alt="" className="w-16 h-16 rounded-2xl border border-white/10 shrink-0 mb-4 sm:mb-0" />
+          <div className="flex-1">
+            <p className="text-[15px] text-white/80 leading-relaxed">
+              Float is built and maintained by <a href="https://gilla.fun" className="text-white underline underline-offset-4 decoration-white/30 hover:decoration-white">Rohith Gilla</a>, a software engineer who got tired of losing meeting notes to the wrong window. Every line of it is in the open.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-[13px]">
+              <a href={GITHUB_URL} onClick={e => { e.preventDefault(); handleGitHub(); }} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 hover:bg-white/5 text-white/80 cursor-pointer">
+                <Star className="w-3.5 h-3.5 text-amber-400" />
+                <span>{stars !== null ? `${stars.toLocaleString()} stars on GitHub` : 'Star on GitHub'}</span>
+              </a>
+              <a href={`${GITHUB_URL}/issues`} className="text-white/50 hover:text-white">Report a bug</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="blog-preview" className="relative z-10 py-20 px-6 max-w-6xl mx-auto border-t border-white/5">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
+          <div>
+            <SectionLabel>From the blog</SectionLabel>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-white">Guides for Mac note-takers.</h2>
+          </div>
           {onOpenBlog && (
-            <a
-              href="/blog"
-              onClick={(e) => {
-                if (!e.metaKey && !e.ctrlKey && e.button === 0) {
-                  e.preventDefault();
-                  onOpenBlog();
-                }
-              }}
-              className="px-4 py-2 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-xs text-white/80 transition-colors flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
-            >
-              <BookOpen className="w-3.5 h-3.5 text-amber-400" />
-              <span>View All Articles</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+            <a href="/blog" onClick={routeClick(onOpenBlog)} className="text-[14px] text-amber-400 hover:text-amber-300 inline-flex items-center gap-1.5 cursor-pointer">
+              All articles <ArrowRight className="w-4 h-4" />
             </a>
           )}
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {BLOG_POSTS.slice(0, 3).map(post => (
             <a
               key={post.slug}
               href={`/blog/${post.slug}`}
-              onClick={(e) => {
-                if (!e.metaKey && !e.ctrlKey && e.button === 0) {
-                  e.preventDefault();
-                  if (onSelectBlogPost) onSelectBlogPost(post.slug);
-                  else onOpenBlog?.();
-                }
-              }}
-              className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-amber-500/30 hover:bg-white/[0.04] transition-all cursor-pointer flex flex-col justify-between group no-underline text-inherit"
+              onClick={routeClick(() => (onSelectBlogPost ? onSelectBlogPost(post.slug) : onOpenBlog?.()))}
+              className="p-6 rounded-2xl border border-white/10 hover:border-white/20 hover:bg-white/[0.03] transition-colors flex flex-col group no-underline text-inherit"
             >
-              <div>
-                <div className="flex items-center justify-between text-[11px] text-white/50 mb-3 font-mono">
-                  <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-amber-400">
-                    {post.category}
-                  </span>
-                  <span>{post.readTime}</span>
-                </div>
-                <h3 className="font-bold text-white text-base group-hover:text-amber-300 transition-colors leading-snug">
-                  {post.title}
-                </h3>
-                <p className="mt-2.5 text-xs text-white/60 leading-relaxed line-clamp-3">
-                  {post.description}
-                </p>
+              <div className="flex items-center justify-between text-[12px] text-white/40 mb-4">
+                <span className="text-amber-400/90">{post.category}</span>
+                <span>{post.readTime}</span>
               </div>
-
-              <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-amber-400 font-medium">
-                <span>Read article</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-              </div>
+              <h3 className="font-semibold text-white text-[17px] leading-snug group-hover:text-amber-200 transition-colors">{post.title}</h3>
+              <p className="mt-3 text-[14px] text-white/55 leading-relaxed line-clamp-3">{post.description}</p>
             </a>
           ))}
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-6 border-t border-white/5 text-center text-xs text-white/40 font-mono space-y-3">
-        <div className="flex items-center justify-center gap-4 text-white/60">
-          <a href="https://float.gilla.fun" className="hover:text-white transition-colors">
-            float.gilla.fun
-          </a>
-          <span>&bull;</span>
-          {onOpenBlog && (
-            <>
-              <a
-                href="/blog"
-                onClick={(e) => {
-                  if (!e.metaKey && !e.ctrlKey && e.button === 0) {
-                    e.preventDefault();
-                    onOpenBlog();
-                  }
-                }}
-                className="hover:text-white transition-colors cursor-pointer"
-              >
-                Blog
-              </a>
-              <span>&bull;</span>
-            </>
-          )}
-          <a href="https://github.com/Rohithgilla12/float" className="hover:text-white transition-colors">
-            GitHub
-          </a>
-          <span>&bull;</span>
-          <a href="https://gilla.fun" className="hover:text-white transition-colors">
-            gilla.fun
-          </a>
-        </div>
-        <p>
-          Crafted by Rohith Gilla. Merchant of Record powered by Dodo Payments Inc.
-        </p>
-      </footer>
+      <section className="relative z-10 py-24 px-6 text-center">
+        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">Ready when you are. <span className="text-white/40">⌥ Space.</span></h2>
+        <div className="mt-8">{buyButton('px-7 py-3.5 text-[15px]')}</div>
+      </section>
 
+      <footer className="relative z-10 py-10 px-6 border-t border-white/5 text-[13px] text-white/45">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p>© {new Date().getFullYear()} Rohith Gilla. Payments by Dodo Payments Inc., merchant of record.</p>
+          <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+            {onOpenBlog && <a href="/blog" onClick={routeClick(onOpenBlog)} className="hover:text-white cursor-pointer">Blog</a>}
+            <a href={GITHUB_URL} className="hover:text-white">GitHub</a>
+            <a href="/legal#privacy" className="hover:text-white">Privacy</a>
+            <a href="/legal#terms" className="hover:text-white">Terms</a>
+            <a href="/legal#refunds" className="hover:text-white">Refunds</a>
+            <a href="https://gilla.fun" className="hover:text-white">gilla.fun</a>
+          </nav>
+        </div>
+      </footer>
     </div>
   );
 };

@@ -39,6 +39,7 @@ import { BLOG_POSTS, BlogPost } from '../src/data/blogPosts.ts';
 import { LandingPage } from '../src/components/LandingPage.tsx';
 import { BlogIndex } from '../src/components/BlogIndex.tsx';
 import { BlogPostView } from '../src/components/BlogPostView.tsx';
+import { LegalPage } from '../src/components/LegalPage.tsx';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,11 +78,13 @@ function injectMetadataAndContent(
     `<meta property="og:description" content="${meta.description.replace(/"/g, '&quot;')}" />`,
     `<meta property="og:url" content="${meta.canonicalUrl}" />`,
     `<meta property="og:type" content="${meta.ogType || 'website'}" />`,
-    `<meta property="og:image" content="${meta.ogImage || `${BASE_URL}/icon.png`}" />`,
+    `<meta property="og:image" content="${meta.ogImage || `${BASE_URL}/og.png`}" />`,
+    `<meta property="og:image:width" content="1200" />`,
+    `<meta property="og:image:height" content="630" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${meta.title.replace(/"/g, '&quot;')}" />`,
     `<meta name="twitter:description" content="${meta.description.replace(/"/g, '&quot;')}" />`,
-    `<meta name="twitter:image" content="${meta.ogImage || `${BASE_URL}/icon.png`}" />`,
+    `<meta name="twitter:image" content="${meta.ogImage || `${BASE_URL}/og.png`}" />`,
   ];
 
   if (meta.keywords && meta.keywords.length > 0) {
@@ -109,7 +112,7 @@ function injectMetadataAndContent(
     .replace(/<meta name="description"[^>]*>/gi, '')
     .replace(/<meta property="og:title"[^>]*>/gi, '')
     .replace(/<meta property="og:description"[^>]*>/gi, '')
-    .replace(/<meta property="og:image"[^>]*>/gi, '')
+    .replace(/<meta property="og:image(:width|:height)?"[^>]*>/gi, '')
     .replace(/<meta property="og:url"[^>]*>/gi, '')
     .replace(/<meta property="og:type"[^>]*>/gi, '')
     .replace(/<meta name="twitter:title"[^>]*>/gi, '')
@@ -199,7 +202,7 @@ async function runPrerender() {
       description: 'The fastest floating desktop scratchpad for macOS. Summon with ⌥Space, pin above full-screen apps, write in live WYSIWYG markdown, and trigger slash commands.',
       canonicalUrl: BASE_URL,
       ogType: 'website',
-      ogImage: `${BASE_URL}/icon.png`,
+      ogImage: `${BASE_URL}/og.png`,
       structuredData: landingStructuredData,
     },
     landingMarkup
@@ -253,7 +256,7 @@ async function runPrerender() {
       description: 'Explore in-depth guides, macOS window management comparisons, and frictionless markdown scratchpad workflows for power users.',
       canonicalUrl: `${BASE_URL}/blog`,
       ogType: 'website',
-      ogImage: `${BASE_URL}/icon.png`,
+      ogImage: `${BASE_URL}/og.png`,
       structuredData: blogIndexStructuredData,
     },
     blogIndexMarkup
@@ -315,7 +318,7 @@ async function runPrerender() {
         description: post.description,
         canonicalUrl: `${BASE_URL}/blog/${post.slug}`,
         ogType: 'article',
-        ogImage: `${BASE_URL}/icon.png`,
+        ogImage: `${BASE_URL}/og.png`,
         publishedTime: '2026-10-31T00:00:00Z',
         authorName: post.author.name,
         category: post.category,
@@ -333,6 +336,21 @@ async function runPrerender() {
       priority: '0.8',
     });
   }
+
+  console.log('📜 Prerendering Legal Page (/legal)...');
+  const legalMarkup = renderToStaticMarkup(React.createElement(LegalPage, { onBackToHome: () => {} }));
+  const legalHtml = injectMetadataAndContent(
+    templateHtml,
+    {
+      title: 'Float — Privacy, Terms & Refunds',
+      description: 'How Float handles your data (it stays on your Mac), the licence terms, and the 14-day refund policy.',
+      canonicalUrl: `${BASE_URL}/legal`,
+      ogType: 'website',
+    },
+    legalMarkup
+  );
+  writeHtmlFile(path.join(DIST_DIR, 'legal', 'index.html'), legalHtml);
+  urlsForSitemap.push({ loc: `${BASE_URL}/legal`, lastmod: '2026-11-02', changefreq: 'yearly', priority: '0.3' });
 
   // ==========================================
   // 4. Generate sitemap.xml

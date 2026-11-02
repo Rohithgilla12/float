@@ -36,3 +36,4 @@ videos/float-intro/sfx/
 .wrangler/
 .hyperframes/
 videos/**/.hyperframes/
+.playwright-mcp/
