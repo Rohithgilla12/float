@@ -37,7 +37,6 @@ const SHORTCUTS: Array<[string, string, string]> = [
   ['New note', '⌘ N', 'Fresh tab, cursor ready'],
   ['Switch note', '⌘ 1 – 9', 'Jump straight to a tab'],
   ['Image card', '⌘⇧ E', 'Share a note as a 2x PNG'],
-  ['Dictate', '⌥ D', 'Speech to text into the note'],
   ['Ghost mode', '⌥ [  ⌥ ]', 'Lower or raise window opacity'],
   ['Zen mode', '⌘⇧ F', 'Hide every bit of chrome'],
   ['Inline maths', '=', 'Type 15% of 850 = and get the answer'],
@@ -49,7 +48,6 @@ const EXTRAS: Array<[string, boolean]> = [
   ['⌘ K palette for everything else', false],
   [`Up to ${FREE_NOTE_LIMIT} note tabs, unlimited with Pro`, false],
   ['Two themes free, all six with Pro', false],
-  ['Voice dictation with ⌥ D', true],
   ['Ghost mode: see through the window', true],
   ['Shareable image cards in one keystroke', true],
   ['Zen mode hides every control', true],
@@ -71,7 +69,7 @@ const FAQ: Array<[string, string]> = [
   ],
   [
     'What is free and what is Pro?',
-    `Free gives you the whole writing experience: summon, pin, live Markdown, slash commands, inline maths, ⌘K, plain-file storage, and ${FREE_NOTE_LIMIT} note tabs. Pro adds unlimited tabs, all six themes, image cards, dictation, ghost mode, zen mode, and a custom notes folder. One payment, every Mac you own.`,
+    `Free gives you the whole writing experience: summon, pin, live Markdown, slash commands, inline maths, ⌘K, plain-file storage, and ${FREE_NOTE_LIMIT} note tabs. Pro adds unlimited tabs, all six themes, image cards, ghost mode, zen mode, and a custom notes folder. One payment, every Mac you own.`,
   ],
   [
     'Can I build it myself?',

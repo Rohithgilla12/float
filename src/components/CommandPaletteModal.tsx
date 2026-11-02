@@ -11,7 +11,6 @@ import {
   Key,
   Settings,
   Image as ImageIcon,
-  Mic,
   Eye,
   Maximize2,
   Lock,
@@ -38,8 +37,6 @@ interface CommandPaletteModalProps {
   onOpenLicense?: () => void;
   onOpenSettings?: () => void;
   onOpenImageExport?: () => void;
-  isDictating?: boolean;
-  onToggleDictation?: () => void;
   opacity?: number;
   onCycleOpacity?: () => void;
   isFocusMode?: boolean;
@@ -74,8 +71,6 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
   onOpenLicense,
   onOpenSettings,
   onOpenImageExport,
-  isDictating,
-  onToggleDictation,
   opacity = 1.0,
   onCycleOpacity,
   isFocusMode,
@@ -117,7 +112,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
           : {
               id: 'upgrade-pro',
               label: `Unlock Float Pro (${PRO_PRICE})`,
-              description: 'All themes, unlimited notes, image cards, dictation, ghost and zen modes',
+              description: 'All themes, unlimited notes, image cards, ghost and zen modes, custom folder',
               icon: <Key className="w-4 h-4 text-amber-400" />,
               category: 'Float Pro',
               action: () => {
@@ -142,22 +137,6 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
             action: () => {
               onClose();
               onOpenImageExport();
-            },
-          },
-        ]
-      : []),
-    ...(onToggleDictation
-      ? [
-          {
-            id: 'dictate',
-            label: isDictating ? 'Stop dictation' : 'Voice dictation',
-            description: 'Speak and Float types',
-            shortcut: proTag ?? '⌥D',
-            icon: <Mic className={`w-4 h-4 ${isDictating ? 'text-rose-400 animate-pulse' : 'text-amber-400'}`} />,
-            category: 'Primary Actions',
-            action: () => {
-              onClose();
-              onToggleDictation();
             },
           },
         ]

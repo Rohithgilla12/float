@@ -30,7 +30,6 @@ export type ProFeature =
   | 'themes'
   | 'notes'
   | 'image-cards'
-  | 'dictation'
   | 'ghost'
   | 'zen'
   | 'folder';
@@ -42,7 +41,6 @@ export const PRO_FEATURES: Record<ProFeature, { title: string; detail: string }>
   themes: { title: 'All six themes', detail: 'Mocha, Paper, Sonoma, and Monastic join Obsidian and Latte.' },
   notes: { title: 'Unlimited notes', detail: `Free keeps ${FREE_NOTE_LIMIT} tabs. Pro removes the limit.` },
   'image-cards': { title: 'Image cards', detail: 'Export any note as a 2x PNG card with ⌘⇧E.' },
-  dictation: { title: 'Voice dictation', detail: 'Speak and Float types, with ⌥D.' },
   ghost: { title: 'Ghost mode', detail: 'Lower the window opacity to see what is behind it.' },
   zen: { title: 'Zen mode', detail: 'Hide every control and keep only the page.' },
   folder: { title: 'Custom notes folder', detail: 'Point Float at an Obsidian vault or any folder you like.' },

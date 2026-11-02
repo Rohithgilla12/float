@@ -433,17 +433,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </span>
               </div>
 
-              {/* Voice Dictation */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-black/10 border border-[var(--border-subtle)]">
-                <div>
-                  <div className="text-xs font-semibold">Voice Dictation (Speech-to-Text)</div>
-                  <div className="text-[11px] text-[var(--text-muted)]">Real-time hands-free speech input into note</div>
-                </div>
-                <span className="px-2.5 py-1 rounded-lg bg-[var(--kbd-bg)] border border-[var(--kbd-border)] text-xs font-mono font-semibold text-[var(--text-primary)]">
-                  ⌥D
-                </span>
-              </div>
-
               {/* Image Card Exporter */}
               <div className="flex items-center justify-between p-3 rounded-xl bg-black/10 border border-[var(--border-subtle)]">
                 <div>

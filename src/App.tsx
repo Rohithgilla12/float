@@ -19,7 +19,6 @@ import {
   LicenseStatus,
   ProFeature,
 } from './utils/license';
-import { speechEngine } from './utils/speechRecognition';
 import { checkForUpdates, isTauri, AvailableUpdate } from './utils/updater';
 import { ThemeId } from './types/theme';
 
@@ -48,7 +47,6 @@ export const App: React.FC = () => {
   const [lockedFeature, setLockedFeature] = useState<ProFeature | null>(null);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [imageExportOpen, setImageExportOpen] = useState(false);
-  const [isDictating, setIsDictating] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [soundsOn, setSoundsOn] = useState(haptics.enabled);
   const [opacity, setOpacity] = useState<number>(() => {
@@ -264,37 +262,6 @@ export const App: React.FC = () => {
     });
   }, [requirePro]);
 
-  const handleToggleDictation = useCallback(() => {
-    requirePro('dictation', () => {
-      haptics.playClick();
-      if (!speechEngine.isSupported()) {
-        showToast('Speech recognition is not available on this system');
-        return;
-      }
-      if (isDictating) {
-        speechEngine.stop();
-        setIsDictating(false);
-        showToast('Dictation stopped');
-        return;
-      }
-      const started = speechEngine.start(
-        text => {
-          if (!text) return;
-          const currentContent = activeNoteRef.current.content;
-          const sep = currentContent.endsWith('\n') || !currentContent ? '' : '\n';
-          updateActiveNoteContent(`${currentContent}${sep}${text}`);
-        },
-        listening => setIsDictating(listening)
-      );
-      if (started) {
-        setIsDictating(true);
-        showToast('Listening');
-      } else {
-        showToast('Could not access the microphone');
-      }
-    });
-  }, [requirePro, isDictating, showToast, updateActiveNoteContent]);
-
   const handleCreateNote = useCallback(() => {
     if (!isPro && notes.length >= FREE_NOTE_LIMIT) {
       openLicense('notes');
@@ -361,11 +328,6 @@ export const App: React.FC = () => {
       if (mod && e.shiftKey && key === 'e') {
         e.preventDefault();
         handleOpenImageExport();
-        return;
-      }
-      if (e.altKey && key === 'd') {
-        e.preventDefault();
-        handleToggleDictation();
         return;
       }
       if (e.altKey && (e.key === '[' || e.key === '“')) {
@@ -479,7 +441,6 @@ export const App: React.FC = () => {
     notes,
     setActiveNoteId,
     showToast,
-    handleToggleDictation,
     handleAdjustOpacity,
     handleToggleFocusMode,
     handleOpenImageExport,
@@ -561,8 +522,6 @@ export const App: React.FC = () => {
             content={activeNote.content}
             onOpenActions={openActions}
             onOpenImageExport={handleOpenImageExport}
-            isDictating={isDictating}
-            onToggleDictation={handleToggleDictation}
             opacity={opacity}
             onCycleOpacity={handleCycleOpacity}
             isPro={isPro}
@@ -588,8 +547,6 @@ export const App: React.FC = () => {
           onOpenLicense={() => openLicense(null)}
           onOpenSettings={openSettings}
           onOpenImageExport={handleOpenImageExport}
-          isDictating={isDictating}
-          onToggleDictation={handleToggleDictation}
           opacity={opacity}
           onCycleOpacity={handleCycleOpacity}
           isFocusMode={isFocusMode}

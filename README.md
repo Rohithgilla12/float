@@ -99,7 +99,7 @@ npm run tauri build
 
 - The code is **100% open source** under the [MIT License](LICENSE).
 - The signed, notarised `.dmg` is free to download from [Releases](https://github.com/Rohithgilla12/float/releases/latest) and updates itself.
-- **Float Pro** ($4.99 once, via **Dodo Payments**) unlocks all six themes, unlimited note tabs, image cards, voice dictation, ghost mode, zen mode, and a custom notes folder.
+- **Float Pro** ($4.99 once, via **Dodo Payments**) unlocks all six themes, unlimited note tabs, image cards, ghost mode, zen mode, and a custom notes folder.
 
 See [`MONETIZATION_AND_SIGNING.md`](MONETIZATION_AND_SIGNING.md) for the complete Apple signing, notarization, and Dodo Payments integration guide.
 
