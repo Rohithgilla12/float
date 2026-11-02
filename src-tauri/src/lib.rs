@@ -1,9 +1,18 @@
-use tauri::{AppHandle, Manager, WebviewWindow};
+use std::sync::atomic::{AtomicBool, Ordering};
+use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
+use tauri::tray::TrayIconBuilder;
+use tauri::{AppHandle, Manager, State, WebviewWindow};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
+/// Whether the user has pinned Float above other windows. Re-applied on every
+/// summon because macOS can drop the level when the window is hidden.
+struct Pinned(AtomicBool);
+
 /// Raises the window above full-screen apps. Tauri's always-on-top uses the
-/// floating level, which full-screen Spaces ignore; the status level plus the
-/// FullScreenAuxiliary behaviour is what lets a panel sit over them.
+/// floating level and sets it asynchronously, which can race with this; the
+/// status level plus FullScreenAuxiliary is what lets the window sit over a
+/// full-screen Space. It only works because the app runs with the Accessory
+/// activation policy (see `run`), otherwise macOS switches Spaces instead.
 #[cfg(target_os = "macos")]
 fn apply_overlay_level(window: &WebviewWindow, on_top: bool) {
     use objc2_app_kit::{NSNormalWindowLevel, NSStatusWindowLevel, NSWindow, NSWindowCollectionBehavior};
@@ -21,13 +30,24 @@ fn apply_overlay_level(window: &WebviewWindow, on_top: bool) {
 }
 
 #[tauri::command]
-fn set_always_on_top(window: WebviewWindow, always_on_top: bool) -> Result<(), String> {
-    window
-        .set_always_on_top(always_on_top)
-        .map_err(|e| e.to_string())?;
+fn set_always_on_top(window: WebviewWindow, pinned: State<Pinned>, always_on_top: bool) -> Result<(), String> {
+    pinned.0.store(always_on_top, Ordering::Relaxed);
     #[cfg(target_os = "macos")]
     apply_overlay_level(&window, always_on_top);
+    #[cfg(not(target_os = "macos"))]
+    window.set_always_on_top(always_on_top).map_err(|e| e.to_string())?;
     Ok(())
+}
+
+fn show_window(window: &WebviewWindow) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        let on_top = window.state::<Pinned>().0.load(Ordering::Relaxed);
+        apply_overlay_level(window, on_top);
+    }
+    let _ = window.unminimize();
+    window.show().map_err(|e| e.to_string())?;
+    window.set_focus().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -36,12 +56,7 @@ fn toggle_window(window: WebviewWindow) -> Result<(), String> {
     if is_visible {
         window.hide().map_err(|e| e.to_string())?;
     } else {
-        window.show().map_err(|e| e.to_string())?;
-        window.set_focus().map_err(|e| e.to_string())?;
-        #[cfg(target_os = "macos")]
-        {
-            let _ = window.set_visible_on_all_workspaces(true);
-        }
+        show_window(&window)?;
     }
     Ok(())
 }
@@ -53,7 +68,8 @@ fn hide_window(window: WebviewWindow) -> Result<(), String> {
 
 #[tauri::command]
 fn minimize_window(window: WebviewWindow) -> Result<(), String> {
-    window.minimize().map_err(|e| e.to_string())
+    // As an accessory app Float has no Dock to minimise into, so hide instead.
+    window.hide().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -160,6 +176,7 @@ fn pick_folder(_default_path: Option<String>) -> Result<Option<String>, String> 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(Pinned(AtomicBool::new(true)))
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -190,13 +207,35 @@ pub fn run() {
                 }
             }
 
+            // Accessory apps (like Spotlight and Raycast) can draw over another
+            // app's full-screen Space. Regular apps make macOS switch Spaces.
+            #[cfg(target_os = "macos")]
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+
             if let Some(window) = app.get_webview_window("main") {
                 #[cfg(target_os = "macos")]
-                {
-                    let _ = window.set_visible_on_all_workspaces(true);
-                    apply_overlay_level(&window, true);
-                }
+                apply_overlay_level(&window, true);
             }
+
+            let show = MenuItem::with_id(app, "show", "Show Float (⌥Space)", true, None::<&str>)?;
+            let quit = MenuItem::with_id(app, "quit", "Quit Float", true, Some("CmdOrCtrl+Q"))?;
+            let menu = Menu::with_items(app, &[&show, &PredefinedMenuItem::separator(app)?, &quit])?;
+            let mut tray = TrayIconBuilder::with_id("float-tray")
+                .tooltip("Float")
+                .menu(&menu)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "show" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = show_window(&window);
+                        }
+                    }
+                    "quit" => app.exit(0),
+                    _ => {}
+                });
+            if let Some(icon) = app.default_window_icon() {
+                tray = tray.icon(icon.clone());
+            }
+            tray.build(app)?;
 
             Ok(())
         })
