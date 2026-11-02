@@ -60,7 +60,7 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
       </div>
 
       {/* Center: Note Switcher Tabs */}
-      <div className="flex items-center gap-1 bg-black/10 dark:bg-white/5 p-0.5 rounded-lg border border-[var(--border-subtle)] max-w-[260px] overflow-x-auto scrollbar-none">
+      <div data-tauri-drag-region className="flex items-center gap-1 bg-black/10 dark:bg-white/5 p-0.5 rounded-lg border border-[var(--border-subtle)] max-w-[260px] overflow-x-auto scrollbar-none">
         {notes.slice(0, 4).map((note, idx) => {
           const isActive = note.id === activeNoteId;
           return (
@@ -90,7 +90,7 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
       </div>
 
       {/* Right: Actions & Pin State */}
-      <div className="flex items-center gap-1.5">
+      <div data-tauri-drag-region className="flex items-center gap-1.5">
         {onOpenLicense && (
           <button
             onClick={onOpenLicense}

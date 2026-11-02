@@ -29,9 +29,9 @@ export const ActionBar: React.FC<ActionBarProps> = ({
   const chars = content.length;
 
   return (
-    <div className="h-10 px-3.5 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-center justify-between text-xs select-none shrink-0 transition-colors">
+    <div data-tauri-drag-region className="h-10 px-3.5 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-center justify-between text-xs select-none shrink-0 transition-colors">
       {/* Left: Metadata & Live Status */}
-      <div className="flex items-center gap-3 text-[var(--text-muted)]">
+      <div data-tauri-drag-region className="flex items-center gap-3 text-[var(--text-muted)]">
         {isDictating ? (
           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-400 font-mono text-[10px] animate-pulse">
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />

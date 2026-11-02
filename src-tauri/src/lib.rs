@@ -1,11 +1,33 @@
 use tauri::{AppHandle, Manager, WebviewWindow};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
+/// Raises the window above full-screen apps. Tauri's always-on-top uses the
+/// floating level, which full-screen Spaces ignore; the status level plus the
+/// FullScreenAuxiliary behaviour is what lets a panel sit over them.
+#[cfg(target_os = "macos")]
+fn apply_overlay_level(window: &WebviewWindow, on_top: bool) {
+    use objc2_app_kit::{NSNormalWindowLevel, NSStatusWindowLevel, NSWindow, NSWindowCollectionBehavior};
+
+    let handle = window.clone();
+    let _ = window.run_on_main_thread(move || {
+        let Ok(ptr) = handle.ns_window() else { return };
+        let ns_window: &NSWindow = unsafe { &*(ptr as *const NSWindow) };
+        let behavior = NSWindowCollectionBehavior::CanJoinAllSpaces
+            | NSWindowCollectionBehavior::FullScreenAuxiliary
+            | NSWindowCollectionBehavior::Stationary;
+        ns_window.setCollectionBehavior(behavior);
+        ns_window.setLevel(if on_top { NSStatusWindowLevel } else { NSNormalWindowLevel });
+    });
+}
+
 #[tauri::command]
 fn set_always_on_top(window: WebviewWindow, always_on_top: bool) -> Result<(), String> {
     window
         .set_always_on_top(always_on_top)
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())?;
+    #[cfg(target_os = "macos")]
+    apply_overlay_level(&window, always_on_top);
+    Ok(())
 }
 
 #[tauri::command]
@@ -168,11 +190,11 @@ pub fn run() {
                 }
             }
 
-            // On macOS, configure main window to appear on all spaces
             if let Some(window) = app.get_webview_window("main") {
                 #[cfg(target_os = "macos")]
                 {
                     let _ = window.set_visible_on_all_workspaces(true);
+                    apply_overlay_level(&window, true);
                 }
             }
 
