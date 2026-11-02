@@ -173,6 +173,6 @@ GitHub Actions will automatically build, sign with Apple Developer ID, notarize 
 | Updater signing keypair | `~/.tauri/float-updater.key` (private, no password) and `.key.pub` on the dev Mac; private key in GitHub secret `TAURI_SIGNING_PRIVATE_KEY`; public key in `src-tauri/tauri.conf.json` | Signing `latest.json` so installed apps trust updates |
 | Team ID and identity string | GitHub secrets `APPLE_TEAM_ID`, `APPLE_SIGNING_IDENTITY` | CI |
 
-If the dev Mac is lost: the certificate and updater key can be restored from the GitHub secrets only if you saved copies elsewhere, so keep the p12 and `float-updater.key` in 1Password too. A new updater key would strand existing installs, which would then need a manual reinstall.
+Backup: 1Password item "Float release credentials" in the Employee vault of fusang.1password.com holds the Developer-ID-only p12 and its password (identical to the GitHub secrets), both updater key files, and the identity, team, and Apple ID. Restore steps are in the item's notes. Never regenerate the updater key: installed apps only accept updates signed by it.
 
 Release: bump `version` in `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`, then `git tag vX.Y.Z && git push origin vX.Y.Z`. The workflow drafts the GitHub release; publish it to go live.
