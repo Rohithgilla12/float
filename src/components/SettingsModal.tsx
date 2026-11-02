@@ -12,9 +12,23 @@ import {
   X,
   Volume2,
   Eye,
+  Lock,
+  ArrowDownToLine,
 } from 'lucide-react';
 import { ThemeId, THEMES } from '../types/theme';
-import { LicenseStatus, activateDodoLicense, deactivateDodoLicense, openExternalLink, DODO_CHECKOUT_URL } from '../utils/license';
+import {
+  LicenseStatus,
+  ProFeature,
+  PRO_FEATURES,
+  PRO_PRICE,
+  FREE_LICENSE,
+  isThemeUnlocked,
+  activateDodoLicense,
+  deactivateDodoLicense,
+  openExternalLink,
+  DODO_CHECKOUT_URL,
+} from '../utils/license';
+import { currentVersion } from '../utils/updater';
 import {
   getStoredSettings,
   saveStoredSettings,
@@ -32,9 +46,12 @@ interface SettingsModalProps {
   onSelectTheme: (theme: ThemeId) => void;
   licenseStatus: LicenseStatus;
   onLicenseChanged: (status: LicenseStatus) => void;
+  onRequirePro: (feature: ProFeature) => void;
   onShowToast: (msg: string) => void;
   opacity?: number;
   onChangeOpacity?: (opacity: number) => void;
+  onCheckForUpdates?: () => void;
+  checkingUpdates?: boolean;
 }
 
 type SettingsTab = 'storage' | 'shortcuts' | 'license' | 'appearance';
@@ -46,10 +63,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onSelectTheme,
   licenseStatus,
   onLicenseChanged,
+  onRequirePro,
   onShowToast,
   opacity = 1.0,
   onChangeOpacity,
+  onCheckForUpdates,
+  checkingUpdates = false,
 }) => {
+  const isPro = licenseStatus.isPro;
+  const [appVersion, setAppVersion] = useState<string>('');
   const [activeTab, setActiveTab] = useState<SettingsTab>('storage');
   const [storageSettings, setStorageSettings] = useState(getStoredSettings);
   const [keybinds, setKeybinds] = useState<KeybindSettings>(getKeybindSettings);
@@ -57,6 +79,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [licenseInput, setLicenseInput] = useState('');
   const [licenseLoading, setLicenseLoading] = useState(false);
   const [licenseMsg, setLicenseMsg] = useState<{ text: string; isError: boolean } | null>(null);
+
+  useEffect(() => {
+    if (isOpen) currentVersion().then(setAppVersion);
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -88,12 +114,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const handlePickFolder = async () => {
     haptics.playClick();
+    if (!isPro) {
+      onRequirePro('folder');
+      return;
+    }
     const picked = await pickStorageFolder();
     if (picked) {
       const updated = { ...storageSettings, notesDir: picked };
       setStorageSettings(updated);
       saveStoredSettings(updated);
-      onShowToast(`📁 Saved storage directory: ${picked}`);
+      onShowToast(`Notes folder: ${picked}`);
     }
   };
 
@@ -114,7 +144,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     const updated = { ...keybinds, [key]: value };
     setKeybinds(updated);
     saveKeybindSettings(updated);
-    onShowToast(`⌨️ Updated shortcut for ${key}`);
+    onShowToast('Shortcut updated');
   };
 
   const handleActivateLicense = async (e?: React.FormEvent) => {
@@ -136,13 +166,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   const handleDeactivate = async () => {
-    if (!confirm('Deactivate your Float Pro license on this device?')) return;
+    if (!confirm('Release the licence from this Mac? You can activate it again later.')) return;
     haptics.playClick();
     setLicenseLoading(true);
     await deactivateDodoLicense();
     setLicenseLoading(false);
-    onLicenseChanged({ isPro: false, licenseKey: null, activatedAt: null });
-    setLicenseMsg({ text: 'License deactivated.', isError: false });
+    onLicenseChanged(FREE_LICENSE);
+    setLicenseMsg({ text: 'Licence released.', isError: false });
   };
 
   return (
@@ -247,9 +277,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={handlePickFolder}
-                      className="px-2.5 py-1 rounded-lg bg-[var(--kbd-bg)] hover:bg-[var(--bg-surface-hover)] border border-[var(--kbd-border)] text-xs font-sans font-medium text-[var(--text-primary)] transition-all cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg bg-[var(--kbd-bg)] hover:bg-[var(--bg-surface-hover)] border border-[var(--kbd-border)] text-xs font-sans font-medium text-[var(--text-primary)] transition-all cursor-pointer flex items-center gap-1.5"
                     >
-                      Change...
+                      {!isPro && <Lock className="w-3 h-3 text-amber-400" />}
+                      <span>Change</span>
                     </button>
                     <button
                       onClick={handleRevealFinder}
@@ -473,72 +504,101 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* TAB 3: LICENSE & PRO */}
           {activeTab === 'license' && (
             <div className="space-y-5">
-              <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/15 via-transparent to-transparent border border-amber-500/30 flex items-center justify-between">
+              <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/15 via-transparent to-transparent border border-amber-500/30 flex items-center justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold">Float Pro License</span>
+                    <span className="text-sm font-bold">Float Pro</span>
                     <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
-                      licenseStatus.isPro ? 'bg-amber-500 text-black' : 'bg-white/10 text-white/60'
+                      isPro ? 'bg-amber-500 text-black' : 'bg-[var(--kbd-bg)] text-[var(--text-muted)]'
                     }`}>
-                      {licenseStatus.isPro ? 'ACTIVE' : 'FREE'}
+                      {isPro ? 'ACTIVE' : 'FREE'}
                     </span>
                   </div>
                   <p className="text-xs text-[var(--text-muted)] mt-1">
-                    {licenseStatus.isPro
-                      ? `Activated license: ${licenseStatus.licenseKey || 'Lifetime Pro'}`
-                      : 'Lifetime license • One-time $4.99 • Powered by Dodo Payments'}
+                    {isPro
+                      ? 'Everything is unlocked on this Mac.'
+                      : `${PRO_PRICE} once. No subscription. 14-day refund.`}
                   </p>
                 </div>
-
-                {!licenseStatus.isPro && (
+                {!isPro && (
                   <button
                     onClick={() => openExternalLink(DODO_CHECKOUT_URL)}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-bold text-xs transition-colors active:scale-[0.98] flex items-center gap-1.5 cursor-pointer shrink-0"
                   >
-                    <span>Buy Pro &bull; $4.99</span>
+                    <span>Get Pro</span>
                     <ExternalLink className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold mb-1.5">Enter License Key</label>
-                <form onSubmit={handleActivateLicense} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={licenseInput}
-                    onChange={e => setLicenseInput(e.target.value)}
-                    placeholder="FLOAT-PRO-XXXX-XXXX-XXXX"
-                    className="flex-1 px-3 py-2 rounded-xl bg-black/20 border border-[var(--border-subtle)] text-xs font-mono outline-none focus:border-amber-500 text-[var(--text-primary)]"
-                  />
-                  <button
-                    type="submit"
-                    disabled={licenseLoading || !licenseInput.trim()}
-                    className="px-4 py-2 rounded-xl bg-[var(--kbd-bg)] hover:bg-[var(--bg-surface-hover)] border border-[var(--kbd-border)] text-xs font-semibold disabled:opacity-50 transition-all cursor-pointer"
-                  >
-                    {licenseLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : 'Activate'}
-                  </button>
-                </form>
+              <ul className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-[var(--text-secondary)]">
+                {(Object.keys(PRO_FEATURES) as ProFeature[]).map(id => (
+                  <li key={id} className="flex items-start gap-2">
+                    {isPro ? <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" /> : <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />}
+                    <span>{PRO_FEATURES[id].title}</span>
+                  </li>
+                ))}
+              </ul>
 
-                {licenseMsg && (
-                  <p className={`text-xs mt-2 font-mono ${licenseMsg.isError ? 'text-rose-400' : 'text-emerald-400'}`}>
-                    {licenseMsg.text}
-                  </p>
-                )}
-              </div>
+              {!isPro && (
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5">Already bought it? Enter the key</label>
+                  <form onSubmit={handleActivateLicense} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={licenseInput}
+                      onChange={e => setLicenseInput(e.target.value)}
+                      placeholder="Key from your Dodo Payments email"
+                      className="flex-1 px-3 py-2 rounded-xl bg-black/20 border border-[var(--border-subtle)] text-xs font-mono outline-none focus:border-amber-500 text-[var(--text-primary)]"
+                    />
+                    <button
+                      type="submit"
+                      disabled={licenseLoading || !licenseInput.trim()}
+                      className="px-4 py-2 rounded-xl bg-[var(--kbd-bg)] hover:bg-[var(--bg-surface-hover)] border border-[var(--kbd-border)] text-xs font-semibold disabled:opacity-50 transition-all cursor-pointer"
+                    >
+                      {licenseLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : 'Activate'}
+                    </button>
+                  </form>
+                </div>
+              )}
 
-              {licenseStatus.isPro && (
+              {licenseMsg && (
+                <p className={`text-xs font-mono ${licenseMsg.isError ? 'text-rose-400' : 'text-emerald-400'}`}>
+                  {licenseMsg.text}
+                </p>
+              )}
+
+              {isPro && (
                 <div className="pt-4 border-t border-[var(--border-subtle)] flex items-center justify-between">
-                  <span className="text-xs text-[var(--text-muted)]">Want to transfer this license to another Mac?</span>
+                  <span className="text-xs text-[var(--text-muted)]">Moving to another Mac?</span>
                   <button
                     onClick={handleDeactivate}
-                    className="text-xs text-rose-400 hover:text-rose-300 font-medium flex items-center gap-1 cursor-pointer"
+                    className="text-xs text-[var(--text-secondary)] hover:text-rose-400 font-medium flex items-center gap-1 cursor-pointer"
                   >
                     <LogOut className="w-3.5 h-3.5" />
-                    <span>Deactivate Device</span>
+                    <span>Release licence</span>
                   </button>
                 </div>
               )}
+
+              <div className="pt-4 border-t border-[var(--border-subtle)] flex items-center justify-between gap-4">
+                <div>
+                  <div className="text-xs font-semibold">Updates</div>
+                  <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
+                    {appVersion && appVersion !== 'web' ? `Float ${appVersion}. ` : ''}Float checks on launch and installs in one click.
+                  </p>
+                </div>
+                {onCheckForUpdates && (
+                  <button
+                    onClick={onCheckForUpdates}
+                    disabled={checkingUpdates}
+                    className="px-3 py-1.5 rounded-lg bg-[var(--kbd-bg)] hover:bg-[var(--bg-surface-hover)] border border-[var(--kbd-border)] text-xs font-medium disabled:opacity-50 transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
+                  >
+                    {checkingUpdates ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ArrowDownToLine className="w-3.5 h-3.5" />}
+                    <span>Check for updates</span>
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
@@ -551,6 +611,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="grid grid-cols-2 gap-2.5">
                   {Object.values(THEMES).map(theme => {
                     const isActive = theme.id === currentTheme;
+                    const unlocked = isThemeUnlocked(theme.id, isPro);
                     return (
                       <button
                         key={theme.id}
@@ -565,14 +626,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="text-xs font-bold text-white">{theme.name}</span>
+                          <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                            {!unlocked && <Lock className="w-3 h-3 text-amber-400" />}
+                            {theme.name}
+                          </span>
                           <span
                             className="w-3.5 h-3.5 rounded-full border border-white/20"
                             style={{ backgroundColor: theme.accent }}
                           />
                         </div>
                         <span className="text-[10px] text-[var(--text-muted)] font-mono">
-                          {theme.isDark ? '🌙 Dark' : '☀️ Light'} &bull; {theme.tagline}
+                          {unlocked ? (theme.isDark ? 'Dark' : 'Light') : 'Pro'} &bull; {theme.tagline}
                         </span>
                       </button>
                     );
@@ -591,10 +655,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
-                    { id: 'thock', name: '🔨 Thock', desc: 'Deep mechanical switch' },
-                    { id: 'crisp', name: '⚡ Crisp', desc: 'Metallic precision click' },
-                    { id: 'bubble', name: '💧 Bubble', desc: 'Gentle organic pop' },
-                    { id: 'silent', name: '🔇 Silent', desc: 'Mute audio haptics' },
+                    { id: 'thock', name: 'Thock', desc: 'Deep mechanical switch' },
+                    { id: 'crisp', name: 'Crisp', desc: 'Metallic click' },
+                    { id: 'bubble', name: 'Bubble', desc: 'Soft pop' },
+                    { id: 'silent', name: 'Silent', desc: 'No sounds' },
                   ].map(p => {
                     const isSelected = soundProfile === p.id;
                     return (
@@ -604,7 +668,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         onClick={() => {
                           haptics.setProfile(p.id as SoundProfile);
                           setSoundProfile(p.id as SoundProfile);
-                          onShowToast(`🔊 Sound profile: ${p.name}`);
                         }}
                         className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                           isSelected
@@ -632,7 +695,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </span>
                 </div>
                 <p className="text-[11px] text-[var(--text-muted)] mb-3">
-                  Adjust window glass transparency to easily read underlying documentation or terminal output.
+                  {isPro ? 'Lower the opacity to read what is behind the window.' : 'Ghost mode is part of Float Pro.'}
                 </p>
                 <div className="flex items-center gap-2 mb-3">
                   <input

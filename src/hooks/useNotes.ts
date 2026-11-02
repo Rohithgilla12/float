@@ -24,9 +24,9 @@ function cleanLegacyContent(content: string): string {
 const INITIAL_NOTES: Note[] = [
   {
     id: 'note-1',
-    title: '⚡ Quick Scratchpad',
-    content: `# Float ✨
-Instant floating desktop scratchpad for macOS.
+    title: 'Scratchpad',
+    content: `# Float
+A scratchpad that stays on top of whatever you're doing.
 
 - [x] Full Light & Dark Modes (Obsidian, Sonoma, Catppuccin)
 - [x] Global Hotkey ⌥Space
@@ -43,21 +43,21 @@ window.set_always_on_top(true)?;
   },
   {
     id: 'note-2',
-    title: '🎯 Daily Goals',
-    content: `# Daily Goals 🚀
+    title: 'Today',
+    content: `# Today
 
 - [ ] Review PRs on GitHub
 - [ ] Check keyboard shortcuts in Settings (⌘,)
 - [ ] Test local markdown file saving in Documents/Float
-- [ ] Enjoy coffee break ☕
+- [ ] Press ⌘K to see everything Float can do
 `,
     createdAt: Date.now() - 7200000,
     updatedAt: Date.now() - 1800000,
   },
   {
     id: 'note-3',
-    title: '📝 Architecture',
-    content: `# Architecture & Shortcuts 👥
+    title: 'Shortcuts',
+    content: `# Shortcuts
 
 - **Shortcut Keybinds:**
   - ⌥Space: Toggle Float Window
@@ -174,7 +174,7 @@ export function useNotes() {
     const newNote: Note = {
       id: `note-${Date.now()}`,
       title: 'New Note',
-      content: `# New Note ⚡\n\nStart typing or press \`/\` for commands...`,
+      content: `# New Note\n\n`,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };

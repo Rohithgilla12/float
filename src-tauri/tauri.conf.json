@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Float",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "fun.gilla.float",
   "build": {
     "frontendDist": "../dist",
@@ -34,9 +34,12 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["dmg", "app"],
+    "targets": [
+      "dmg",
+      "app"
+    ],
     "category": "Productivity",
-    "copyright": "Copyright © 2026 Float. All rights reserved.",
+    "copyright": "Copyright © 2026 Rohith Gilla. MIT License.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -48,7 +51,17 @@
       "frameworks": [],
       "minimumSystemVersion": "11.0",
       "entitlements": "entitlements.plist",
-      "hardenedRuntime": true
+      "hardenedRuntime": true,
+      "signingIdentity": null
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVFMTk4QzJFMDQzOENCRTUKUldUbHl6Z0VMb3daN3BFd0U4WlNXWHhuYTVNMG91S2k1MS9VUkJZaVBrY0tPdjJTTDNPS1owci8K",
+      "endpoints": [
+        "https://github.com/Rohithgilla12/float/releases/latest/download/latest.json"
+      ]
     }
   }
 }

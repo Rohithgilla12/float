@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Mic, Image as ImageIcon, Eye } from 'lucide-react';
+import { Sparkles, Mic, Image as ImageIcon, Eye, Lock } from 'lucide-react';
 
 interface ActionBarProps {
   content: string;
@@ -10,6 +10,7 @@ interface ActionBarProps {
   onToggleDictation?: () => void;
   opacity?: number;
   onCycleOpacity?: () => void;
+  isPro?: boolean;
 }
 
 export const ActionBar: React.FC<ActionBarProps> = ({
@@ -21,7 +22,9 @@ export const ActionBar: React.FC<ActionBarProps> = ({
   onToggleDictation,
   opacity = 1.0,
   onCycleOpacity,
+  isPro = true,
 }) => {
+  const proMark = isPro ? null : <Lock className="w-2.5 h-2.5 text-amber-400" />;
   const words = content.trim() ? content.trim().split(/\s+/).length : 0;
   const chars = content.length;
 
@@ -32,7 +35,7 @@ export const ActionBar: React.FC<ActionBarProps> = ({
         {isDictating ? (
           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-400 font-mono text-[10px] animate-pulse">
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
-            <span className="font-semibold">🎙️ Listening...</span>
+            <span className="font-semibold">Listening</span>
           </div>
         ) : (
           <span className="flex items-center gap-1.5 font-mono text-[11px]">
@@ -52,11 +55,11 @@ export const ActionBar: React.FC<ActionBarProps> = ({
         {onCycleOpacity && (
           <button
             onClick={onCycleOpacity}
-            title={`Ghost Mode (${Math.round(opacity * 100)}% - ⌥[ / ⌥])`}
+            title={isPro ? `Ghost mode (${Math.round(opacity * 100)}%, ⌥[ / ⌥])` : 'Ghost mode (Pro)'}
             className="btn-press px-1.5 py-1 rounded-lg bg-[var(--kbd-bg)] hover:bg-[var(--bg-surface-hover)] border border-[var(--kbd-border)] text-[var(--text-secondary)] hover:text-cyan-400 font-mono text-[10px] transition-colors flex items-center gap-1"
           >
             <Eye className="w-3 h-3" />
-            <span>{Math.round(opacity * 100)}%</span>
+            {isPro ? <span>{Math.round(opacity * 100)}%</span> : proMark}
           </button>
         )}
 
@@ -64,14 +67,15 @@ export const ActionBar: React.FC<ActionBarProps> = ({
         {onToggleDictation && (
           <button
             onClick={onToggleDictation}
-            title={isDictating ? 'Stop Voice Dictation (⌥D)' : 'Start Voice Dictation (⌥D)'}
-            className={`btn-press p-1.5 rounded-lg border transition-colors ${
+            title={!isPro ? 'Voice dictation (Pro)' : isDictating ? 'Stop dictation (⌥D)' : 'Dictate (⌥D)'}
+            className={`btn-press p-1.5 rounded-lg border transition-colors flex items-center gap-1 ${
               isDictating
                 ? 'bg-rose-500/20 border-rose-500/40 text-rose-400 shadow-sm animate-pulse'
                 : 'bg-[var(--kbd-bg)] hover:bg-[var(--bg-surface-hover)] border-[var(--kbd-border)] text-[var(--text-secondary)] hover:text-rose-400'
             }`}
           >
             <Mic className="w-3.5 h-3.5" />
+            {proMark}
           </button>
         )}
 
@@ -79,10 +83,11 @@ export const ActionBar: React.FC<ActionBarProps> = ({
         {onOpenImageExport && (
           <button
             onClick={onOpenImageExport}
-            title="Export as Image Card (⌘⇧E)"
-            className="btn-press p-1.5 rounded-lg bg-[var(--kbd-bg)] hover:bg-[var(--bg-surface-hover)] border border-[var(--kbd-border)] text-[var(--text-secondary)] hover:text-pink-400 transition-colors"
+            title={isPro ? 'Export as image card (⌘⇧E)' : 'Image cards (Pro)'}
+            className="btn-press p-1.5 rounded-lg bg-[var(--kbd-bg)] hover:bg-[var(--bg-surface-hover)] border border-[var(--kbd-border)] text-[var(--text-secondary)] hover:text-pink-400 transition-colors flex items-center gap-1"
           >
             <ImageIcon className="w-3.5 h-3.5" />
+            {proMark}
           </button>
         )}
 

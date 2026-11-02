@@ -15,16 +15,17 @@ import {
 } from 'lucide-react';
 import App from '../App';
 import { BLOG_POSTS } from '../data/blogPosts';
-import { DODO_CHECKOUT_URL, openExternalLink } from '../utils/license';
+import { DODO_CHECKOUT_URL, PRO_FEATURES, PRO_PRICE, FREE_NOTE_LIMIT, openExternalLink } from '../utils/license';
 
 const R2_VIDEO_URL = 'https://pub-f69e073835364d8883ded4ff1d09e386.r2.dev/float-intro.mp4';
 const GITHUB_URL = 'https://github.com/Rohithgilla12/float';
-const PRICE = '$4.99';
+const LATEST_RELEASE_URL = `${GITHUB_URL}/releases/latest`;
+const PRICE = PRO_PRICE;
 
 const NAV_LINKS = [
   { href: '#features', label: 'Features' },
   { href: '#shortcuts', label: 'Shortcuts' },
-  { href: '#pricing', label: 'Pricing' },
+  { href: '#pricing', label: 'Pro' },
   { href: '#faq', label: 'FAQ' },
 ];
 
@@ -43,15 +44,16 @@ const SHORTCUTS: Array<[string, string, string]> = [
   ['Close', 'Esc', 'Closes a menu first, then the window'],
 ];
 
-const EXTRAS = [
-  'Six themes, two of them proper light modes',
-  'Inline maths: 45 * 12 = answers itself',
-  'Voice dictation with ⌥ D',
-  'Ghost mode: see through the window',
-  'Shareable image cards in one keystroke',
-  'Zen mode hides every control',
-  '⌘ K palette for everything else',
-  'Tabs for several notes at once',
+const EXTRAS: Array<[string, boolean]> = [
+  ['Inline maths: 45 * 12 = answers itself', false],
+  ['⌘ K palette for everything else', false],
+  [`Up to ${FREE_NOTE_LIMIT} note tabs, unlimited with Pro`, false],
+  ['Two themes free, all six with Pro', false],
+  ['Voice dictation with ⌥ D', true],
+  ['Ghost mode: see through the window', true],
+  ['Shareable image cards in one keystroke', true],
+  ['Zen mode hides every control', true],
+  ['Custom notes folder, such as an Obsidian vault', true],
 ];
 
 const FAQ: Array<[string, string]> = [
@@ -61,23 +63,27 @@ const FAQ: Array<[string, string]> = [
   ],
   [
     'Is the app signed?',
-    'Yes. The .dmg is signed with my Apple Developer ID (Rohith Gilla). Notarisation is in progress; until it lands, macOS may ask you to confirm the first launch via right-click, then Open.',
+    'Yes. Releases are signed with my Apple Developer ID (Rohith Gilla) and submitted to Apple for notarisation as part of the release pipeline, so macOS opens them without a warning.',
   ],
   [
     'Where are my notes stored?',
     'As plain .md files in ~/Documents/Float, or any folder you choose in Settings. No account, no sync server, nothing leaves your Mac. Open the same files in Obsidian, VS Code, or iA Writer.',
   ],
   [
-    'What do I get for the $4.99 that I do not get from the source code?',
-    'The pre-built, signed .dmg, a licence key, and free updates for life. Everything in the app is in the open-source repo; you are paying to skip installing Rust, Node, and Xcode, and to support the project.',
+    'What is free and what is Pro?',
+    `Free gives you the whole writing experience: summon, pin, live Markdown, slash commands, inline maths, ⌘K, plain-file storage, and ${FREE_NOTE_LIMIT} note tabs. Pro adds unlimited tabs, all six themes, image cards, dictation, ghost mode, zen mode, and a custom notes folder. One payment, every Mac you own.`,
   ],
   [
-    'Is it a subscription?',
-    'No. One payment, one licence, yours for good. Dodo Payments handles checkout and tax as merchant of record.',
+    'Can I build it myself?',
+    'Yes. The whole app is MIT-licensed on GitHub. Clone it and build with Rust, Node, and Xcode. The licence check is in the source too, so do with it what you like; buying Pro is how you support the project.',
   ],
   [
-    'What if it is not for me?',
-    'Email within 14 days of purchase and you get a full refund, no questions asked. See the refund policy in the footer.',
+    'Is Pro a subscription?',
+    'No. One payment, one licence, yours for good, including updates. Dodo Payments handles checkout and tax as merchant of record.',
+  ],
+  [
+    'What if Pro is not for me?',
+    'Ask within 14 days of purchase and you get a full refund, no questions asked. See the refund policy in the footer.',
   ],
 ];
 
@@ -121,6 +127,24 @@ function useGitHubStars(repo: string) {
     };
   }, [repo]);
   return stars;
+}
+
+function useLatestDmg() {
+  const [url, setUrl] = useState(LATEST_RELEASE_URL);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('https://api.github.com/repos/Rohithgilla12/float/releases/latest')
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => {
+        const asset = data?.assets?.find((a: { name: string }) => /\.dmg$/i.test(a.name));
+        if (!cancelled && asset?.browser_download_url) setUrl(asset.browser_download_url);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return url;
 }
 
 const DesktopBackdrop: React.FC = () => (
@@ -256,18 +280,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const stars = useGitHubStars('Rohithgilla12/float');
+  const dmgUrl = useLatestDmg();
 
   const handleBuy = () => openExternalLink(DODO_CHECKOUT_URL);
   const handleGitHub = () => openExternalLink(GITHUB_URL);
   const scrollToFilm = () => document.getElementById('film')?.scrollIntoView({ behavior: 'smooth' });
 
-  const buyButton = (extra = '') => (
-    <button
-      onClick={handleBuy}
-      className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-400 hover:bg-amber-300 text-black font-semibold shadow-[0_10px_30px_-10px_rgba(245,158,11,0.6)] transition-all active:scale-[0.98] cursor-pointer ${extra}`}
+  const downloadButton = (extra = '') => (
+    <a
+      href={dmgUrl}
+      className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-400 hover:bg-amber-300 text-black font-semibold shadow-[0_10px_30px_-10px_rgba(245,158,11,0.6)] transition-all active:scale-[0.98] cursor-pointer no-underline ${extra}`}
     >
       <Download className="w-4 h-4" />
-      <span>Get Float for Mac · {PRICE}</span>
+      <span>Download for Mac</span>
+    </a>
+  );
+
+  const proButton = (extra = '') => (
+    <button
+      onClick={handleBuy}
+      className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-400 hover:bg-amber-300 text-black font-semibold transition-all active:scale-[0.98] cursor-pointer ${extra}`}
+    >
+      <span>Unlock Pro · {PRICE}</span>
     </button>
   );
 
@@ -298,13 +332,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </nav>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleBuy}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold bg-amber-400 hover:bg-amber-300 text-black transition-colors active:scale-95"
+            <a
+              href={dmgUrl}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold bg-amber-400 hover:bg-amber-300 text-black transition-colors active:scale-95 no-underline"
             >
-              <span className="hidden sm:inline">Get Float ·</span>
-              <span>{PRICE}</span>
-            </button>
+              <Download className="w-3.5 h-3.5" />
+              <span>Download</span>
+            </a>
             <button
               onClick={() => setMenuOpen(v => !v)}
               aria-label="Menu"
@@ -335,7 +369,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </p>
 
           <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
-            {buyButton('px-7 py-3.5 text-[15px]')}
+            {downloadButton('px-7 py-3.5 text-[15px]')}
             <button
               onClick={scrollToFilm}
               className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl text-white/80 hover:text-white text-[15px] font-medium hover:bg-white/5 transition-colors cursor-pointer"
@@ -345,7 +379,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </button>
           </div>
           <p className="mt-4 text-[13px] text-white/40">
-            One-time payment · Free updates for life · Apple Silicon, macOS 11+ · Open source (MIT)
+            Free to use · Pro unlock {PRICE}, once · macOS 11+ · Open source (MIT)
           </p>
         </div>
 
@@ -428,10 +462,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </p>
           </div>
           <ul className="mt-8 grid sm:grid-cols-2 gap-x-10 gap-y-3 text-[15px] text-white/75">
-            {EXTRAS.map(item => (
+            {EXTRAS.map(([item, pro]) => (
               <li key={item} className="flex items-start gap-3">
                 <Check className="w-4 h-4 mt-1 text-amber-400 shrink-0" />
-                <span>{item}</span>
+                <span>
+                  {item}
+                  {pro && <span className="ml-2 align-middle text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-300">Pro</span>}
+                </span>
               </li>
             ))}
           </ul>
@@ -484,52 +521,62 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <section id="pricing" className="relative z-10 py-24 px-6 max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <SectionLabel>Pricing</SectionLabel>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-white">Open source. {PRICE} for the signed app.</h2>
-          <p className="mt-3 text-[15px] text-white/55">One payment. No subscription. The code is MIT-licensed on GitHub.</p>
+          <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-white">Free to use. {PRICE} to unlock Pro.</h2>
+          <p className="mt-3 text-[15px] text-white/55">One payment, no subscription, every Mac you own. The code is MIT-licensed on GitHub.</p>
         </div>
 
         <div className="grid md:grid-cols-5 gap-6 items-stretch">
+          <div className="md:col-span-2 p-8 rounded-3xl bg-white/[0.02] border border-white/10 flex flex-col">
+            <div className="flex items-baseline justify-between">
+              <h3 className="font-bold text-xl text-white">Float</h3>
+              <span className="text-4xl font-extrabold text-white">$0</span>
+            </div>
+            <ul className="mt-7 space-y-3 text-[14px] text-white/70 flex-1">
+              {[
+                '⌥ Space summon and pin on top',
+                'Live Markdown and slash commands',
+                'Inline maths and ⌘ K palette',
+                'Plain .md files in ~/Documents/Float',
+                `${FREE_NOTE_LIMIT} note tabs, two themes`,
+                'Signed, notarised, auto-updating',
+              ].map(line => (
+                <li key={line} className="flex items-start gap-3">
+                  <Check className="w-4 h-4 mt-0.5 text-white/40 shrink-0" />
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
+            <a
+              href={dmgUrl}
+              className="mt-8 w-full py-3 rounded-2xl border border-white/15 hover:bg-white/5 text-white text-[14px] font-medium transition-colors inline-flex items-center justify-center gap-2 no-underline"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download for Mac</span>
+            </a>
+          </div>
+
           <div className="md:col-span-3 p-8 rounded-3xl bg-gradient-to-b from-amber-500/[0.09] to-transparent border border-amber-500/30 flex flex-col">
             <div className="flex items-baseline justify-between">
-              <h3 className="font-bold text-xl text-white">Float for Mac</h3>
+              <h3 className="font-bold text-xl text-white">Float Pro</h3>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-4xl font-extrabold text-white">{PRICE}</span>
                 <span className="text-[13px] text-white/45">once</span>
               </div>
             </div>
-            <ul className="mt-7 space-y-3 text-[15px] text-white/80 flex-1">
-              {[
-                'Pre-built .dmg, signed with an Apple Developer ID',
-                'Licence key delivered by email straight after checkout',
-                'Free updates for life',
-                'Apple Silicon, macOS 11 or newer',
-                '14-day refund if it is not for you',
-              ].map(line => (
-                <li key={line} className="flex items-start gap-3">
-                  <Check className="w-4 h-4 mt-1 text-amber-400 shrink-0" />
-                  <span>{line}</span>
+            <ul className="mt-7 grid sm:grid-cols-2 gap-x-6 gap-y-3 text-[14px] text-white/80 flex-1">
+              {Object.values(PRO_FEATURES).map(f => (
+                <li key={f.title} className="flex items-start gap-3">
+                  <Check className="w-4 h-4 mt-0.5 text-amber-400 shrink-0" />
+                  <span>{f.title}</span>
                 </li>
               ))}
+              <li className="flex items-start gap-3">
+                <Check className="w-4 h-4 mt-0.5 text-amber-400 shrink-0" />
+                <span>14-day refund, no questions</span>
+              </li>
             </ul>
-            <div className="mt-8">{buyButton('w-full py-3.5 text-[15px]')}</div>
-            <p className="mt-3 text-center text-[12px] text-white/35">Checkout and tax handled by Dodo Payments.</p>
-          </div>
-
-          <div className="md:col-span-2 p-8 rounded-3xl bg-white/[0.02] border border-white/10 flex flex-col">
-            <div className="flex items-baseline justify-between">
-              <h3 className="font-bold text-xl text-white">Build it yourself</h3>
-              <span className="text-4xl font-extrabold text-white">$0</span>
-            </div>
-            <p className="mt-4 text-[14px] text-white/55 leading-relaxed flex-1">
-              Same app, same features. Clone the repo and build with Rust, Node, and Xcode. You will see a Gatekeeper warning for an unsigned local build, which is normal.
-            </p>
-            <button
-              onClick={handleGitHub}
-              className="mt-8 w-full py-3 rounded-2xl border border-white/15 hover:bg-white/5 text-white text-[14px] font-medium transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Github className="w-4 h-4" />
-              <span>Clone on GitHub</span>
-            </button>
+            <div className="mt-8">{proButton('w-full py-3.5 text-[15px]')}</div>
+            <p className="mt-3 text-center text-[12px] text-white/35">Key arrives by email. Paste it in the app under Settings. Checkout and tax by Dodo Payments.</p>
           </div>
         </div>
       </section>
@@ -601,7 +648,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       <section className="relative z-10 py-24 px-6 text-center">
         <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">Ready when you are. <span className="text-white/40">⌥ Space.</span></h2>
-        <div className="mt-8">{buyButton('px-7 py-3.5 text-[15px]')}</div>
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+          {downloadButton('px-7 py-3.5 text-[15px]')}
+          <button onClick={handleBuy} className="px-5 py-3.5 text-[15px] text-white/70 hover:text-white cursor-pointer">Or unlock Pro · {PRICE}</button>
+        </div>
       </section>
 
       <footer className="relative z-10 py-10 px-6 border-t border-white/5 text-[13px] text-white/45">

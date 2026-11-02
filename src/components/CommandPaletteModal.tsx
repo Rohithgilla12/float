@@ -14,7 +14,12 @@ import {
   Mic,
   Eye,
   Maximize2,
+  Lock,
+  Volume2,
+  VolumeX,
+  ArrowDownToLine,
 } from 'lucide-react';
+import { isThemeUnlocked, PRO_PRICE } from '../utils/license';
 import { ThemeId, THEMES } from '../types/theme';
 import { haptics } from '../utils/audioHaptics';
 
@@ -39,6 +44,9 @@ interface CommandPaletteModalProps {
   onCycleOpacity?: () => void;
   isFocusMode?: boolean;
   onToggleFocusMode?: () => void;
+  soundsOn?: boolean;
+  onToggleSounds?: () => void;
+  onCheckForUpdates?: () => void;
 }
 
 interface ActionItem {
@@ -72,7 +80,11 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
   onCycleOpacity,
   isFocusMode,
   onToggleFocusMode,
+  soundsOn = true,
+  onToggleSounds,
+  onCheckForUpdates,
 }) => {
+  const proTag = isPro ? undefined : 'Pro';
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [viewingThemes, setViewingThemes] = useState(false);
@@ -88,47 +100,32 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
   }, [isOpen]);
 
   const licensingActions: ActionItem[] = onOpenLicense
-    ? isPro
-      ? [
-          {
-            id: 'license-active',
-            label: 'Float Pro (Active)',
-            description: 'Manage your lifetime license or view activation status',
-            shortcut: 'PRO',
-            icon: <Sparkles className="w-4 h-4 fill-current text-amber-400" />,
-            category: 'Pro & Licensing',
-            action: () => {
-              onClose();
-              onOpenLicense();
+    ? [
+        isPro
+          ? {
+              id: 'license-active',
+              label: 'Float Pro',
+              description: 'Licensed on this Mac. Manage or release the key.',
+              shortcut: 'PRO',
+              icon: <Sparkles className="w-4 h-4 fill-current text-amber-400" />,
+              category: 'Float Pro',
+              action: () => {
+                onClose();
+                onOpenLicense();
+              },
+            }
+          : {
+              id: 'upgrade-pro',
+              label: `Unlock Float Pro (${PRO_PRICE})`,
+              description: 'All themes, unlimited notes, image cards, dictation, ghost and zen modes',
+              icon: <Key className="w-4 h-4 text-amber-400" />,
+              category: 'Float Pro',
+              action: () => {
+                onClose();
+                onOpenLicense();
+              },
             },
-          },
-        ]
-      : [
-          {
-            id: 'upgrade-pro',
-            label: 'Upgrade to Float Pro ($4.99)',
-            description: 'Get Apple notarized binaries, auto-updates via Dodo Payments',
-            shortcut: '$4.99',
-            icon: <Sparkles className="w-4 h-4 text-amber-400" />,
-            category: 'Pro & Licensing',
-            action: () => {
-              onClose();
-              onOpenLicense();
-            },
-          },
-          {
-            id: 'enter-license',
-            label: 'Enter License Key...',
-            description: 'Activate your Dodo Payments purchase',
-            shortcut: '🔑',
-            icon: <Key className="w-4 h-4 text-amber-300" />,
-            category: 'Pro & Licensing',
-            action: () => {
-              onClose();
-              onOpenLicense();
-            },
-          },
-        ]
+      ]
     : [];
 
   const mainActions: ActionItem[] = [
@@ -137,9 +134,9 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       ? [
           {
             id: 'export-image',
-            label: 'Export as Image Card...',
-            description: 'Generate beautiful Ray.so / Carbon style shareable card',
-            shortcut: '⌘⇧E',
+            label: 'Export as image card',
+            description: 'A 2x PNG of this note for sharing',
+            shortcut: proTag ?? '⌘⇧E',
             icon: <ImageIcon className="w-4 h-4 text-pink-400" />,
             category: 'Primary Actions',
             action: () => {
@@ -153,9 +150,9 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       ? [
           {
             id: 'dictate',
-            label: isDictating ? 'Stop Voice Dictation' : 'Voice Dictation (Speech-to-Text)',
-            description: 'Capture notes hands-free in real time with speech recognition',
-            shortcut: '⌥D',
+            label: isDictating ? 'Stop dictation' : 'Voice dictation',
+            description: 'Speak and Float types',
+            shortcut: proTag ?? '⌥D',
             icon: <Mic className={`w-4 h-4 ${isDictating ? 'text-rose-400 animate-pulse' : 'text-amber-400'}`} />,
             category: 'Primary Actions',
             action: () => {
@@ -169,9 +166,9 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       ? [
           {
             id: 'ghost-mode',
-            label: `Ghost Mode (${Math.round(opacity * 100)}% Opacity)`,
-            description: 'Adjust window glass transparency to see behind Float',
-            shortcut: '⌥[ / ⌥]',
+            label: isPro ? `Ghost mode (${Math.round(opacity * 100)}% opacity)` : 'Ghost mode',
+            description: 'See through the window to what is behind it',
+            shortcut: proTag ?? '⌥[ / ⌥]',
             icon: <Eye className="w-4 h-4 text-cyan-400" />,
             category: 'Preferences',
             action: () => {
@@ -184,9 +181,9 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       ? [
           {
             id: 'focus-mode',
-            label: isFocusMode ? 'Exit Zen Focus Mode' : 'Zen Focus Mode',
-            description: 'Distraction-free floating paper with auto-hidden chrome',
-            shortcut: '⌘⇧F',
+            label: isFocusMode ? 'Exit zen mode' : 'Zen mode',
+            description: 'Hide every control and keep only the page',
+            shortcut: proTag ?? '⌘⇧F',
             icon: <Maximize2 className="w-4 h-4 text-indigo-400" />,
             category: 'Preferences',
             action: () => {
@@ -196,10 +193,39 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
           },
         ]
       : []),
+    ...(onToggleSounds
+      ? [
+          {
+            id: 'sounds',
+            label: soundsOn ? 'Turn sounds off' : 'Turn sounds on',
+            description: 'Click and tick sounds for keys and checkboxes',
+            icon: soundsOn ? <Volume2 className="w-4 h-4 text-teal-400" /> : <VolumeX className="w-4 h-4 text-teal-400" />,
+            category: 'Preferences',
+            action: () => {
+              onToggleSounds();
+            },
+          },
+        ]
+      : []),
+    ...(onCheckForUpdates
+      ? [
+          {
+            id: 'updates',
+            label: 'Check for updates',
+            description: 'Fetch the latest Float release',
+            icon: <ArrowDownToLine className="w-4 h-4 text-sky-400" />,
+            category: 'Preferences',
+            action: () => {
+              onClose();
+              onCheckForUpdates();
+            },
+          },
+        ]
+      : []),
     {
       id: 'copy',
-      label: 'Copy Markdown',
-      description: 'Copy entire note markdown to clipboard',
+      label: 'Copy as Markdown',
+      description: 'Copy the whole note to the clipboard',
       shortcut: '⌘C',
       icon: <Copy className="w-4 h-4 text-emerald-400" />,
       category: 'Primary Actions',
@@ -210,8 +236,8 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     },
     {
       id: 'pin',
-      label: isPinned ? 'Unpin from Desktop' : 'Pin on Desktop (Always on Top)',
-      description: 'Keep note floating above all windows and fullscreen apps',
+      label: isPinned ? 'Unpin' : 'Pin above other windows',
+      description: 'Stay on top of full-screen apps',
       shortcut: '⌥P',
       icon: <Pin className={`w-4 h-4 ${isPinned ? 'fill-current text-amber-400' : 'text-amber-400'}`} />,
       category: 'Primary Actions',
@@ -222,7 +248,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     },
     {
       id: 'theme',
-      label: 'Change Theme...',
+      label: 'Change theme',
       description: `Current: ${THEMES[currentTheme].name}`,
       shortcut: '⌥T',
       icon: <Palette className="w-4 h-4 text-purple-400" />,
@@ -237,8 +263,8 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       ? [
           {
             id: 'settings',
-            label: 'Settings & Keybinds',
-            description: 'Storage folder, custom keyboard shortcuts, license & themes',
+            label: 'Settings',
+            description: 'Notes folder, shortcuts, licence, appearance',
             shortcut: '⌘,',
             icon: <Settings className="w-4 h-4 text-cyan-400" />,
             category: 'Preferences',
@@ -251,8 +277,8 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       : []),
     {
       id: 'new',
-      label: 'Create New Note',
-      description: 'Spawn a fresh blank floating scratchpad',
+      label: 'New note',
+      description: 'Open a fresh tab',
       shortcut: '⌘N',
       icon: <Plus className="w-4 h-4 text-blue-400" />,
       category: 'Note Management',
@@ -263,8 +289,8 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     },
     {
       id: 'export',
-      label: 'Export to File',
-      description: 'Download note as .md file to disk',
+      label: 'Export as .md',
+      description: 'Save this note as a Markdown file',
       shortcut: '⌘E',
       icon: <FileDown className="w-4 h-4 text-sky-400" />,
       category: 'Note Management',
@@ -275,8 +301,8 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     },
     {
       id: 'delete',
-      label: 'Delete Note',
-      description: 'Remove this note permanently',
+      label: 'Delete note',
+      description: 'Remove this note and its file',
       shortcut: '⌘⌫',
       icon: <Trash2 className="w-4 h-4 text-rose-400" />,
       category: 'Danger',
@@ -290,13 +316,15 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
   const themeActions: ActionItem[] = Object.values(THEMES).map(t => ({
     id: t.id,
     label: t.name,
-    description: `${t.isDark ? '🌙 Dark' : '☀️ Light'} - ${t.tagline}`,
-    shortcut: t.id === currentTheme ? 'Active' : undefined,
-    icon: (
+    description: `${t.isDark ? 'Dark' : 'Light'}. ${t.tagline}`,
+    shortcut: t.id === currentTheme ? 'Active' : isThemeUnlocked(t.id, !!isPro) ? undefined : 'Pro',
+    icon: isThemeUnlocked(t.id, !!isPro) ? (
       <span
         className="w-3.5 h-3.5 rounded-full border border-white/30"
         style={{ backgroundColor: t.accent }}
       />
+    ) : (
+      <Lock className="w-3.5 h-3.5 text-amber-400" />
     ),
     category: t.isDark ? 'Dark Themes' : 'Light Themes',
     action: () => {
@@ -366,7 +394,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder={viewingThemes ? 'Search themes (Latte, Mocha, Obsidian...)...' : 'Type a command or search...'}
+            placeholder={viewingThemes ? 'Search themes' : 'Type a command'}
             className="bg-transparent text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none w-full font-sans"
           />
           <kbd className="px-1.5 py-0.5 rounded bg-[var(--kbd-bg)] border border-[var(--kbd-border)] text-[10px] font-mono text-[var(--text-muted)]">
@@ -377,12 +405,12 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         {/* Breadcrumb if in theme picker */}
         {viewingThemes && (
           <div className="px-4 py-1.5 bg-black/5 dark:bg-white/5 border-b border-[var(--border-subtle)] text-[11px] font-mono text-[var(--text-muted)] flex items-center justify-between">
-            <span>Themes &bull; Select a built-in theme</span>
+            <span>Themes</span>
             <button
               onClick={() => setViewingThemes(false)}
               className="text-[var(--accent-color)] hover:underline"
             >
-              &larr; Back to Actions
+              &larr; Back
             </button>
           </div>
         )}
@@ -391,7 +419,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         <div className="max-h-72 overflow-y-auto p-1.5 space-y-0.5">
           {filteredActions.length === 0 ? (
             <div className="py-6 text-center text-xs text-[var(--text-muted)] font-mono">
-              No matching actions found
+              Nothing matches
             </div>
           ) : (
             filteredActions.map((item, idx) => {

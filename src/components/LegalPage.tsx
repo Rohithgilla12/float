@@ -65,14 +65,14 @@ export const LegalPage: React.FC<LegalPageProps> = ({ onBackToHome }) => (
       </Section>
 
       <Section id="terms" title="Terms">
-        <p>Buying Float gives you a personal, non-transferable licence to use the pre-built app on the Macs you own. One licence covers your own machines; please buy a seat per person for a team.</p>
-        <p>The source code is separately available under the MIT licence on GitHub. The paid download is the signed build plus updates and support.</p>
+        <p>Float is free to download and use. Buying Float Pro gives you a personal, non-transferable licence key that unlocks the Pro features on the Macs you own. Please buy a key per person for a team.</p>
+        <p>The source code is available under the MIT licence on GitHub. Buying Pro supports the project and gets you the Pro features without building anything yourself.</p>
         <p>Float is provided as is. I work hard on it, but I cannot promise it is free of bugs, and I am not liable for lost notes. Your notes are plain files, so please back up the folder like any other documents.</p>
         <p>Dodo Payments Inc. is the merchant of record for all purchases and handles payment processing and tax.</p>
       </Section>
 
       <Section id="refunds" title="Refunds">
-        <p>If Float is not for you, ask within 14 days of purchase and you get a full refund, no questions asked.</p>
+        <p>If Float Pro is not for you, ask within 14 days of purchase and you get a full refund, no questions asked.</p>
         <p>To request one, reply to your Dodo Payments receipt email or <a href={CONTACT_URL} className="text-amber-400 hover:text-amber-300">open an issue on GitHub</a> with your order number. Refunds are returned to the original payment method.</p>
       </Section>
     </main>

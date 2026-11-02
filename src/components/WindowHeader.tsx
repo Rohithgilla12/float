@@ -91,19 +91,18 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
 
       {/* Right: Actions & Pin State */}
       <div className="flex items-center gap-1.5">
-        {/* Pro Status / Upgrade Badge */}
         {onOpenLicense && (
           <button
             onClick={onOpenLicense}
-            title={isPro ? 'Float Pro Active' : 'Upgrade to Float Pro ($4.99 via Dodo Payments)'}
-            className={`btn-press px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold flex items-center gap-1 border transition-all ${
+            title={isPro ? 'Float Pro is active' : 'Unlock Float Pro'}
+            className={`btn-press rounded-md flex items-center gap-1 transition-all ${
               isPro
-                ? 'bg-amber-500/15 text-amber-500 border-amber-500/30'
-                : 'bg-black/5 dark:bg-white/5 text-[var(--text-muted)] hover:text-amber-400 border-[var(--border-subtle)]'
+                ? 'px-1.5 py-0.5 text-[10px] font-mono font-bold bg-amber-500/15 text-amber-500 border border-amber-500/30'
+                : 'p-1.5 text-[var(--text-muted)] hover:text-amber-400 hover:bg-[var(--bg-surface-hover)]'
             }`}
           >
-            <Sparkles className="w-2.5 h-2.5 fill-current" />
-            <span>{isPro ? 'PRO' : 'PRO $4.99'}</span>
+            <Sparkles className={`w-3 h-3 ${isPro ? 'fill-current' : ''}`} />
+            {isPro && <span>PRO</span>}
           </button>
         )}
 

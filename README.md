@@ -95,11 +95,11 @@ npm run tauri build
 
 ---
 
-## 💰 Open Source & $4.99 Lifetime License
+## 💰 Free app, $4.99 Pro unlock
 
-Float follows the open source commercial model popularized by indie macOS tools like **Maccy** and **Shottr**:
-- The code is **100% Open Source** on GitHub under the [MIT License](LICENSE).
-- Pre-built, signed, and Apple-notarized `.dmg` binaries with automatic updates are available for a **$4.99 one-time lifetime license** powered by **Dodo Payments**.
+- The code is **100% open source** under the [MIT License](LICENSE).
+- The signed, notarised `.dmg` is free to download from [Releases](https://github.com/Rohithgilla12/float/releases/latest) and updates itself.
+- **Float Pro** ($4.99 once, via **Dodo Payments**) unlocks all six themes, unlimited note tabs, image cards, voice dictation, ghost mode, zen mode, and a custom notes folder.
 
 See [`MONETIZATION_AND_SIGNING.md`](MONETIZATION_AND_SIGNING.md) for the complete Apple signing, notarization, and Dodo Payments integration guide.
 

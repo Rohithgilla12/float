@@ -1,10 +1,10 @@
 [package]
 name = "app"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+version = "0.2.0"
+description = "Float: the floating desktop scratchpad for macOS"
+authors = ["Rohith Gilla"]
+license = "MIT"
+repository = "https://github.com/Rohithgilla12/float"
 edition = "2024"
 rust-version = "1.90"
 
@@ -25,3 +25,5 @@ tauri = { version = "2.12.5", features = ["tray-icon"] }
 tauri-plugin-log = "2"
 tauri-plugin-global-shortcut = "2"
 tauri-plugin-clipboard-manager = "2"
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"

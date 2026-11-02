@@ -8,12 +8,23 @@ import { CommandPaletteModal } from './components/CommandPaletteModal';
 import { LicenseModal } from './components/LicenseModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ImageExportModal } from './components/ImageExportModal';
+import { UpdateBanner } from './components/UpdateBanner';
 import { ParticleBurstCanvas, ParticleCanvasHandle } from './components/ParticleBurstCanvas';
 import { haptics } from './utils/audioHaptics';
-import { getStoredLicense, LicenseStatus } from './utils/license';
+import {
+  getStoredLicense,
+  revalidateStoredLicense,
+  isThemeUnlocked,
+  FREE_NOTE_LIMIT,
+  LicenseStatus,
+  ProFeature,
+} from './utils/license';
 import { speechEngine } from './utils/speechRecognition';
+import { checkForUpdates, isTauri, AvailableUpdate } from './utils/updater';
+import { ThemeId } from './types/theme';
 
 const OPACITY_STORAGE_KEY = 'float_window_opacity';
+const STARTUP_UPDATE_CHECK_DELAY_MS = 4000;
 
 export const App: React.FC = () => {
   const {
@@ -34,10 +45,12 @@ export const App: React.FC = () => {
   const [isPinned, setIsPinned] = useState(true);
   const [actionsPaletteOpen, setActionsPaletteOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
+  const [lockedFeature, setLockedFeature] = useState<ProFeature | null>(null);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [imageExportOpen, setImageExportOpen] = useState(false);
   const [isDictating, setIsDictating] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
+  const [soundsOn, setSoundsOn] = useState(haptics.enabled);
   const [opacity, setOpacity] = useState<number>(() => {
     try {
       const saved = localStorage.getItem(OPACITY_STORAGE_KEY);
@@ -50,6 +63,12 @@ export const App: React.FC = () => {
   });
   const [licenseStatus, setLicenseStatus] = useState<LicenseStatus>(getStoredLicense);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [availableUpdate, setAvailableUpdate] = useState<AvailableUpdate | null>(null);
+  const [updateDismissed, setUpdateDismissed] = useState(false);
+  const [updateProgress, setUpdateProgress] = useState<number | null>(null);
+  const [checkingUpdates, setCheckingUpdates] = useState(false);
+
+  const isPro = licenseStatus.isPro;
 
   const particleCanvasRef = useRef<ParticleCanvasHandle>(null);
   const windowShellRef = useRef<HTMLDivElement>(null);
@@ -66,42 +85,108 @@ export const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, [toastMessage]);
 
-  // Overdrive Direction B: Mouse-Tracking Sub-Pixel Specular Glass Border
+  const openLicense = useCallback((feature: ProFeature | null = null) => {
+    haptics.playClick();
+    setLockedFeature(feature);
+    setLicenseModalOpen(true);
+  }, []);
+
+  const requirePro = useCallback(
+    (feature: ProFeature, run: () => void) => {
+      if (isPro) run();
+      else openLicense(feature);
+    },
+    [isPro, openLicense]
+  );
+
+  const applyLicense = useCallback(
+    (status: LicenseStatus) => {
+      setLicenseStatus(status);
+      if (status.isPro) showToast('Float Pro is active');
+    },
+    [showToast]
+  );
+
+  useEffect(() => {
+    revalidateStoredLicense().then(setLicenseStatus);
+  }, []);
+
+  useEffect(() => {
+    if (!isThemeUnlocked(theme, isPro)) setTheme('obsidian');
+  }, [theme, isPro, setTheme]);
+
+  useEffect(() => {
+    if (!isPro && opacity < 1) setOpacity(1);
+    if (!isPro && isFocusMode) setIsFocusMode(false);
+  }, [isPro, opacity, isFocusMode]);
+
+  useEffect(() => {
+    if (!isTauri) return;
+    const timer = setTimeout(async () => {
+      const result = await checkForUpdates();
+      if (result.kind === 'available') setAvailableUpdate(result.update);
+    }, STARTUP_UPDATE_CHECK_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleCheckForUpdates = useCallback(async () => {
+    haptics.playClick();
+    if (!isTauri) {
+      showToast('Updates apply to the Mac app only');
+      return;
+    }
+    setCheckingUpdates(true);
+    const result = await checkForUpdates();
+    setCheckingUpdates(false);
+    if (result.kind === 'available') {
+      setAvailableUpdate(result.update);
+      setUpdateDismissed(false);
+      showToast(`Float ${result.update.version} is ready to install`);
+    } else if (result.kind === 'up-to-date') {
+      showToast(`You are on the latest version (${result.version})`);
+    } else if (result.kind === 'error') {
+      showToast(`Update check failed: ${result.message}`);
+    }
+  }, [showToast]);
+
+  const handleInstallUpdate = useCallback(async () => {
+    if (!availableUpdate) return;
+    haptics.playClick();
+    setUpdateProgress(0);
+    try {
+      await availableUpdate.install(setUpdateProgress);
+    } catch (err) {
+      setUpdateProgress(null);
+      showToast(`Update failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }, [availableUpdate, showToast]);
+
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const win = windowShellRef.current;
     if (!win) return;
     const rect = win.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    win.style.setProperty('--mouse-x', `${x}px`);
-    win.style.setProperty('--mouse-y', `${y}px`);
+    win.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+    win.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
   }, []);
 
-  // Always on Top Pin Toggle with Tauri Backend Integration
   const handleTogglePin = useCallback(async () => {
     const nextState = !isPinned;
     setIsPinned(nextState);
     haptics.playClick();
-
-    // Call Tauri window API if available
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       await invoke('set_always_on_top', { alwaysOnTop: nextState });
-    } catch {
-      // In web preview fallback
-    }
-
-    showToast(nextState ? '📌 Pinned to desktop (Always on Top)' : '🔓 Window unpinned (normal float)');
+    } catch {}
+    showToast(nextState ? 'Pinned above other windows' : 'Unpinned');
   }, [isPinned, showToast]);
 
-  // Window Controls
   const handleCloseWindow = useCallback(async () => {
     haptics.playClick();
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       await invoke('hide_window');
     } catch {
-      showToast('Close window (⌘W / Esc)');
+      showToast('Close window (⌘W or Esc)');
     }
   }, [showToast]);
 
@@ -111,95 +196,145 @@ export const App: React.FC = () => {
       const { invoke } = await import('@tauri-apps/api/core');
       await invoke('minimize_window');
     } catch {
-      showToast('Minimize window (⌘M)');
+      showToast('Minimise window (⌘M)');
     }
   }, [showToast]);
 
-  // Window Opacity & Ghost Mode
-  const handleAdjustOpacity = useCallback((delta: number) => {
-    haptics.playClick();
-    setOpacity(prev => {
-      const next = Math.max(0.4, Math.min(1.0, Number((prev + delta).toFixed(2))));
-      try {
-        localStorage.setItem(OPACITY_STORAGE_KEY, String(next));
-      } catch {}
-      showToast(`👻 Ghost Mode: ${Math.round(next * 100)}% Opacity`);
-      return next;
-    });
-  }, [showToast]);
+  const persistOpacity = (next: number) => {
+    try {
+      localStorage.setItem(OPACITY_STORAGE_KEY, String(next));
+    } catch {}
+  };
+
+  const handleAdjustOpacity = useCallback(
+    (delta: number) => {
+      requirePro('ghost', () => {
+        haptics.playClick();
+        setOpacity(prev => {
+          const next = Math.max(0.4, Math.min(1.0, Number((prev + delta).toFixed(2))));
+          persistOpacity(next);
+          showToast(`Ghost mode: ${Math.round(next * 100)}% opacity`);
+          return next;
+        });
+      });
+    },
+    [requirePro, showToast]
+  );
 
   const handleCycleOpacity = useCallback(() => {
-    haptics.playClick();
-    setOpacity(prev => {
-      let next = 1.0;
-      if (prev >= 0.95) next = 0.85;
-      else if (prev >= 0.80) next = 0.70;
-      else if (prev >= 0.65) next = 0.50;
-      else next = 1.0;
-      try {
-        localStorage.setItem(OPACITY_STORAGE_KEY, String(next));
-      } catch {}
-      showToast(`👻 Ghost Mode: ${Math.round(next * 100)}% Opacity`);
-      return next;
+    requirePro('ghost', () => {
+      haptics.playClick();
+      setOpacity(prev => {
+        let next = 1.0;
+        if (prev >= 0.95) next = 0.85;
+        else if (prev >= 0.8) next = 0.7;
+        else if (prev >= 0.65) next = 0.5;
+        persistOpacity(next);
+        showToast(`Ghost mode: ${Math.round(next * 100)}% opacity`);
+        return next;
+      });
     });
-  }, [showToast]);
+  }, [requirePro, showToast]);
 
-  const handleSetOpacity = useCallback((val: number) => {
-    const clamped = Math.max(0.4, Math.min(1.0, val));
-    setOpacity(clamped);
-    try {
-      localStorage.setItem(OPACITY_STORAGE_KEY, String(clamped));
-    } catch {}
-  }, []);
+  const handleSetOpacity = useCallback(
+    (val: number) => {
+      requirePro('ghost', () => {
+        const clamped = Math.max(0.4, Math.min(1.0, val));
+        setOpacity(clamped);
+        persistOpacity(clamped);
+      });
+    },
+    [requirePro]
+  );
 
-  // Web Speech Real-Time Dictation Mode
+  const handleToggleFocusMode = useCallback(() => {
+    requirePro('zen', () => {
+      haptics.playClick();
+      setIsFocusMode(prev => {
+        showToast(prev ? 'Zen mode off' : 'Zen mode on');
+        return !prev;
+      });
+    });
+  }, [requirePro, showToast]);
+
+  const handleOpenImageExport = useCallback(() => {
+    requirePro('image-cards', () => {
+      haptics.playClick();
+      setImageExportOpen(true);
+    });
+  }, [requirePro]);
+
   const handleToggleDictation = useCallback(() => {
-    haptics.playClick();
-    if (!speechEngine.isSupported()) {
-      showToast('⚠️ Speech recognition not supported in this browser/OS');
-      return;
-    }
-    if (isDictating) {
-      speechEngine.stop();
-      setIsDictating(false);
-      showToast('🎙️ Dictation stopped');
-    } else {
+    requirePro('dictation', () => {
+      haptics.playClick();
+      if (!speechEngine.isSupported()) {
+        showToast('Speech recognition is not available on this system');
+        return;
+      }
+      if (isDictating) {
+        speechEngine.stop();
+        setIsDictating(false);
+        showToast('Dictation stopped');
+        return;
+      }
       const started = speechEngine.start(
-        (text) => {
-          if (text) {
-            const currentContent = activeNoteRef.current.content;
-            const sep = currentContent.endsWith('\n') || !currentContent ? '' : '\n';
-            updateActiveNoteContent(`${currentContent}${sep}${text}`);
-          }
+        text => {
+          if (!text) return;
+          const currentContent = activeNoteRef.current.content;
+          const sep = currentContent.endsWith('\n') || !currentContent ? '' : '\n';
+          updateActiveNoteContent(`${currentContent}${sep}${text}`);
         },
-        (listening) => {
-          setIsDictating(listening);
-        }
+        listening => setIsDictating(listening)
       );
       if (started) {
         setIsDictating(true);
-        showToast('🎙️ Dictating... speak clearly');
+        showToast('Listening');
       } else {
-        showToast('⚠️ Could not access microphone');
+        showToast('Could not access the microphone');
       }
-    }
-  }, [isDictating, showToast, updateActiveNoteContent]);
+    });
+  }, [requirePro, isDictating, showToast, updateActiveNoteContent]);
 
-  // Copy Note Markdown to Clipboard
+  const handleCreateNote = useCallback(() => {
+    if (!isPro && notes.length >= FREE_NOTE_LIMIT) {
+      openLicense('notes');
+      return;
+    }
+    haptics.playClick();
+    createNote();
+    showToast('New note');
+  }, [isPro, notes.length, openLicense, createNote, showToast]);
+
+  const handleSelectTheme = useCallback(
+    (next: ThemeId) => {
+      if (!isThemeUnlocked(next, isPro)) {
+        openLicense('themes');
+        return;
+      }
+      haptics.playClick();
+      setTheme(next);
+    },
+    [isPro, openLicense, setTheme]
+  );
+
+  const handleToggleSounds = useCallback(() => {
+    const next = !haptics.enabled;
+    haptics.setProfile(next ? 'thock' : 'silent');
+    setSoundsOn(next);
+    showToast(next ? 'Sounds on' : 'Sounds off');
+  }, [showToast]);
+
   const handleCopyNote = useCallback(async () => {
     haptics.playClick();
     try {
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(activeNote.content);
-      }
-      showToast('⚡ Copied note markdown to clipboard');
+      if (navigator.clipboard) await navigator.clipboard.writeText(activeNote.content);
+      showToast('Copied as Markdown');
     } catch (e) {
       console.error('Clipboard copy error:', e);
-      showToast('Failed to copy to clipboard');
+      showToast('Could not copy to the clipboard');
     }
   }, [activeNote.content, showToast]);
 
-  // Export Note as .md File
   const handleExportNote = useCallback(() => {
     haptics.playClick();
     try {
@@ -211,32 +346,28 @@ export const App: React.FC = () => {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-      showToast(`💾 Exported to ${filename}`);
+      showToast(`Exported ${filename}`);
     } catch (e) {
       console.error('Export error:', e);
-      showToast('Failed to export note');
+      showToast('Could not export the note');
     }
   }, [activeNote, showToast]);
 
-  // Global Keyboard Shortcuts
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      // ⌘⇧E: Export as Image Card
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
+      const mod = e.metaKey || e.ctrlKey;
+      const key = e.key.toLowerCase();
+
+      if (mod && e.shiftKey && key === 'e') {
         e.preventDefault();
-        haptics.playClick();
-        setImageExportOpen(prev => !prev);
+        handleOpenImageExport();
         return;
       }
-
-      // ⌥D: Voice Dictation (Speech-to-Text)
-      if (e.altKey && e.key.toLowerCase() === 'd') {
+      if (e.altKey && key === 'd') {
         e.preventDefault();
         handleToggleDictation();
         return;
       }
-
-      // ⌥[ / ⌥]: Ghost Mode Opacity
       if (e.altKey && (e.key === '[' || e.key === '“')) {
         e.preventDefault();
         handleAdjustOpacity(-0.1);
@@ -247,127 +378,79 @@ export const App: React.FC = () => {
         handleAdjustOpacity(0.1);
         return;
       }
-
-      // ⌘⇧F: Zen Focus Mode
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'f') {
+      if (mod && e.shiftKey && key === 'f') {
         e.preventDefault();
-        haptics.playClick();
-        setIsFocusMode(prev => {
-          showToast(!prev ? '🧘 Zen Focus Mode: ON' : 'Zen Focus Mode: OFF');
-          return !prev;
-        });
+        handleToggleFocusMode();
         return;
       }
-
-      // ⌘, : Open Settings & Keybinds
-      if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+      if (mod && e.key === ',') {
         e.preventDefault();
         haptics.playClick();
         setSettingsModalOpen(prev => !prev);
         return;
       }
-
-      // ⌘K or ⌘O: Actions Palette / Quick Switcher
-      if ((e.metaKey || e.ctrlKey) && (e.key.toLowerCase() === 'k' || e.key.toLowerCase() === 'o')) {
+      if (mod && (key === 'k' || key === 'o')) {
         e.preventDefault();
         haptics.playClick();
         setActionsPaletteOpen(prev => !prev);
         return;
       }
-
-      // ⌥P: Toggle Pin (Always on Top)
-      if (e.altKey && e.key.toLowerCase() === 'p') {
+      if (e.altKey && key === 'p') {
         e.preventDefault();
         handleTogglePin();
         return;
       }
-
-      // ⌘N or ⌘T: New Note Tab
-      if ((e.metaKey || e.ctrlKey) && (e.key.toLowerCase() === 'n' || e.key.toLowerCase() === 't')) {
+      if (mod && (key === 'n' || key === 't')) {
         e.preventDefault();
-        haptics.playClick();
-        createNote();
-        showToast('✨ Created new note');
+        handleCreateNote();
         return;
       }
-
-      // ⌘W: Close Current Note Tab
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'w') {
+      if (mod && key === 'w') {
         e.preventDefault();
         haptics.playClick();
         closeActiveNote();
-        showToast('🗑️ Closed note tab');
+        showToast('Closed note');
         return;
       }
-
-      // ⌘] or ⌘} : Switch to Next Tab
-      if ((e.metaKey || e.ctrlKey) && (e.key === ']' || (e.shiftKey && e.key === '}'))) {
+      if (mod && (e.key === ']' || (e.shiftKey && e.key === '}'))) {
         e.preventDefault();
         haptics.playClick();
         switchToNextNote();
         return;
       }
-
-      // ⌘[ or ⌘{ : Switch to Previous Tab
-      if ((e.metaKey || e.ctrlKey) && (e.key === '[' || (e.shiftKey && e.key === '{'))) {
+      if (mod && (e.key === '[' || (e.shiftKey && e.key === '{'))) {
         e.preventDefault();
         haptics.playClick();
         switchToPrevNote();
         return;
       }
-
-      // ⌘1..9: Quick Switcher
-      if ((e.metaKey || e.ctrlKey) && /^[1-9]$/.test(e.key)) {
+      if (mod && /^[1-9]$/.test(e.key)) {
         const index = parseInt(e.key, 10) - 1;
         if (notes[index]) {
           e.preventDefault();
           haptics.playClick();
           setActiveNoteId(notes[index].id);
-          showToast(`Switched to "${notes[index].title}"`);
         }
         return;
       }
 
-      // Esc: Dismiss Modal, Palette, Exit Focus or Close/Hide Window
       if (e.key === 'Escape') {
-        if (imageExportOpen) {
+        const closers: Array<[boolean, () => void]> = [
+          [imageExportOpen, () => setImageExportOpen(false)],
+          [settingsModalOpen, () => setSettingsModalOpen(false)],
+          [licenseModalOpen, () => setLicenseModalOpen(false)],
+          [actionsPaletteOpen, () => setActionsPaletteOpen(false)],
+          [isFocusMode, () => { setIsFocusMode(false); showToast('Zen mode off'); }],
+        ];
+        const open = closers.find(([isOpen]) => isOpen);
+        if (open) {
           e.preventDefault();
           haptics.playClick();
-          setImageExportOpen(false);
+          open[1]();
           return;
         }
-        if (settingsModalOpen) {
-          e.preventDefault();
-          haptics.playClick();
-          setSettingsModalOpen(false);
-          return;
-        }
-        if (licenseModalOpen) {
-          e.preventDefault();
-          haptics.playClick();
-          setLicenseModalOpen(false);
-          return;
-        }
-        if (actionsPaletteOpen) {
-          e.preventDefault();
-          haptics.playClick();
-          setActionsPaletteOpen(false);
-          return;
-        }
-        if (isFocusMode) {
-          e.preventDefault();
-          haptics.playClick();
-          setIsFocusMode(false);
-          showToast('Zen Focus Mode: OFF');
-          return;
-        }
-
-        const isTauri = typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
         if (isTauri) {
-          const hasPopover = document.querySelector('.slash-popover, .bubble-popover');
-          if (hasPopover) {
-            return;
-          }
+          if (document.querySelector('.slash-popover, .bubble-popover')) return;
           const activeTag = document.activeElement?.tagName?.toLowerCase();
           if (activeTag === 'textarea' || activeTag === 'input') {
             (document.activeElement as HTMLElement)?.blur();
@@ -376,7 +459,6 @@ export const App: React.FC = () => {
           e.preventDefault();
           handleCloseWindow();
         }
-        return;
       }
     };
 
@@ -390,7 +472,7 @@ export const App: React.FC = () => {
     isFocusMode,
     handleTogglePin,
     handleCloseWindow,
-    createNote,
+    handleCreateNote,
     closeActiveNote,
     switchToNextNote,
     switchToPrevNote,
@@ -399,24 +481,30 @@ export const App: React.FC = () => {
     showToast,
     handleToggleDictation,
     handleAdjustOpacity,
+    handleToggleFocusMode,
+    handleOpenImageExport,
   ]);
+
+  const openActions = () => {
+    haptics.playClick();
+    setActionsPaletteOpen(true);
+  };
+  const openSettings = () => {
+    haptics.playClick();
+    setSettingsModalOpen(true);
+  };
 
   return (
     <div className={`theme-${theme} w-full h-full flex flex-col overflow-hidden bg-transparent`}>
-      {/* Outer Floating Window Container with Overdrive Specular Glass Shader & Ghost Mode Opacity */}
       <div
         ref={windowShellRef}
         onMouseMove={handleMouseMove}
         style={{ opacity }}
         className="window-shell w-full h-full rounded-2xl flex flex-col overflow-hidden relative transition-opacity duration-150"
       >
-        {/* Ambient Specular Glass Glow (Direction B) */}
         <div className="specular-glow" />
-
-        {/* Micro-Particle Burst Canvas (Overdrive Direction B) */}
         <ParticleBurstCanvas ref={particleCanvasRef} />
 
-        {/* Top Header Bar (Hidden in Zen Focus Mode) */}
         {!isFocusMode ? (
           <WindowHeader
             notes={notes}
@@ -425,11 +513,7 @@ export const App: React.FC = () => {
               haptics.playClick();
               setActiveNoteId(id);
             }}
-            onCreateNote={() => {
-              haptics.playClick();
-              createNote();
-              showToast('✨ Created new note');
-            }}
+            onCreateNote={handleCreateNote}
             isPinned={isPinned}
             onTogglePin={handleTogglePin}
             currentTheme={themeConfig}
@@ -437,75 +521,54 @@ export const App: React.FC = () => {
               haptics.playClick();
               toggleLightDark();
             }}
-            onOpenActions={() => {
-              haptics.playClick();
-              setActionsPaletteOpen(true);
-            }}
-            onOpenSettings={() => {
-              haptics.playClick();
-              setSettingsModalOpen(true);
-            }}
+            onOpenActions={openActions}
+            onOpenSettings={openSettings}
             onCloseWindow={handleCloseWindow}
             onMinimizeWindow={handleMinimizeWindow}
-            isPro={licenseStatus.isPro}
-            onOpenLicense={() => {
-              haptics.playClick();
-              setLicenseModalOpen(true);
-            }}
+            isPro={isPro}
+            onOpenLicense={() => openLicense(null)}
           />
         ) : (
-          /* Subtle Zen Exit Button in top right */
           <button
-            onClick={() => {
-              haptics.playClick();
-              setIsFocusMode(false);
-              showToast('Zen Focus Mode: OFF');
-            }}
+            onClick={handleToggleFocusMode}
             className="absolute top-3 right-3 z-30 px-2.5 py-1 rounded-lg bg-black/60 hover:bg-black/90 text-white/50 hover:text-white border border-white/15 text-[10px] font-mono transition-all flex items-center gap-1 shadow-lg cursor-pointer"
-            title="Exit Zen Focus Mode (Esc or ⌘⇧F)"
+            title="Exit Zen mode (Esc or ⌘⇧F)"
           >
             <span>Exit Zen (Esc)</span>
           </button>
         )}
 
-        {/* Note Editor Area with Task Particle Bursts (Overdrive Direction B) & Audio Haptics (Direction A) */}
+        {availableUpdate && !updateDismissed && !isFocusMode && (
+          <UpdateBanner
+            version={availableUpdate.version}
+            progress={updateProgress}
+            onInstall={handleInstallUpdate}
+            onDismiss={() => setUpdateDismissed(true)}
+          />
+        )}
+
         <NoteEditor
           content={activeNote.content}
           onChange={updateActiveNoteContent}
-          onOpenActions={() => {
-            haptics.playClick();
-            setActionsPaletteOpen(true);
-          }}
+          onOpenActions={openActions}
           onTaskCheckBurst={(x, y) => {
-            particleCanvasRef.current?.burst(x, y, [
-              themeConfig.accent,
-              '#FFFFFF',
-              '#38BDF8',
-              '#F59E0B',
-            ]);
+            particleCanvasRef.current?.burst(x, y, [themeConfig.accent, '#FFFFFF', '#38BDF8', '#F59E0B']);
           }}
         />
 
-        {/* Bottom Action Bar (Hidden in Zen Focus Mode) */}
         {!isFocusMode && (
           <ActionBar
             content={activeNote.content}
-            onOpenActions={() => {
-              haptics.playClick();
-              setActionsPaletteOpen(true);
-            }}
-            onOpenImageExport={() => {
-              haptics.playClick();
-              setImageExportOpen(true);
-            }}
+            onOpenActions={openActions}
+            onOpenImageExport={handleOpenImageExport}
             isDictating={isDictating}
             onToggleDictation={handleToggleDictation}
             opacity={opacity}
             onCycleOpacity={handleCycleOpacity}
+            isPro={isPro}
           />
         )}
 
-        {/* ⌘K Actions Command Palette */}
         <CommandPaletteModal
           isOpen={actionsPaletteOpen}
           onClose={() => setActionsPaletteOpen(false)}
@@ -513,44 +576,29 @@ export const App: React.FC = () => {
           isPinned={isPinned}
           onTogglePin={handleTogglePin}
           currentTheme={theme}
-          onSelectTheme={t => {
-            haptics.playClick();
-            setTheme(t);
-            showToast(`Switched to ${t}`);
-          }}
-          onCreateNote={() => {
-            haptics.playClick();
-            createNote();
-            showToast('✨ Created new note');
-          }}
+          onSelectTheme={handleSelectTheme}
+          onCreateNote={handleCreateNote}
           onDeleteNote={() => {
             haptics.playClick();
             deleteActiveNote();
-            showToast('🗑️ Deleted note');
+            showToast('Deleted note');
           }}
           onExportNote={handleExportNote}
-          isPro={licenseStatus.isPro}
-          onOpenLicense={() => {
-            haptics.playClick();
-            setLicenseModalOpen(true);
-          }}
-          onOpenSettings={() => {
-            haptics.playClick();
-            setSettingsModalOpen(true);
-          }}
-          onOpenImageExport={() => setImageExportOpen(true)}
+          isPro={isPro}
+          onOpenLicense={() => openLicense(null)}
+          onOpenSettings={openSettings}
+          onOpenImageExport={handleOpenImageExport}
           isDictating={isDictating}
           onToggleDictation={handleToggleDictation}
           opacity={opacity}
           onCycleOpacity={handleCycleOpacity}
           isFocusMode={isFocusMode}
-          onToggleFocusMode={() => {
-            setIsFocusMode(prev => !prev);
-            showToast(!isFocusMode ? '🧘 Zen Focus Mode: ON' : 'Zen Focus Mode: OFF');
-          }}
+          onToggleFocusMode={handleToggleFocusMode}
+          soundsOn={soundsOn}
+          onToggleSounds={handleToggleSounds}
+          onCheckForUpdates={handleCheckForUpdates}
         />
 
-        {/* Ray.so / Carbon Style Visual Image Card Exporter */}
         <ImageExportModal
           isOpen={imageExportOpen}
           onClose={() => setImageExportOpen(false)}
@@ -559,45 +607,34 @@ export const App: React.FC = () => {
           onShowToast={showToast}
         />
 
-        {/* Settings Modal (Storage, Shortcuts, License & Appearance) */}
         <SettingsModal
           isOpen={settingsModalOpen}
           onClose={() => setSettingsModalOpen(false)}
           currentTheme={theme}
-          onSelectTheme={t => {
-            haptics.playClick();
-            setTheme(t);
-            showToast(`Switched to ${t}`);
-          }}
+          onSelectTheme={handleSelectTheme}
           licenseStatus={licenseStatus}
-          onLicenseChanged={status => {
-            setLicenseStatus(status);
-            showToast(status.isPro ? '⚡ Float Pro Activated!' : 'License updated');
-          }}
+          onLicenseChanged={applyLicense}
+          onRequirePro={feature => openLicense(feature)}
           onShowToast={showToast}
           opacity={opacity}
           onChangeOpacity={handleSetOpacity}
+          onCheckForUpdates={handleCheckForUpdates}
+          checkingUpdates={checkingUpdates}
         />
 
-        {/* Dodo Payments License Modal */}
         <LicenseModal
           isOpen={licenseModalOpen}
           onClose={() => setLicenseModalOpen(false)}
           licenseStatus={licenseStatus}
-          onLicenseChanged={status => {
-            setLicenseStatus(status);
-            showToast(status.isPro ? '⚡ Float Pro Activated!' : 'License updated');
-          }}
+          onLicenseChanged={applyLicense}
+          lockedFeature={lockedFeature}
         />
 
-        {/* Toast Notification */}
         {toastMessage && (
-          <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 z-50 px-3.5 py-1.5 rounded-xl bg-black/90 text-white border border-white/20 text-xs font-medium shadow-2xl flex items-center gap-2 pointer-events-none animate-fadeIn">
-            <span className="text-amber-400">⚡</span>
-            <span>{toastMessage}</span>
+          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-50 px-3.5 py-1.5 rounded-xl bg-black/90 text-white border border-white/20 text-xs font-medium shadow-2xl pointer-events-none animate-fadeIn">
+            {toastMessage}
           </div>
         )}
-
       </div>
     </div>
   );

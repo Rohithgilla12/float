@@ -1,46 +1,86 @@
-// Float Dodo Payments Licensing Engine
-// Supports public client-side activation, validation, and deactivation
+import { ThemeId } from '../types/theme';
 
 const LICENSE_STORAGE_KEY = 'float_dodo_license_v1';
+const LEGACY_LICENSE_KEY = 'float_notes_dodo_license_v1';
+const REVALIDATE_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 
-// Live Dodo Payments checkout link for Float ($4.99 one-time)
 export const DODO_CHECKOUT_URL = 'https://dodo.pe/float-lifetime';
+export const PRO_PRICE = '$4.99';
 
-// Set to 'https://test.dodopayments.com' for test environment, 'https://live.dodopayments.com' for production
-export const DODO_API_BASE = 'https://live.dodopayments.com';
+const DODO_ENDPOINTS = {
+  dodo_live: 'https://live.dodopayments.com',
+  dodo_test: 'https://test.dodopayments.com',
+} as const;
+
+type DodoSource = keyof typeof DODO_ENDPOINTS;
 
 export interface LicenseStatus {
   isPro: boolean;
   licenseKey: string | null;
   instanceId?: string | null;
   activatedAt: number | null;
+  lastValidatedAt?: number | null;
   deviceName?: string;
-  source?: 'dodo_live' | 'dodo_test' | 'offline_demo';
+  source?: DodoSource | 'offline_demo';
 }
 
-/**
- * Retrieve cached license status from localStorage
- */
+export const FREE_LICENSE: LicenseStatus = { isPro: false, licenseKey: null, activatedAt: null };
+
+export type ProFeature =
+  | 'themes'
+  | 'notes'
+  | 'image-cards'
+  | 'dictation'
+  | 'ghost'
+  | 'zen'
+  | 'folder';
+
+export const FREE_NOTE_LIMIT = 3;
+export const FREE_THEMES: ThemeId[] = ['obsidian', 'latte'];
+
+export const PRO_FEATURES: Record<ProFeature, { title: string; detail: string }> = {
+  themes: { title: 'All six themes', detail: 'Mocha, Paper, Sonoma, and Monastic join Obsidian and Latte.' },
+  notes: { title: 'Unlimited notes', detail: `Free keeps ${FREE_NOTE_LIMIT} tabs. Pro removes the limit.` },
+  'image-cards': { title: 'Image cards', detail: 'Export any note as a 2x PNG card with ⌘⇧E.' },
+  dictation: { title: 'Voice dictation', detail: 'Speak and Float types, with ⌥D.' },
+  ghost: { title: 'Ghost mode', detail: 'Lower the window opacity to see what is behind it.' },
+  zen: { title: 'Zen mode', detail: 'Hide every control and keep only the page.' },
+  folder: { title: 'Custom notes folder', detail: 'Point Float at an Obsidian vault or any folder you like.' },
+};
+
+export function isThemeUnlocked(theme: ThemeId, isPro: boolean): boolean {
+  return isPro || FREE_THEMES.includes(theme);
+}
+
 export function getStoredLicense(): LicenseStatus {
   try {
-    const raw = localStorage.getItem(LICENSE_STORAGE_KEY) || localStorage.getItem('float_notes_dodo_license_v1');
+    const raw = localStorage.getItem(LICENSE_STORAGE_KEY) || localStorage.getItem(LEGACY_LICENSE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed.isPro) return parsed;
+      const parsed = JSON.parse(raw) as LicenseStatus;
+      if (parsed.isPro && parsed.licenseKey) return parsed;
     }
   } catch (err) {
     console.error('Failed to parse stored license:', err);
   }
-  return {
-    isPro: false,
-    licenseKey: null,
-    activatedAt: null,
-  };
+  return FREE_LICENSE;
 }
 
-/**
- * Open external URL in default desktop browser via Tauri or Web fallback
- */
+function saveLicense(status: LicenseStatus): void {
+  try {
+    localStorage.setItem(LICENSE_STORAGE_KEY, JSON.stringify(status));
+    localStorage.removeItem(LEGACY_LICENSE_KEY);
+  } catch (err) {
+    console.error('Failed to save license:', err);
+  }
+}
+
+function clearLicense(): void {
+  try {
+    localStorage.removeItem(LICENSE_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_LICENSE_KEY);
+  } catch {}
+}
+
 export async function openExternalLink(url: string): Promise<void> {
   try {
     const { invoke } = await import('@tauri-apps/api/core');
@@ -50,180 +90,126 @@ export async function openExternalLink(url: string): Promise<void> {
   }
 }
 
-/**
- * Activate a license key with Dodo Payments Public API
- * No secret API keys required in desktop client.
- */
+interface ActivationResult {
+  success: boolean;
+  message: string;
+  status: LicenseStatus;
+}
+
+async function postJson(url: string, body: unknown): Promise<Response> {
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+function activationError(response: Response, data: { message?: string }): string {
+  if (response.status === 404) return 'That key was not found. Check the email from Dodo Payments.';
+  if (response.status === 403) return 'This key has been disabled or has expired.';
+  if (response.status === 422) return 'This key has reached its activation limit. Deactivate another Mac first.';
+  return data.message || 'Dodo Payments rejected the key.';
+}
+
 export async function activateDodoLicense(
   licenseKey: string,
-  deviceName: string = 'macOS Float Device'
-): Promise<{ success: boolean; message: string; status: LicenseStatus }> {
+  deviceName: string = 'Float on macOS'
+): Promise<ActivationResult> {
   const cleanKey = licenseKey.trim();
-
   if (!cleanKey) {
-    return {
-      success: false,
-      message: 'Please enter your license key.',
-      status: getStoredLicense(),
-    };
+    return { success: false, message: 'Enter your licence key.', status: getStoredLicense() };
   }
 
-  // Developer / Demo bypass for testing without live charges
-  if (
-    cleanKey.toUpperCase().startsWith('FLOAT-PRO') ||
-    cleanKey.toUpperCase() === 'TEST-PRO-LICENSE' ||
-    cleanKey.toUpperCase() === 'DODO-PRO-TEST'
-  ) {
+  if (import.meta.env.DEV && cleanKey.toUpperCase() === 'FLOAT-DEV-PRO') {
     const status: LicenseStatus = {
       isPro: true,
       licenseKey: cleanKey,
-      instanceId: `inst_demo_${Date.now()}`,
+      instanceId: 'inst_dev',
       activatedAt: Date.now(),
+      lastValidatedAt: Date.now(),
       deviceName,
       source: 'offline_demo',
     };
     saveLicense(status);
-    return {
-      success: true,
-      message: 'Float Pro activated successfully (Demo/Test Key)!',
-      status,
-    };
+    return { success: true, message: 'Dev licence active.', status };
   }
 
-  // Call Dodo Payments Public Activation Endpoint
-  try {
-    const endpoints = [
-      `${DODO_API_BASE}/licenses/activate`,
-      'https://test.dodopayments.com/licenses/activate',
-    ];
+  let lastError = 'Could not reach Dodo Payments. Check your connection and try again.';
 
-    let lastError = 'Failed to activate license.';
-
-    for (const endpoint of endpoints) {
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            license_key: cleanKey,
-            name: deviceName,
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const instanceId = data.id || data.instance_id || `inst_${Date.now()}`;
-          const isTest = endpoint.includes('test.dodopayments');
-
-          const status: LicenseStatus = {
-            isPro: true,
-            licenseKey: cleanKey,
-            instanceId,
-            activatedAt: Date.now(),
-            deviceName,
-            source: isTest ? 'dodo_test' : 'dodo_live',
-          };
-
-          saveLicense(status);
-          return {
-            success: true,
-            message: 'Float Pro activated! Thank you for your support.',
-            status,
-          };
-        } else {
-          const errData = await response.json().catch(() => ({}));
-          if (response.status === 404) {
-            lastError = 'License key not found. Check your purchase email.';
-          } else if (response.status === 403) {
-            lastError = 'This license key is disabled or expired.';
-          } else if (response.status === 422) {
-            lastError = 'Activation limit reached for this license key.';
-          } else if (errData.message) {
-            lastError = errData.message;
-          }
-        }
-      } catch (reqErr) {
-        // Network timeout / offline fallback
-        console.warn(`Endpoint ${endpoint} request failed:`, reqErr);
+  for (const source of ['dodo_live', 'dodo_test'] as DodoSource[]) {
+    try {
+      const response = await postJson(`${DODO_ENDPOINTS[source]}/licenses/activate`, {
+        license_key: cleanKey,
+        name: deviceName,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok) {
+        const status: LicenseStatus = {
+          isPro: true,
+          licenseKey: cleanKey,
+          instanceId: data.id || null,
+          activatedAt: Date.now(),
+          lastValidatedAt: Date.now(),
+          deviceName,
+          source,
+        };
+        saveLicense(status);
+        return { success: true, message: 'Float Pro is active. Thank you.', status };
       }
+      lastError = activationError(response, data);
+      if (response.status !== 404) break;
+    } catch (err) {
+      console.warn(`Activation against ${source} failed:`, err);
     }
-
-    // If completely offline or network issue, but format is valid, provide offline fallback
-    if (cleanKey.length >= 10 && cleanKey.includes('-')) {
-      const status: LicenseStatus = {
-        isPro: true,
-        licenseKey: cleanKey,
-        instanceId: `inst_offline_${Date.now()}`,
-        activatedAt: Date.now(),
-        deviceName,
-        source: 'dodo_live',
-      };
-      saveLicense(status);
-      return {
-        success: true,
-        message: 'Activated locally (offline mode).',
-        status,
-      };
-    }
-
-    return {
-      success: false,
-      message: lastError,
-      status: getStoredLicense(),
-    };
-  } catch (err: any) {
-    return {
-      success: false,
-      message: err?.message || 'Network error while contacting Dodo Payments.',
-      status: getStoredLicense(),
-    };
   }
+
+  return { success: false, message: lastError, status: getStoredLicense() };
 }
 
-/**
- * Deactivate the license from this device
- */
 export async function deactivateDodoLicense(): Promise<{ success: boolean; message: string }> {
   const current = getStoredLicense();
   if (!current.isPro || !current.licenseKey) {
-    return { success: false, message: 'No active license to deactivate.' };
+    return { success: false, message: 'No licence is active on this Mac.' };
   }
 
-  try {
-    if (current.instanceId && !current.source?.includes('demo')) {
-      const endpoint = current.source === 'dodo_test'
-        ? 'https://test.dodopayments.com/licenses/deactivate'
-        : `${DODO_API_BASE}/licenses/deactivate`;
+  if (current.instanceId && current.source && current.source !== 'offline_demo') {
+    await postJson(`${DODO_ENDPOINTS[current.source]}/licenses/deactivate`, {
+      license_key: current.licenseKey,
+      license_key_instance_id: current.instanceId,
+    }).catch(() => {});
+  }
 
-      await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          license_key: current.licenseKey,
-          license_key_instance_id: current.instanceId,
-          instance_id: current.instanceId,
-        }),
-      }).catch(() => {});
-    }
-  } catch {}
-
-  try {
-    localStorage.removeItem(LICENSE_STORAGE_KEY);
-    localStorage.removeItem('float_notes_dodo_license_v1');
-  } catch {}
-
-  return {
-    success: true,
-    message: 'License deactivated on this device.',
-  };
+  clearLicense();
+  return { success: true, message: 'Licence released. You can activate it on another Mac.' };
 }
 
-function saveLicense(status: LicenseStatus): void {
+/**
+ * Re-checks a stored licence with Dodo once a week. Network failures keep the
+ * current state; only an explicit "valid: false" revokes it.
+ */
+export async function revalidateStoredLicense(): Promise<LicenseStatus> {
+  const current = getStoredLicense();
+  if (!current.isPro || !current.licenseKey || current.source === 'offline_demo') return current;
+  if (!current.source) return current;
+
+  const last = current.lastValidatedAt ?? current.activatedAt ?? 0;
+  if (Date.now() - last < REVALIDATE_AFTER_MS) return current;
+
   try {
-    localStorage.setItem(LICENSE_STORAGE_KEY, JSON.stringify(status));
-  } catch (err) {
-    console.error('Failed to save license to localStorage:', err);
+    const response = await postJson(`${DODO_ENDPOINTS[current.source]}/licenses/validate`, {
+      license_key: current.licenseKey,
+      license_key_instance_id: current.instanceId ?? null,
+    });
+    if (!response.ok) return current;
+    const data = (await response.json()) as { valid?: boolean };
+    if (data.valid === false) {
+      clearLicense();
+      return FREE_LICENSE;
+    }
+    const refreshed = { ...current, lastValidatedAt: Date.now() };
+    saveLicense(refreshed);
+    return refreshed;
+  } catch {
+    return current;
   }
 }
