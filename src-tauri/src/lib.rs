@@ -208,14 +208,23 @@ pub fn run() {
             }
 
             // Accessory apps (like Spotlight and Raycast) can draw over another
-            // app's full-screen Space. Regular apps make macOS switch Spaces.
+            // app's full-screen Space. macOS decides this when a window is
+            // created, so the policy must be set first: the main window has
+            // `create: false` in tauri.conf.json and is built here instead.
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-            if let Some(window) = app.get_webview_window("main") {
-                #[cfg(target_os = "macos")]
-                apply_overlay_level(&window, true);
-            }
+            let window_config = app
+                .config()
+                .app
+                .windows
+                .iter()
+                .find(|w| w.label == "main")
+                .ok_or("tauri.conf.json has no main window")?
+                .clone();
+            let window = tauri::WebviewWindowBuilder::from_config(app.handle(), &window_config)?.build()?;
+            #[cfg(target_os = "macos")]
+            apply_overlay_level(&window, true);
 
             let show = MenuItem::with_id(app, "show", "Show Float (⌥Space)", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "Quit Float", true, Some("CmdOrCtrl+Q"))?;

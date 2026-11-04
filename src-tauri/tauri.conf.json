@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Float",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "identifier": "fun.gilla.float",
   "build": {
     "frontendDist": "../dist",
@@ -13,6 +13,7 @@
     "windows": [
       {
         "label": "main",
+        "create": false,
         "title": "Float",
         "width": 520,
         "height": 560,
