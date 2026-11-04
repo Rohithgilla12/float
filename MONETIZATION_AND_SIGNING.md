@@ -155,7 +155,7 @@ To enable 1-click releases:
    - `APPLE_PASSWORD`: `abcd-efgh-ijkl-mnop`
    - `APPLE_TEAM_ID`: `ABC1234XYZ`
 
-Whenever you push a tag:
+Whenever you push a tag (`just release patch` does this for you):
 ```bash
 git tag v0.1.0
 git push origin v0.1.0
@@ -175,4 +175,4 @@ GitHub Actions will automatically build, sign with Apple Developer ID, notarize 
 
 Backup: 1Password item "Float release credentials" in the Employee vault of fusang.1password.com holds the Developer-ID-only p12 and its password (identical to the GitHub secrets), both updater key files, and the identity, team, and Apple ID. Restore steps are in the item's notes. Never regenerate the updater key: installed apps only accept updates signed by it.
 
-Release: bump `version` in `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`, then `git tag vX.Y.Z && git push origin vX.Y.Z`. The workflow drafts the GitHub release; publish it to go live.
+Release: `just release patch` (or `minor`, `major`, `X.Y.Z`) bumps the version in every manifest and lockfile, commits, tags `vX.Y.Z`, and pushes; the workflow then drafts the GitHub release. `just publish` waits for that build, checks the feed version, notarisation, and Gatekeeper, and publishes the draft to go live. `just ship patch` does both.
