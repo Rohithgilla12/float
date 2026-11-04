@@ -2,7 +2,7 @@
   "name": "float",
   "description": "Float — The fastest floating desktop scratchpad for macOS",
   "private": true,
-  "version": "0.2.4",
+  "version": "0.2.5",
   "type": "module",
   "scripts": {
     "dev": "vite",

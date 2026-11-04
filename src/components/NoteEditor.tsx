@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import {
   Check,
   Copy,
@@ -46,8 +46,18 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     blockId: string;
   }>({ visible: false, x: 0, y: 0, text: '', start: 0, end: 0, blockId: '' });
 
+  // Each block is its own textarea, so a native selection can't span the note.
+  // Selecting the whole note is a separate mode, held while the hidden input has focus.
+  const [wholeNoteSelected, setWholeNoteSelected] = useState(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const blockInputRefs = useRef<{ [key: string]: HTMLTextAreaElement | null }>({});
+  const lastFocusedInput = useRef<HTMLTextAreaElement | null>(null);
+  const wholeNoteInput = useRef<HTMLTextAreaElement>(null);
+  const wholeNoteUndo = useRef<{ before: EditorBlock[]; after: string } | null>(null);
+  const pendingCaretAtEnd = useRef<string | null>(null);
+  const blocksRef = useRef(blocks);
+  blocksRef.current = blocks;
   const isInternalUpdate = useRef(false);
 
   // Auto-resize single textarea to fit its text height
@@ -65,7 +75,9 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     }
     const parsed = parseMarkdownToBlocks(content);
     setBlocks(parsed);
-    
+    setWholeNoteSelected(false);
+    wholeNoteUndo.current = null;
+
     // Safely size textareas without collapsing container scroll
     requestAnimationFrame(() => {
       Object.values(blockInputRefs.current).forEach(el => {
@@ -84,6 +96,121 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     const md = serializeBlocksToMarkdown(newBlocks);
     onChange(md);
   }, [onChange]);
+
+  const selectWholeNote = useCallback(() => {
+    const proxy = wholeNoteInput.current;
+    if (!proxy) return;
+    setBubbleMenu(prev => ({ ...prev, visible: false }));
+    setSlashMenuOpen(false);
+    setWholeNoteSelected(true);
+    // The hidden input holds the note's markdown, fully selected, so native
+    // copy, cut, paste, typing, and IME all act on the whole note.
+    proxy.value = serializeBlocksToMarkdown(blocksRef.current);
+    proxy.focus({ preventScroll: true });
+    proxy.select();
+  }, []);
+
+  const replaceWholeNote = (next: EditorBlock[]) => {
+    const before = blocksRef.current;
+    setWholeNoteSelected(false);
+    notifyChange(next);
+    wholeNoteUndo.current = { before, after: serializeBlocksToMarkdown(next) };
+    const target = [...next].reverse().find(b => b.type !== 'divider');
+    pendingCaretAtEnd.current = target?.id ?? null;
+  };
+
+  const replaceWholeNoteWithText = (text: string) => {
+    replaceWholeNote([{ id: `block-${Date.now()}`, type: 'paragraph', content: text }]);
+  };
+
+  const handleWholeNoteInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (!wholeNoteSelected || (e.nativeEvent as InputEvent).isComposing) return;
+    replaceWholeNoteWithText(e.target.value);
+  };
+
+  const handleWholeNotePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+    replaceWholeNote(parseMarkdownToBlocks(e.clipboardData.getData('text')));
+  };
+
+  const handleWholeNoteKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const mod = e.metaKey || e.ctrlKey;
+    if (mod && e.key.toLowerCase() === 'a') {
+      e.preventDefault();
+      return;
+    }
+    if (e.key === 'Escape') {
+      // Keep App's Escape handler from hiding the window on this press.
+      e.preventDefault();
+      e.stopPropagation();
+      e.currentTarget.blur();
+      return;
+    }
+    if (e.key.startsWith('Arrow') && !e.shiftKey) {
+      e.preventDefault();
+      setWholeNoteSelected(false);
+      const toStart = e.key === 'ArrowUp' || e.key === 'ArrowLeft';
+      const target = toStart ? blocks[0] : blocks[blocks.length - 1];
+      if (target) focusBlock(target.id, !toStart);
+    }
+  };
+
+  // Undo a whole-note replace, as long as nothing has changed since. Native
+  // textarea undo can't do this: the replaced blocks were separate elements.
+  const undoWholeNoteReplace = (e: React.KeyboardEvent) => {
+    const snapshot = wholeNoteUndo.current;
+    const isUndo = (e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z';
+    if (!isUndo || !snapshot || serializeBlocksToMarkdown(blocks) !== snapshot.after) return false;
+    e.preventDefault();
+    wholeNoteUndo.current = null;
+    notifyChange(snapshot.before);
+    const target = [...snapshot.before].reverse().find(b => b.type !== 'divider');
+    pendingCaretAtEnd.current = target?.id ?? null;
+    return true;
+  };
+
+  // Focus the replacement block in the same commit, so a fast second keystroke
+  // can't land in the hidden input.
+  useLayoutEffect(() => {
+    const id = pendingCaretAtEnd.current;
+    if (!id) return;
+    pendingCaretAtEnd.current = null;
+    const el = blockInputRefs.current[id];
+    if (!el) return;
+    el.focus();
+    autoResize(el);
+    el.setSelectionRange(el.value.length, el.value.length);
+  });
+
+  // With nothing focused (after Escape, or before the first click), ⌘A would
+  // hit the unselectable body and do nothing.
+  useEffect(() => {
+    const handleBodySelectAll = (e: KeyboardEvent) => {
+      const active = document.activeElement;
+      if (active && active !== document.body) return;
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        selectWholeNote();
+      }
+    };
+    window.addEventListener('keydown', handleBodySelectAll);
+    return () => window.removeEventListener('keydown', handleBodySelectAll);
+  }, [selectWholeNote]);
+
+  // When the window is summoned with nothing focused, put the caret back where
+  // it was so typing lands in the note. A textarea keeps its selection on blur.
+  useEffect(() => {
+    const restoreCaret = () => {
+      const active = document.activeElement;
+      if (active && active !== document.body) return;
+      const last = lastFocusedInput.current;
+      const inputs = containerRef.current?.querySelectorAll<HTMLTextAreaElement>('textarea:not([aria-hidden])');
+      const target = last?.isConnected ? last : inputs?.[inputs.length - 1];
+      target?.focus();
+    };
+    window.addEventListener('focus', restoreCaret);
+    return () => window.removeEventListener('focus', restoreCaret);
+  }, []);
 
   // Focus helper
   const focusBlock = (id: string, selectEnd = true) => {
@@ -246,6 +373,19 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       e.preventDefault();
       onOpenActions();
       return;
+    }
+
+    if (undoWholeNoteReplace(e)) return;
+
+    // ⌘A: native select-all within the block first; once the block is fully
+    // selected (or empty), a further ⌘A selects the whole note.
+    if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'a' && blocks.length > 1) {
+      const el = e.currentTarget;
+      if (el.selectionStart === 0 && el.selectionEnd === el.value.length) {
+        e.preventDefault();
+        selectWholeNote();
+        return;
+      }
     }
 
     const block = blocks[index];
@@ -692,6 +832,11 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     <div
       ref={containerRef}
       className="flex-1 min-h-0 flex flex-col p-5 overflow-y-auto relative text-[var(--text-primary)] select-text z-10"
+      onFocus={e => {
+        if (e.target instanceof HTMLTextAreaElement && e.target !== wholeNoteInput.current) {
+          lastFocusedInput.current = e.target;
+        }
+      }}
       onClick={e => {
         // If clicking blank space at the bottom of the editor, focus the last block or create a new one
         if (e.target === containerRef.current) {
@@ -711,8 +856,24 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         }
       }}
     >
+      <textarea
+        ref={wholeNoteInput}
+        aria-hidden
+        tabIndex={-1}
+        className="fixed top-0 left-0 w-px h-px opacity-0 pointer-events-none resize-none"
+        onChange={handleWholeNoteInput}
+        onCompositionEnd={e => replaceWholeNoteWithText(e.currentTarget.value)}
+        onPaste={handleWholeNotePaste}
+        onKeyDown={handleWholeNoteKeyDown}
+        onBlur={() => setWholeNoteSelected(false)}
+      />
+
       {/* Block List: Unified Rendered WYSIWYG */}
-      <div className="w-full space-y-1 pb-16">
+      <div
+        className={`-mx-2 px-2 space-y-1 pb-16 rounded-lg transition-colors ${
+          wholeNoteSelected ? 'bg-[var(--accent-glow)]' : ''
+        }`}
+      >
         {blocks.map((block, idx) => {
           // 1. Heading 1
           if (block.type === 'h1') {
