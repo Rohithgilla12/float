@@ -283,3 +283,16 @@ html.desktop-app #root {
     transform: scale(1) translateY(0);
   }
 }
+
+/* Block range selection: an overlay, so it shows over blocks with their own background */
+[data-block-selected] {
+  position: relative;
+}
+[data-block-selected]::after {
+  content: '';
+  position: absolute;
+  inset: -2px -8px;
+  border-radius: 6px;
+  background: var(--accent-glow);
+  pointer-events: none;
+}

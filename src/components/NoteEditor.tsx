@@ -13,12 +13,14 @@ import { SlashCommand } from '../types/note';
 import { SlashCommandMenu } from './SlashCommandMenu';
 import { haptics } from '../utils/audioHaptics';
 import { evaluateMathExpression } from '../utils/mathEvaluator';
+import { DEFAULT_TEXT_SIZE } from '../utils/textSize';
 
 interface NoteEditorProps {
   content: string;
   onChange: (content: string) => void;
   onOpenActions: () => void;
   onTaskCheckBurst?: (x: number, y: number) => void;
+  textSize?: number;
 }
 
 export const NoteEditor: React.FC<NoteEditorProps> = ({
@@ -26,6 +28,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
   onChange,
   onOpenActions,
   onTaskCheckBurst,
+  textSize = DEFAULT_TEXT_SIZE,
 }) => {
   const [blocks, setBlocks] = useState<EditorBlock[]>(() => parseMarkdownToBlocks(content));
   
@@ -46,9 +49,13 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     blockId: string;
   }>({ visible: false, x: 0, y: 0, text: '', start: 0, end: 0, blockId: '' });
 
-  // Each block is its own textarea, so a native selection can't span the note.
-  // Selecting the whole note is a separate mode, held while the hidden input has focus.
-  const [wholeNoteSelected, setWholeNoteSelected] = useState(false);
+  // Each block is its own textarea, so a native selection can't span blocks.
+  // Selecting a range of blocks is a separate mode, held while the hidden input
+  // has focus. The anchor stays put; Shift+arrows move the head.
+  const [blockRange, setBlockRange] = useState<{ anchor: number; head: number } | null>(null);
+  const rangeStart = blockRange ? Math.min(blockRange.anchor, blockRange.head) : -1;
+  const rangeEnd = blockRange ? Math.max(blockRange.anchor, blockRange.head) : -1;
+  const isBlockSelected = (idx: number) => idx >= rangeStart && idx <= rangeEnd;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const blockInputRefs = useRef<{ [key: string]: HTMLTextAreaElement | null }>({});
@@ -75,7 +82,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     }
     const parsed = parseMarkdownToBlocks(content);
     setBlocks(parsed);
-    setWholeNoteSelected(false);
+    setBlockRange(null);
     wholeNoteUndo.current = null;
 
     // Safely size textareas without collapsing container scroll
@@ -89,6 +96,11 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     });
   }, [content]);
 
+  // Textareas are sized to their content in px, so re-measure when the text size changes.
+  useEffect(() => {
+    Object.values(blockInputRefs.current).forEach(autoResize);
+  }, [textSize, autoResize]);
+
   // Propagate block changes to parent markdown
   const notifyChange = useCallback((newBlocks: EditorBlock[]) => {
     isInternalUpdate.current = true;
@@ -97,46 +109,62 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     onChange(md);
   }, [onChange]);
 
-  const selectWholeNote = useCallback(() => {
+  const selectBlocks = useCallback((anchor: number, head: number) => {
     const proxy = wholeNoteInput.current;
-    if (!proxy) return;
+    const all = blocksRef.current;
+    if (!proxy || all.length === 0) return;
+    const clampedHead = Math.max(0, Math.min(all.length - 1, head));
     setBubbleMenu(prev => ({ ...prev, visible: false }));
     setSlashMenuOpen(false);
-    setWholeNoteSelected(true);
-    // The hidden input holds the note's markdown, fully selected, so native
-    // copy, cut, paste, typing, and IME all act on the whole note.
-    proxy.value = serializeBlocksToMarkdown(blocksRef.current);
+    setBlockRange({ anchor, head: clampedHead });
+    // The hidden input holds the selected blocks' markdown, fully selected, so
+    // native copy, cut, paste, typing, and IME all act on the selection.
+    const start = Math.min(anchor, clampedHead);
+    const end = Math.max(anchor, clampedHead);
+    proxy.value = serializeBlocksToMarkdown(all.slice(start, end + 1));
     proxy.focus({ preventScroll: true });
     proxy.select();
+    const headId = all[clampedHead]?.id;
+    containerRef.current
+      ?.querySelector(`[data-block-id="${headId}"]`)
+      ?.scrollIntoView({ block: 'nearest' });
   }, []);
 
-  const replaceWholeNote = (next: EditorBlock[]) => {
+  const selectWholeNote = useCallback(() => {
+    selectBlocks(0, blocksRef.current.length - 1);
+  }, [selectBlocks]);
+
+  const replaceSelectedBlocks = (insert: EditorBlock[]) => {
+    if (!blockRange) return;
     const before = blocksRef.current;
-    setWholeNoteSelected(false);
+    const next = [...before.slice(0, rangeStart), ...insert, ...before.slice(rangeEnd + 1)];
+    setBlockRange(null);
     notifyChange(next);
     wholeNoteUndo.current = { before, after: serializeBlocksToMarkdown(next) };
-    const target = [...next].reverse().find(b => b.type !== 'divider');
+    const target = [...insert].reverse().find(b => b.type !== 'divider');
     pendingCaretAtEnd.current = target?.id ?? null;
   };
 
-  const replaceWholeNoteWithText = (text: string) => {
-    replaceWholeNote([{ id: `block-${Date.now()}`, type: 'paragraph', content: text }]);
+  const replaceSelectedBlocksWithText = (text: string) => {
+    replaceSelectedBlocks([{ id: `block-${Date.now()}`, type: 'paragraph', content: text }]);
   };
 
-  const handleWholeNoteInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (!wholeNoteSelected || (e.nativeEvent as InputEvent).isComposing) return;
-    replaceWholeNoteWithText(e.target.value);
+  const handleSelectionInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if ((e.nativeEvent as InputEvent).isComposing) return;
+    replaceSelectedBlocksWithText(e.target.value);
   };
 
-  const handleWholeNotePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+  const handleSelectionPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     e.preventDefault();
-    replaceWholeNote(parseMarkdownToBlocks(e.clipboardData.getData('text')));
+    replaceSelectedBlocks(parseMarkdownToBlocks(e.clipboardData.getData('text')));
   };
 
-  const handleWholeNoteKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleSelectionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!blockRange) return;
     const mod = e.metaKey || e.ctrlKey;
     if (mod && e.key.toLowerCase() === 'a') {
       e.preventDefault();
+      selectWholeNote();
       return;
     }
     if (e.key === 'Escape') {
@@ -146,13 +174,21 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       e.currentTarget.blur();
       return;
     }
-    if (e.key.startsWith('Arrow') && !e.shiftKey) {
-      e.preventDefault();
-      setWholeNoteSelected(false);
-      const toStart = e.key === 'ArrowUp' || e.key === 'ArrowLeft';
-      const target = toStart ? blocks[0] : blocks[blocks.length - 1];
-      if (target) focusBlock(target.id, !toStart);
+    if (!e.key.startsWith('Arrow')) return;
+    // Any arrow would move the hidden input's own caret and shrink what gets
+    // copied or replaced, so every arrow is handled here.
+    e.preventDefault();
+    const vertical = e.key === 'ArrowUp' || e.key === 'ArrowDown';
+    if (e.shiftKey) {
+      if (vertical) {
+        selectBlocks(blockRange.anchor, blockRange.head + (e.key === 'ArrowUp' ? -1 : 1));
+      }
+      return;
     }
+    setBlockRange(null);
+    const toStart = e.key === 'ArrowUp' || e.key === 'ArrowLeft';
+    const target = blocks[toStart ? rangeStart : rangeEnd];
+    if (target) focusBlock(target.id, !toStart);
   };
 
   // Undo a whole-note replace, as long as nothing has changed since. Native
@@ -376,6 +412,19 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     }
 
     if (undoWholeNoteReplace(e)) return;
+
+    // Shift+↑/↓: native selection within the block until it reaches the
+    // block's edge, then the next press selects whole blocks.
+    if (e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      const el = e.currentTarget;
+      const up = e.key === 'ArrowUp';
+      const head = el.selectionDirection === 'backward' ? el.selectionStart : el.selectionEnd;
+      if (head === (up ? 0 : el.value.length)) {
+        e.preventDefault();
+        selectBlocks(index, up ? index - 1 : index + 1);
+      }
+      return;
+    }
 
     // ⌘A: native select-all within the block first; once the block is fully
     // selected (or empty), a further ⌘A selects the whole note.
@@ -832,6 +881,13 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     <div
       ref={containerRef}
       className="flex-1 min-h-0 flex flex-col p-5 overflow-y-auto relative text-[var(--text-primary)] select-text z-10"
+      style={{
+        '--editor-text-size': `${textSize}px`,
+        // How far the first line's centre moves from the 13px default
+        // (leading-relaxed is 1.625, so half a line is 0.8125 per px); keeps
+        // bullets, checkboxes, and the callout icon level with the text.
+        '--editor-line-shift': `${(textSize - DEFAULT_TEXT_SIZE) * 0.8125}px`,
+      } as React.CSSProperties}
       onFocus={e => {
         if (e.target instanceof HTMLTextAreaElement && e.target !== wholeNoteInput.current) {
           lastFocusedInput.current = e.target;
@@ -861,24 +917,20 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         aria-hidden
         tabIndex={-1}
         className="fixed top-0 left-0 w-px h-px opacity-0 pointer-events-none resize-none"
-        onChange={handleWholeNoteInput}
-        onCompositionEnd={e => replaceWholeNoteWithText(e.currentTarget.value)}
-        onPaste={handleWholeNotePaste}
-        onKeyDown={handleWholeNoteKeyDown}
-        onBlur={() => setWholeNoteSelected(false)}
+        onChange={handleSelectionInput}
+        onCompositionEnd={e => replaceSelectedBlocksWithText(e.currentTarget.value)}
+        onPaste={handleSelectionPaste}
+        onKeyDown={handleSelectionKeyDown}
+        onBlur={() => setBlockRange(null)}
       />
 
       {/* Block List: Unified Rendered WYSIWYG */}
-      <div
-        className={`-mx-2 px-2 space-y-1 pb-16 rounded-lg transition-colors ${
-          wholeNoteSelected ? 'bg-[var(--accent-glow)]' : ''
-        }`}
-      >
+      <div className="w-full space-y-1 pb-16">
         {blocks.map((block, idx) => {
           // 1. Heading 1
           if (block.type === 'h1') {
             return (
-              <div key={block.id} className="relative group my-2">
+              <div key={block.id} data-block-id={block.id} data-block-selected={isBlockSelected(idx) || undefined} className="relative group my-2">
                 <textarea
                   ref={el => (blockInputRefs.current[block.id] = el)}
                   rows={1}
@@ -889,7 +941,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   onWheel={handleTextareaWheel}
                   onSelect={() => handleSelectText(block.id)}
                   placeholder="Heading 1..."
-                  className="w-full bg-transparent resize-none overflow-hidden font-bold text-xl tracking-tight text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0 leading-tight selection:bg-[var(--accent-color)]/30"
+                  className="w-full bg-transparent resize-none overflow-hidden font-bold text-editor-h1 tracking-tight text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0 leading-tight selection:bg-[var(--accent-color)]/30"
                 />
               </div>
             );
@@ -898,7 +950,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           // 2. Heading 2
           if (block.type === 'h2') {
             return (
-              <div key={block.id} className="relative group my-1.5">
+              <div key={block.id} data-block-id={block.id} data-block-selected={isBlockSelected(idx) || undefined} className="relative group my-1.5">
                 <textarea
                   ref={el => (blockInputRefs.current[block.id] = el)}
                   rows={1}
@@ -909,7 +961,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   onWheel={handleTextareaWheel}
                   onSelect={() => handleSelectText(block.id)}
                   placeholder="Heading 2..."
-                  className="w-full bg-transparent resize-none overflow-hidden font-semibold text-base tracking-tight text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0 leading-snug selection:bg-[var(--accent-color)]/30"
+                  className="w-full bg-transparent resize-none overflow-hidden font-semibold text-editor-h2 tracking-tight text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0 leading-snug selection:bg-[var(--accent-color)]/30"
                 />
               </div>
             );
@@ -918,7 +970,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           // 3. Heading 3
           if (block.type === 'h3') {
             return (
-              <div key={block.id} className="relative group my-1">
+              <div key={block.id} data-block-id={block.id} data-block-selected={isBlockSelected(idx) || undefined} className="relative group my-1">
                 <textarea
                   ref={el => (blockInputRefs.current[block.id] = el)}
                   rows={1}
@@ -929,7 +981,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   onWheel={handleTextareaWheel}
                   onSelect={() => handleSelectText(block.id)}
                   placeholder="Heading 3..."
-                  className="w-full bg-transparent resize-none overflow-hidden font-medium text-sm text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0 leading-normal selection:bg-[var(--accent-color)]/30"
+                  className="w-full bg-transparent resize-none overflow-hidden font-medium text-editor-h3 text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0 leading-normal selection:bg-[var(--accent-color)]/30"
                 />
               </div>
             );
@@ -938,12 +990,12 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           // 4. Task Checklist Block
           if (block.type === 'task') {
             return (
-              <div key={block.id} className="flex items-start gap-2.5 my-1.5 group">
+              <div key={block.id} data-block-id={block.id} data-block-selected={isBlockSelected(idx) || undefined} className="flex items-start gap-2.5 my-1.5 group">
                 {/* Interactive Clickable Checkbox */}
                 <button
                   type="button"
                   onClick={e => handleToggleTask(idx, e)}
-                  className={`w-4 h-4 rounded mt-1 flex items-center justify-center text-xs font-bold transition-all shrink-0 btn-press cursor-pointer select-none ${
+                  className={`w-4 h-4 rounded mt-[calc(4px_+_var(--editor-line-shift))] flex items-center justify-center text-xs font-bold transition-all shrink-0 btn-press cursor-pointer select-none ${
                     block.checked
                       ? 'border border-[var(--accent-color)] bg-[var(--accent-color)] text-white shadow-sm'
                       : 'border border-[var(--border-highlight)] bg-transparent text-transparent hover:border-[var(--accent-color)]'
@@ -964,7 +1016,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   onWheel={handleTextareaWheel}
                   onSelect={() => handleSelectText(block.id)}
                   placeholder="Task item..."
-                  className={`w-full bg-transparent resize-none overflow-hidden outline-none text-[13px] leading-relaxed transition-all placeholder-[var(--text-muted)] border-none p-0 selection:bg-[var(--accent-color)]/30 ${
+                  className={`w-full bg-transparent resize-none overflow-hidden outline-none text-editor-body leading-relaxed transition-colors placeholder-[var(--text-muted)] border-none p-0 selection:bg-[var(--accent-color)]/30 ${
                     block.checked
                       ? 'line-through text-[var(--text-muted)]'
                       : 'text-[var(--text-primary)]'
@@ -977,8 +1029,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           // 5. Bullet List
           if (block.type === 'bullet') {
             return (
-              <div key={block.id} className="flex items-start gap-2.5 my-1 ml-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-color)] mt-2 shrink-0 select-none" />
+              <div key={block.id} data-block-id={block.id} data-block-selected={isBlockSelected(idx) || undefined} className="flex items-start gap-2.5 my-1 ml-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-color)] mt-[calc(8px_+_var(--editor-line-shift))] shrink-0 select-none" />
                 <textarea
                   ref={el => (blockInputRefs.current[block.id] = el)}
                   rows={1}
@@ -989,7 +1041,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   onWheel={handleTextareaWheel}
                   onSelect={() => handleSelectText(block.id)}
                   placeholder="List item..."
-                  className="w-full bg-transparent resize-none overflow-hidden text-[13px] leading-relaxed text-[var(--text-secondary)] outline-none placeholder-[var(--text-muted)] border-none p-0 selection:bg-[var(--accent-color)]/30"
+                  className="w-full bg-transparent resize-none overflow-hidden text-editor-body leading-relaxed text-[var(--text-secondary)] outline-none placeholder-[var(--text-muted)] border-none p-0 selection:bg-[var(--accent-color)]/30"
                 />
               </div>
             );
@@ -999,7 +1051,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           if (block.type === 'code') {
             return (
               <div
-                key={block.id}
+                key={block.id} data-block-id={block.id} data-block-selected={isBlockSelected(idx) || undefined}
                 className="my-2.5 rounded-xl bg-[var(--code-bg)] border border-[var(--border-subtle)] overflow-hidden shadow-sm"
               >
                 <div className="px-3 py-1 bg-black/20 border-b border-white/5 flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] select-none">
@@ -1022,7 +1074,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   onKeyDown={e => handleKeyDown(idx, e)}
                   onPaste={e => handlePaste(idx, e)}
                   rows={Math.max(2, block.content.split('\n').length)}
-                  className="w-full p-3 bg-transparent font-mono text-xs leading-relaxed text-[var(--text-primary)] outline-none resize-none border-none selection:bg-[var(--accent-color)]/30"
+                  className="w-full p-3 bg-transparent font-mono text-editor-code leading-relaxed text-[var(--text-primary)] outline-none resize-none border-none selection:bg-[var(--accent-color)]/30"
                   spellCheck="false"
                 />
               </div>
@@ -1033,10 +1085,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           if (block.type === 'callout') {
             return (
               <div
-                key={block.id}
+                key={block.id} data-block-id={block.id} data-block-selected={isBlockSelected(idx) || undefined}
                 className="my-2.5 p-3 rounded-xl bg-[var(--accent-glow)] border border-[var(--accent-color)]/25 text-xs flex items-start gap-2.5 shadow-sm"
               >
-                <Lightbulb className="w-4 h-4 text-[var(--accent-color)] mt-0.5 shrink-0 select-none" />
+                <Lightbulb className="w-4 h-4 text-[var(--accent-color)] mt-[calc(2px_+_var(--editor-line-shift))] shrink-0 select-none" />
                 <textarea
                   ref={el => (blockInputRefs.current[block.id] = el)}
                   rows={1}
@@ -1047,7 +1099,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   onWheel={handleTextareaWheel}
                   onSelect={() => handleSelectText(block.id)}
                   placeholder="Callout thought..."
-                  className="w-full bg-transparent resize-none overflow-hidden text-[13px] leading-relaxed text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0 font-medium selection:bg-[var(--accent-color)]/30"
+                  className="w-full bg-transparent resize-none overflow-hidden text-editor-body leading-relaxed text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0 font-medium selection:bg-[var(--accent-color)]/30"
                 />
               </div>
             );
@@ -1057,7 +1109,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           if (block.type === 'quote') {
             return (
               <div
-                key={block.id}
+                key={block.id} data-block-id={block.id} data-block-selected={isBlockSelected(idx) || undefined}
                 className="my-2 pl-3.5 border-l-2 border-[var(--accent-color)] flex items-start gap-2 italic"
               >
                 <textarea
@@ -1070,7 +1122,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   onWheel={handleTextareaWheel}
                   onSelect={() => handleSelectText(block.id)}
                   placeholder="Blockquote..."
-                  className="w-full bg-transparent resize-none overflow-hidden text-[13px] leading-relaxed text-[var(--text-secondary)] outline-none placeholder-[var(--text-muted)] border-none p-0 selection:bg-[var(--accent-color)]/30"
+                  className="w-full bg-transparent resize-none overflow-hidden text-editor-body leading-relaxed text-[var(--text-secondary)] outline-none placeholder-[var(--text-muted)] border-none p-0 selection:bg-[var(--accent-color)]/30"
                 />
               </div>
             );
@@ -1079,7 +1131,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           // 9. Divider Block
           if (block.type === 'divider') {
             return (
-              <div key={block.id} className="my-3 py-1 cursor-pointer select-none">
+              <div key={block.id} data-block-id={block.id} data-block-selected={isBlockSelected(idx) || undefined} className="my-3 py-1 cursor-pointer select-none">
                 <hr className="border-[var(--border-subtle)]" />
               </div>
             );
@@ -1087,7 +1139,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
           // 10. Standard Paragraph
           return (
-            <div key={block.id} className="relative group my-0.5">
+            <div key={block.id} data-block-id={block.id} data-block-selected={isBlockSelected(idx) || undefined} className="relative group my-0.5">
               <textarea
                 ref={el => (blockInputRefs.current[block.id] = el)}
                 rows={1}
@@ -1098,7 +1150,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 onWheel={handleTextareaWheel}
                 onSelect={() => handleSelectText(block.id)}
                 placeholder={idx === 0 ? "Start typing note or press '/' for commands..." : ''}
-                className="w-full bg-transparent resize-none overflow-hidden text-[13px] leading-relaxed text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0 selection:bg-[var(--accent-color)]/30"
+                className="w-full bg-transparent resize-none overflow-hidden text-editor-body leading-relaxed text-[var(--text-primary)] outline-none placeholder-[var(--text-muted)] border-none p-0 selection:bg-[var(--accent-color)]/30"
               />
             </div>
           );

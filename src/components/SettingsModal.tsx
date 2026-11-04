@@ -14,8 +14,10 @@ import {
   Eye,
   Lock,
   ArrowDownToLine,
+  Type,
 } from 'lucide-react';
 import { ThemeId, THEMES } from '../types/theme';
+import { DEFAULT_TEXT_SIZE, TEXT_SIZES } from '../utils/textSize';
 import {
   LicenseStatus,
   ProFeature,
@@ -50,6 +52,8 @@ interface SettingsModalProps {
   onShowToast: (msg: string) => void;
   opacity?: number;
   onChangeOpacity?: (opacity: number) => void;
+  textSize?: number;
+  onChangeTextSize?: (size: number) => void;
   onCheckForUpdates?: () => void;
   checkingUpdates?: boolean;
 }
@@ -67,6 +71,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onShowToast,
   opacity = 1.0,
   onChangeOpacity,
+  textSize = DEFAULT_TEXT_SIZE,
+  onChangeTextSize,
   onCheckForUpdates,
   checkingUpdates = false,
 }) => {
@@ -455,6 +461,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </span>
               </div>
 
+              {/* Text Size */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-black/10 border border-[var(--border-subtle)]">
+                <div>
+                  <div className="text-xs font-semibold">Text Size</div>
+                  <div className="text-[11px] text-[var(--text-muted)]">Larger / smaller / default editor text</div>
+                </div>
+                <span className="px-2.5 py-1 rounded-lg bg-[var(--kbd-bg)] border border-[var(--kbd-border)] text-xs font-mono font-semibold text-[var(--text-primary)]">
+                  ⌘+ / ⌘− / ⌘0
+                </span>
+              </div>
+
               {/* Zen Focus Mode */}
               <div className="flex items-center justify-between p-3 rounded-xl bg-black/10 border border-[var(--border-subtle)]">
                 <div>
@@ -669,6 +686,55 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       </button>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* Editor Text Size Section */}
+              <div className="pt-4 border-t border-[var(--border-subtle)]">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <Type className="w-3.5 h-3.5 text-amber-400" />
+                    <h3 className="text-xs font-semibold">Text Size</h3>
+                  </div>
+                  <span className="font-mono text-xs font-bold text-amber-400">{textSize}px</span>
+                </div>
+                <p className="text-[11px] text-[var(--text-muted)] mb-3">
+                  Size of note text. Headings and code scale with it. ⌘+ and ⌘− work anywhere.
+                </p>
+                <div className="flex items-center gap-2 mb-3">
+                  <input
+                    type="range"
+                    min="0"
+                    max={TEXT_SIZES.length - 1}
+                    step="1"
+                    value={Math.max(0, TEXT_SIZES.findIndex(s => s === textSize))}
+                    onChange={e => onChangeTextSize?.(TEXT_SIZES[parseInt(e.target.value, 10)])}
+                    className="flex-1 accent-amber-500 cursor-pointer"
+                  />
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { label: 'Small', val: 12 },
+                    { label: 'Default', val: DEFAULT_TEXT_SIZE },
+                    { label: 'Large', val: 16 },
+                    { label: 'Larger', val: 20 },
+                  ].map(preset => (
+                    <button
+                      key={preset.val}
+                      type="button"
+                      onClick={() => {
+                        haptics.playClick();
+                        onChangeTextSize?.(preset.val);
+                      }}
+                      className={`py-1.5 px-2 rounded-lg text-[11px] font-mono border transition-all cursor-pointer text-center ${
+                        textSize === preset.val
+                          ? 'bg-amber-500/15 border-amber-500/50 text-amber-300 font-bold'
+                          : 'bg-black/10 border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-white'
+                      }`}
+                    >
+                      {preset.label} · {preset.val}
+                    </button>
+                  ))}
                 </div>
               </div>
 

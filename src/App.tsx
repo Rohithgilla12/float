@@ -21,6 +21,7 @@ import {
 } from './utils/license';
 import { checkForUpdates, isTauri, AvailableUpdate } from './utils/updater';
 import { ThemeId } from './types/theme';
+import { DEFAULT_TEXT_SIZE, getStoredTextSize, stepTextSize, storeTextSize } from './utils/textSize';
 
 const OPACITY_STORAGE_KEY = 'float_window_opacity';
 const STARTUP_UPDATE_CHECK_DELAY_MS = 4000;
@@ -59,6 +60,7 @@ export const App: React.FC = () => {
     } catch {}
     return 1.0;
   });
+  const [textSize, setTextSize] = useState<number>(getStoredTextSize);
   const [licenseStatus, setLicenseStatus] = useState<LicenseStatus>(getStoredLicense);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [availableUpdate, setAvailableUpdate] = useState<AvailableUpdate | null>(null);
@@ -245,6 +247,23 @@ export const App: React.FC = () => {
     [requirePro]
   );
 
+  const handleSetTextSize = useCallback(
+    (size: number) => {
+      setTextSize(size);
+      storeTextSize(size);
+      showToast(`Text size: ${size}px`);
+    },
+    [showToast]
+  );
+
+  const handleStepTextSize = useCallback(
+    (direction: 1 | -1 | 0) => {
+      haptics.playClick();
+      handleSetTextSize(direction === 0 ? DEFAULT_TEXT_SIZE : stepTextSize(textSize, direction));
+    },
+    [handleSetTextSize, textSize]
+  );
+
   const handleToggleFocusMode = useCallback(() => {
     requirePro('zen', () => {
       haptics.playClick();
@@ -386,6 +405,12 @@ export const App: React.FC = () => {
         switchToPrevNote();
         return;
       }
+      // ⌘= and ⌘+ (⇧=) grow the text, ⌘- shrinks it, ⌘0 resets it.
+      if (mod && !e.altKey && (e.key === '=' || e.key === '+' || e.key === '-' || e.key === '0')) {
+        e.preventDefault();
+        handleStepTextSize(e.key === '-' ? -1 : e.key === '0' ? 0 : 1);
+        return;
+      }
       if (mod && /^[1-9]$/.test(e.key)) {
         const index = parseInt(e.key, 10) - 1;
         if (notes[index]) {
@@ -444,6 +469,7 @@ export const App: React.FC = () => {
     handleAdjustOpacity,
     handleToggleFocusMode,
     handleOpenImageExport,
+    handleStepTextSize,
   ]);
 
   const openActions = () => {
@@ -512,6 +538,7 @@ export const App: React.FC = () => {
           content={activeNote.content}
           onChange={updateActiveNoteContent}
           onOpenActions={openActions}
+          textSize={textSize}
           onTaskCheckBurst={(x, y) => {
             particleCanvasRef.current?.burst(x, y, [themeConfig.accent, '#FFFFFF', '#38BDF8', '#F59E0B']);
           }}
@@ -575,6 +602,8 @@ export const App: React.FC = () => {
           onShowToast={showToast}
           opacity={opacity}
           onChangeOpacity={handleSetOpacity}
+          textSize={textSize}
+          onChangeTextSize={handleSetTextSize}
           onCheckForUpdates={handleCheckForUpdates}
           checkingUpdates={checkingUpdates}
         />

@@ -38,6 +38,7 @@ const SHORTCUTS: Array<[string, string, string]> = [
   ['Switch note', '⌘ 1 – 9', 'Jump straight to a tab'],
   ['Image card', '⌘⇧ E', 'Share a note as a 2x PNG'],
   ['Ghost mode', '⌥ [  ⌥ ]', 'Lower or raise window opacity'],
+  ['Text size', '⌘ +  ⌘ −', 'Make note text bigger or smaller'],
   ['Zen mode', '⌘⇧ F', 'Hide every bit of chrome'],
   ['Inline maths', '=', 'Type 15% of 850 = and get the answer'],
   ['Close', 'Esc', 'Closes a menu first, then the window'],
