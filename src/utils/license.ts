@@ -134,7 +134,8 @@ export async function activateDodoLicense(
 
   let lastError = 'Could not reach Dodo Payments. Check your connection and try again.';
 
-  for (const source of ['dodo_live', 'dodo_test'] as DodoSource[]) {
+  const sources: DodoSource[] = import.meta.env.DEV ? ['dodo_live', 'dodo_test'] : ['dodo_live'];
+  for (const source of sources) {
     try {
       const response = await postJson(`${DODO_ENDPOINTS[source]}/licenses/activate`, {
         license_key: cleanKey,
