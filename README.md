@@ -4,9 +4,9 @@
 [![Tauri v2](https://img.shields.io/badge/Tauri-v2-FFC131?logo=tauri&logoColor=white)](https://v2.tauri.app/)
 [![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Launch Film](https://img.shields.io/badge/15s_Film-Watch_on_R2-F59E0B?logo=quicktime&logoColor=white)](https://pub-f69e073835364d8883ded4ff1d09e386.r2.dev/float-intro.mp4)
+[![Launch Film](https://img.shields.io/badge/15s_Film-Watch-F59E0B?logo=quicktime&logoColor=white)](https://float.gilla.fun/float-intro.mp4)
 
-> **The fastest, most beautiful floating desktop scratchpad for macOS.**  
+> **A floating desktop scratchpad for macOS that lives on a hotkey.**  
 > Crafted with **Tauri v2 (Rust)**, **React + TypeScript**, and **Tailwind CSS**. Built for speed, fluid motion, and zero friction.
 
 ---
@@ -20,7 +20,6 @@
   - Smooth window dragging via `data-tauri-drag-region`.
 - **Global Hotkey Summoning**:
   - Press `⌥ + Space` (Option+Space or Alt+Space) anywhere on your system to instantly summon or dismiss your floating scratchpad.
-  - **0ms keyboard latency:** Instant keystroke-to-screen responsiveness.
 - **Unified Live WYSIWYG Editor**:
   - Always in rendered preview mode—zero clunky "edit vs preview" toggle.
   - Interactive clickable checkboxes with fluid spring tick and strikethrough.

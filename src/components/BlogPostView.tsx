@@ -143,7 +143,7 @@ export const BlogPostView: React.FC<BlogPostViewProps> = ({
             Ready to reclaim your focus with Float?
           </h3>
           <p className="mt-2 text-xs sm:text-sm text-white/70 leading-relaxed max-w-xl">
-            Summon in 0ms with <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-xs text-white">⌥Space</kbd>, pin above full-screen apps with <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-xs text-white">⌥P</kbd>, and save raw markdown notes directly to your disk.
+            Summon with <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-xs text-white">⌥Space</kbd>, pin above full-screen apps with <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-xs text-white">⌥P</kbd>, and save raw markdown notes directly to your disk.
           </p>
 
           <div className="mt-6 flex flex-col sm:flex-row gap-3">

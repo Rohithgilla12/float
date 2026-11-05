@@ -21,7 +21,7 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: 'best-floating-notes-apps-mac',
     title: 'The Best Floating Notes Apps for macOS in 2026 (Why Native Stickies Falls Short)',
     metaTitle: '5 Best Floating Notes Apps for Mac (2026 In-Depth Comparison)',
-    description: 'Looking for a modern, always-on-top floating scratchpad for Mac? We compared Apple Stickies, Raycast Notes, Tot, SideNotes, and Float to find the fastest desktop note companion.',
+    description: 'Looking for a modern, always-on-top floating scratchpad for Mac? We compared Apple Stickies, Raycast Notes, Tot, SideNotes, and Float side by side.',
     date: 'Oct 31, 2026',
     readTime: '6 min read',
     category: 'Comparisons',
@@ -37,27 +37,27 @@ If you work on a Mac all day, you know the constant friction of fleeting thought
 
 Opening a heavy electron app like Notion or Obsidian takes seconds and shatters your focus. Opening Apple's built-in **Stickies** app feels like stepping back into System 7 in 1994.
 
-In this guide, we break down the top **floating notes apps for macOS** in 2026, comparing speed, window level behavior over full-screen apps, local file storage, and keyboard ergonomics.
+In this guide, we break down the top **floating notes apps for macOS** in 2026, comparing hotkey summoning, window level behavior over full-screen apps, local file storage, and keyboard ergonomics.
 
 ---
 
 ### The Contenders at a Glance
 
-| App | Summon Latency | Always on Top | Full-Screen Spaces Support | Local Plain \`.md\` Files | Price |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Float** | **0ms (Native Rust/Tauri)** | **Yes (\`⌥P\`)** | **Yes (Multi-workspace)** | **Yes (\`~/Documents/Float\`)** | **Free OSS / $4.99 Pro** |
-| **Apple Stickies** | ~400ms (App Launch) | Manual (Window menu) | ❌ **Hides in Full Screen** | ❌ Proprietary database | Free (Preinstalled) |
-| **Raycast Notes** | ~200ms | Yes | Limited | ❌ SQLite internal DB | Free / $8/mo Pro |
-| **Tot (Iconfactory)** | ~150ms | Yes (Detached) | ❌ Standard window level | ❌ Plain text / RTF (max 7) | $19.99 (iOS) / Free (Mac) |
-| **SideNotes** | ~100ms | Docked edge | ❌ Hides on active space change | ❌ Proprietary DB | $19.99 (or Setapp) |
+| App | Always on Top | Full-Screen Spaces Support | Local Plain \`.md\` Files | Price |
+| :--- | :--- | :--- | :--- | :--- |
+| **Float** | **Yes (\`⌥P\`)** | **Yes (Multi-workspace)** | **Yes (\`~/Documents/Float\`)** | **Free OSS / $4.99 Pro** |
+| **Apple Stickies** | Manual (Window menu) | ❌ **Hides in Full Screen** | ❌ Proprietary database | Free (Preinstalled) |
+| **Raycast Notes** | Yes | Limited | ❌ SQLite internal DB | Free / $8/mo Pro |
+| **Tot (Iconfactory)** | Yes (Detached) | ❌ Standard window level | ❌ Plain text / RTF (max 7) | $19.99 (iOS) / Free (Mac) |
+| **SideNotes** | Docked edge | ❌ Hides on active space change | ❌ Proprietary DB | $19.99 (or Setapp) |
 
 ---
 
-### 1. Float — The Fastest Standalone Floating Scratchpad
+### 1. Float — A Standalone Floating Scratchpad
 
 **Float** was built to solve the exact flaws that plague both traditional sticky notes and bloated workspace apps.
 
-- **0ms Summon Latency:** Tap \`⌥ Space\` anywhere in macOS and a borderless, translucent floating glass window springs to focus instantly.
+- **Global Hotkey Summon:** Tap \`⌥ Space\` anywhere in macOS and a borderless, translucent floating glass window springs to focus instantly.
 - **True Multi-Workspace & Full-Screen Pinning:** Unlike Apple Stickies, pressing \`⌥P\` elevates Float to native macOS status window levels (\`NSStatusWindowLevel\`) and enables ubiquity across all mission control virtual desktops (\`set_visible_on_all_workspaces(true)\`). You can pin Float directly on top of full-screen Figma or VS Code without it disappearing.
 - **Zero Lock-In (\`.md\` Local Files):** Every note is saved in plain Markdown under \`~/Documents/Float\` (customizable in Settings \`⌘,\`). If you use Obsidian, your Float notes automatically live inside your vault.
 - **Rich Live WYSIWYG & Slash Commands:** Type \`/\` for instant checklists, code snippets, callouts, and headings with tactile Web Audio micro-haptics.
@@ -220,7 +220,7 @@ When inspiration strikes during a meeting or while reading an article, opening O
 
 Many power users turn to floating companion apps, only to discover their notes are trapped inside closed proprietary cloud databases.
 
-Here is how to create a **zero-latency quick-capture scratchpad** that saves directly into your Obsidian vault in plain \`.md\` files.
+Here is how to create a **keyboard-first quick-capture scratchpad** that saves directly into your Obsidian vault in plain \`.md\` files.
 
 ---
 
@@ -230,7 +230,7 @@ Unlike note utilities that rely on proprietary cloud synchronizers, **Float** sa
 
 By pointing Float's storage directory to an inbox folder inside your Obsidian vault (for example: \`~/Documents/Vault/00_Inbox\`), you achieve the holy grail of note-taking:
 
-1. **Instant Capture in Float (\`⌥Space\`):** 0ms keystroke response, interactive checkboxes, and live WYSIWYG formatting.
+1. **Instant Capture in Float (\`⌥Space\`):** Interactive checkboxes and live WYSIWYG formatting.
 2. **Instant Sync in Obsidian:** Because Obsidian constantly watches your local file system, changes saved by Float appear instantly in your Obsidian file tree and graph view.
 3. **Zero Lock-In:** You can open your notes in Finder, VS Code, iA Writer, or git version control at any moment.
 

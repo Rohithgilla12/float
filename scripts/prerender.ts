@@ -179,9 +179,9 @@ async function runPrerender() {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: 'Float',
-    operatingSystem: 'macOS 12.0 or later',
+    operatingSystem: 'macOS 11.0 or later',
     applicationCategory: 'ProductivityApplication',
-    description: 'The fastest floating desktop scratchpad for macOS with 0ms summon latency, fullscreen space pinning, and raw markdown storage.',
+    description: 'A floating desktop scratchpad for macOS with a global hotkey, full-screen space pinning, and plain markdown storage.',
     offers: {
       '@type': 'Offer',
       price: '4.99',
@@ -199,7 +199,7 @@ async function runPrerender() {
     templateHtml,
     {
       title: 'Float — The Floating Desktop Scratchpad for macOS',
-      description: 'The fastest floating desktop scratchpad for macOS. Summon with ⌥Space, pin above full-screen apps, write in live WYSIWYG markdown, and trigger slash commands.',
+      description: 'A floating desktop scratchpad for macOS. Summon with ⌥Space, pin above full-screen apps, write in live WYSIWYG markdown, and trigger slash commands.',
       canonicalUrl: BASE_URL,
       ogType: 'website',
       ogImage: `${BASE_URL}/og.png`,

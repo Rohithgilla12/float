@@ -71,7 +71,7 @@ export const BlogIndex: React.FC<BlogIndexProps> = ({ onSelectPost, onBackToLand
         </div>
 
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
-          Crafting the fastest desktop note experience for macOS.
+          Guides on quick capture and floating notes for macOS.
         </h1>
         <p className="mt-4 text-base text-white/60 max-w-xl mx-auto leading-relaxed">
           Deep-dives into macOS windowing architectures, zero-friction markdown capture, and workflow optimizations for power users.
