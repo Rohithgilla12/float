@@ -76,12 +76,15 @@ export const BlogPostView: React.FC<BlogPostViewProps> = ({
             >
               <Share2 className="w-4 h-4" />
             </button>
-            <button
-              onClick={onBackToHome}
-              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs shadow-md shadow-amber-500/20 transition-all cursor-pointer flex items-center gap-1"
+            <a
+              href="https://github.com/Rohithgilla12/float/releases/latest"
+              data-umami-event="download"
+              data-umami-event-placement="blog-header"
+              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs shadow-md shadow-amber-500/20 transition-all cursor-pointer flex items-center gap-1 no-underline"
             >
-              <span>Get Float ($4.99)</span>
-            </button>
+              <Download className="w-3.5 h-3.5" />
+              <span>Download free</span>
+            </a>
           </div>
         </div>
       </header>

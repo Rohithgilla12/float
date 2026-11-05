@@ -182,12 +182,22 @@ async function runPrerender() {
     operatingSystem: 'macOS 11.0 or later',
     applicationCategory: 'ProductivityApplication',
     description: 'A floating desktop scratchpad for macOS with a global hotkey, full-screen space pinning, and plain markdown storage.',
-    offers: {
-      '@type': 'Offer',
-      price: '4.99',
-      priceCurrency: 'USD',
-      url: 'https://float.gilla.fun',
-    },
+    offers: [
+      {
+        '@type': 'Offer',
+        name: 'Float',
+        price: '0',
+        priceCurrency: 'USD',
+        url: 'https://github.com/Rohithgilla12/float/releases/latest',
+      },
+      {
+        '@type': 'Offer',
+        name: 'Float Pro',
+        price: '4.99',
+        priceCurrency: 'USD',
+        url: 'https://float.gilla.fun/#pricing',
+      },
+    ],
     author: {
       '@type': 'Person',
       name: 'Rohith Gilla',
