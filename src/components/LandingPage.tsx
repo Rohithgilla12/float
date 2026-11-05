@@ -17,7 +17,7 @@ import App from '../App';
 import { BLOG_POSTS } from '../data/blogPosts';
 import { DODO_CHECKOUT_URL, PRO_FEATURES, PRO_PRICE, FREE_NOTE_LIMIT, openExternalLink } from '../utils/license';
 
-const R2_VIDEO_URL = 'https://pub-f69e073835364d8883ded4ff1d09e386.r2.dev/float-intro.mp4';
+const INTRO_VIDEO_URL = 'https://float.gilla.fun/float-intro.mp4';
 const GITHUB_URL = 'https://github.com/Rohithgilla12/float';
 const LATEST_RELEASE_URL = `${GITHUB_URL}/releases/latest`;
 const PRICE = PRO_PRICE;
@@ -399,7 +399,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           <div className="md:hidden rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl">
             <video
-              src={R2_VIDEO_URL}
+              src={INTRO_VIDEO_URL}
               poster="/assets/preview-poster.jpg"
               controls
               playsInline
@@ -507,7 +507,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
         <div className="rounded-3xl border border-white/10 overflow-hidden shadow-2xl bg-black">
           <video
-            src={R2_VIDEO_URL}
+            src={INTRO_VIDEO_URL}
             controls
             playsInline
             preload="metadata"
