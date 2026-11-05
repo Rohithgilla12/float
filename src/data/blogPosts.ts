@@ -37,7 +37,7 @@ If you work on a Mac all day, small things need writing down at awkward moments:
 
 Opening Notion or Obsidian for that means switching to a full app and deciding where the note belongs. Apple's built-in **Stickies** is quicker, but it has barely changed since it shipped with System 7.5 in 1994.
 
-This guide compares five **floating notes apps for macOS**: what each does well, where it falls short, and where your notes end up.
+This guide compares five **floating notes apps for macOS**: what each does well, where it falls short, and where your notes end up. Apart from Stickies, they all stay visible over full-screen apps, so the bigger difference is where your notes are stored.
 
 *Disclosure: I make Float, so weigh my verdict on it accordingly.*
 
@@ -49,9 +49,9 @@ This guide compares five **floating notes apps for macOS**: what each does well,
 | :--- | :--- | :--- | :--- |
 | **Float** | **Yes (pinned by default, \`⌥P\` to toggle)** | **Plain \`.md\` files in \`~/Documents/Float\`** | **Free and open source; $4.99 one-time Pro** |
 | **Apple Stickies** | ❌ No | Stickies' own storage | Free, built in |
-| **Raycast Notes** | Not checked | Encrypted local database, exports to Markdown | Free up to 5 notes; Raycast Pro for more |
-| **Tot** | Not checked | Seven notes, synced through iCloud | One-time purchase |
-| **SideNotes** | Not checked | Synced through iCloud | $19.99 one-time, or Setapp |
+| **Raycast Notes** | Yes | Encrypted local database, exports to Markdown | Free up to 5 notes; Raycast Pro for more |
+| **Tot** | Yes | Seven notes, synced through iCloud | One-time purchase |
+| **SideNotes** | Yes | Synced through iCloud | $19.99 one-time, or Setapp |
 
 Checked in November 2026. If something here is out of date, [open an issue](https://github.com/Rohithgilla12/float/issues) and I'll fix it.
 
