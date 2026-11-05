@@ -189,7 +189,7 @@ export const BlogPostView: React.FC<BlogPostViewProps> = ({
 
       {/* Footer */}
       <footer className="py-12 px-6 border-t border-white/5 text-center text-xs text-white/40 font-mono space-y-2">
-        <p>Float Blog &bull; High-Velocity Desktop Scratchpad for macOS</p>
+        <p>Float Blog &bull; The floating scratchpad for macOS</p>
       </footer>
 
     </div>

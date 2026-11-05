@@ -66,7 +66,7 @@ const FAQ: Array<[string, string]> = [
   ],
   [
     'Where are my notes stored?',
-    'As plain .md files in ~/Documents/Float, or any folder you choose in Settings. No account, no sync server, nothing leaves your Mac. Open the same files in Obsidian, VS Code, or iA Writer.',
+    'As plain .md files in ~/Documents/Float, or with Pro, any folder you choose in Settings. No account, no sync server, nothing leaves your Mac. Open the same files in Obsidian, VS Code, or iA Writer.',
   ],
   [
     'What is free and what is Pro?',
@@ -447,10 +447,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div>
             <SectionLabel>Plain files, no lock-in</SectionLabel>
             <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-white leading-tight">
-              Your notes are .md files in a folder you choose.
+              Your notes are plain .md files on your Mac.
             </h2>
             <p className="mt-4 text-[15px] sm:text-base text-white/60 leading-relaxed">
-              Float writes to <span className="font-mono text-white/80 text-[14px]">~/Documents/Float</span> by default, or point it at your Obsidian vault. No account, no sync server, nothing leaves your Mac. Delete the app and your notes are still there.
+              Float writes to <span className="font-mono text-white/80 text-[14px]">~/Documents/Float</span> by default, or with Pro, point it at your Obsidian vault. No account, no sync server, nothing leaves your Mac. Delete the app and your notes are still there.
             </p>
           </div>
           <FilesPreview />

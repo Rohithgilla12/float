@@ -19,9 +19,9 @@ export interface BlogPost {
 export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'best-floating-notes-apps-mac',
-    title: 'The Best Floating Notes Apps for macOS in 2026 (Why Native Stickies Falls Short)',
-    metaTitle: '5 Best Floating Notes Apps for Mac (2026 In-Depth Comparison)',
-    description: 'Looking for a modern, always-on-top floating scratchpad for Mac? We compared Apple Stickies, Raycast Notes, Tot, SideNotes, and Float side by side.',
+    title: 'The Best Floating Notes Apps for macOS in 2026 (and Why Stickies Falls Short)',
+    metaTitle: '5 Floating Notes Apps for Mac Compared (2026)',
+    description: 'Float, Apple Stickies, Raycast Notes, Tot, and SideNotes compared: which ones stay over full-screen apps, where your notes are stored, and what each costs.',
     date: 'Oct 31, 2026',
     readTime: '6 min read',
     category: 'Comparisons',
@@ -33,96 +33,111 @@ export const BLOG_POSTS: BlogPost[] = [
       avatar: '/favicon.png',
     },
     content: `
-If you work on a Mac all day, you know the constant friction of fleeting thoughts. You're in a Zoom call, deep inside an Xcode build, or testing an API in Postman, and you need to jot down a quick URL, customer snippet, or to-do.
+If you work on a Mac all day, small things need writing down at awkward moments: a URL during a call, a command from a build log, a to-do that comes up halfway through something else.
 
-Opening a heavy electron app like Notion or Obsidian takes seconds and shatters your focus. Opening Apple's built-in **Stickies** app feels like stepping back into System 7 in 1994.
+Opening Notion or Obsidian for that means switching to a full app and deciding where the note belongs. Apple's built-in **Stickies** is quicker, but it has barely changed since it shipped with System 7.5 in 1994.
 
-In this guide, we break down the top **floating notes apps for macOS** in 2026, comparing hotkey summoning, window level behavior over full-screen apps, local file storage, and keyboard ergonomics.
+This guide compares five **floating notes apps for macOS**: what each does well, where it falls short, and where your notes end up.
+
+*Disclosure: I make Float, so weigh my verdict on it accordingly.*
 
 ---
 
 ### The Contenders at a Glance
 
-| App | Always on Top | Full-Screen Spaces Support | Local Plain \`.md\` Files | Price |
-| :--- | :--- | :--- | :--- | :--- |
-| **Float** | **Yes (\`⌥P\`)** | **Yes (Multi-workspace)** | **Yes (\`~/Documents/Float\`)** | **Free OSS / $4.99 Pro** |
-| **Apple Stickies** | Manual (Window menu) | ❌ **Hides in Full Screen** | ❌ Proprietary database | Free (Preinstalled) |
-| **Raycast Notes** | Yes | Limited | ❌ SQLite internal DB | Free / $8/mo Pro |
-| **Tot (Iconfactory)** | Yes (Detached) | ❌ Standard window level | ❌ Plain text / RTF (max 7) | $19.99 (iOS) / Free (Mac) |
-| **SideNotes** | Docked edge | ❌ Hides on active space change | ❌ Proprietary DB | $19.99 (or Setapp) |
+| App | Stays over full-screen apps | Where notes live | Price |
+| :--- | :--- | :--- | :--- |
+| **Float** | **Yes (pinned by default, \`⌥P\` to toggle)** | **Plain \`.md\` files in \`~/Documents/Float\`** | **Free and open source; $4.99 one-time Pro** |
+| **Apple Stickies** | ❌ No | Stickies' own storage | Free, built in |
+| **Raycast Notes** | Not checked | Encrypted local database, exports to Markdown | Free up to 5 notes; Raycast Pro for more |
+| **Tot** | Not checked | Seven notes, synced through iCloud | One-time purchase |
+| **SideNotes** | Not checked | Synced through iCloud | $19.99 one-time, or Setapp |
+
+Checked in November 2026. If something here is out of date, [open an issue](https://github.com/Rohithgilla12/float/issues) and I'll fix it.
 
 ---
 
-### 1. Float — A Standalone Floating Scratchpad
+### 1. Float: A Floating Scratchpad That Writes Markdown Files
 
-**Float** was built to solve the exact flaws that plague both traditional sticky notes and bloated workspace apps.
+- **Global hotkey:** \`⌥Space\` shows or hides Float from any app.
+- **Stays over full-screen apps:** Float is pinned by default. It raises its window to the macOS status window level and joins every Space, so it stays over full-screen Figma, VS Code, or a video call. \`⌥P\` turns the pin off and on.
+- **Notes as Markdown files:** each open note is saved as a \`.md\` file in \`~/Documents/Float\`. Float Pro lets you choose another folder, such as one inside an Obsidian vault.
+- **Slash commands:** type \`/\` for to-dos, headings, code blocks, callouts, tables, a timestamp, or a quick calculation.
 
-- **Global Hotkey Summon:** Tap \`⌥ Space\` anywhere in macOS and a borderless, translucent floating glass window springs to focus instantly.
-- **True Multi-Workspace & Full-Screen Pinning:** Unlike Apple Stickies, pressing \`⌥P\` elevates Float to native macOS status window levels (\`NSStatusWindowLevel\`) and enables ubiquity across all mission control virtual desktops (\`set_visible_on_all_workspaces(true)\`). You can pin Float directly on top of full-screen Figma or VS Code without it disappearing.
-- **Zero Lock-In (\`.md\` Local Files):** Every note is saved in plain Markdown under \`~/Documents/Float\` (customizable in Settings \`⌘,\`). If you use Obsidian, your Float notes automatically live inside your vault.
-- **Rich Live WYSIWYG & Slash Commands:** Type \`/\` for instant checklists, code snippets, callouts, and headings with tactile Web Audio micro-haptics.
+**Limits worth knowing:** the free version keeps 3 note tabs. Float writes the files but doesn't read them back, so edits made in another app won't appear in Float. Closing a tab deletes that note's file.
 
-*Verdict:* The ultimate choice for software engineers, designers, and keyboard-first power users who want speed without proprietary lock-in.
-
----
-
-### 2. Apple Stickies — The 90s Classic That Time Forgot
-
-Included with every Mac since Mac OS 7, Apple Stickies is the default tool most users reach for first.
-
-**Where it succeeds:**
-- Zero installation required.
-- Colorful pastel backgrounds (yellow, blue, green, pink).
-- Has a rudimentary "Float on Top" option in the Window menu.
-
-**Where it fails in 2026:**
-- **Disappears in Full-Screen:** As soon as you maximize any app or swipe to a separate macOS Space, your Stickies vanish behind the workspace curtain.
-- **No Markdown Support:** You cannot format code blocks, create interactive clickable checkboxes, or use Markdown shortcuts.
-- **No Global Summon Hotkey:** You must click the icon or search Spotlight to bring it forward.
+*Verdict:* a good fit if you're keyboard-first, spend your day in full-screen apps, and want notes as plain files.
 
 ---
 
-### 3. Raycast Floating Notes — Great If You Already Live in Raycast
+### 2. Apple Stickies: The Classic That Stayed Put
 
-Raycast popularized the modern HUD floating note for developers.
+Stickies ships with every Mac, so it's the first thing most people try.
 
-**Where it succeeds:**
-- Beautiful dark-mode typography.
-- Single hotkey summoning from within the launcher.
-- Clean floating window mode.
+**Where it works:**
+- Nothing to install.
+- Coloured notes, and a **Float on Top** option in the Window menu.
 
-**Where it fails:**
-- **Proprietary Internal Database:** Notes are trapped inside Raycast's internal SQLite storage. You cannot open them directly as raw files in Obsidian or VS Code without manually copying them.
-- **Launcher Overhead:** If you only want a lightweight scratchpad, running the full Raycast background process can consume significant RAM and battery.
-
----
-
-### 4. Tot by The Iconfactory — Constrained Simplicity
-
-Tot takes an opinionated, minimalist stance: you get exactly **7 color-coded notes** and nothing more.
-
-**Where it succeeds:**
-- Eliminates digital hoarding by capping your notes at 7 tabs.
-- Elegant Apple design language with native menu bar companion.
-
-**Where it fails:**
-- If you need project scratchpads, meeting snippets, or more than 7 topics, you are out of luck.
-- iOS companion app costs a steep $19.99.
+**Where it falls short:**
+- **Gone in full screen:** a sticky belongs to one desktop Space. When an app goes full screen, macOS gives it a Space of its own, and your stickies stay behind, even with Float on Top turned on.
+- **No Markdown:** no code blocks, checkboxes, or Markdown shortcuts.
+- **No hotkey** to bring your notes forward from another app.
 
 ---
 
-### Summary & Recommendation
+### 3. Raycast Notes: Good If You Already Live in Raycast
 
-- If you want a **free, open-source, ultra-fast floating scratchpad** that saves to plain \`.md\` files and **never disappears over full-screen apps**, get **[Float](https://float.gilla.fun)**.
-- If you only need temporary snippets and want to force yourself to delete them, try **Tot**.
-- If you already use Raycast for all window management and don't care about plain text files, use **Raycast Notes**.
+If Raycast is already your launcher, Notes comes built in.
+
+**Where it works:**
+- Opens from Raycast with a hotkey, in a floating window that resizes to fit the note.
+- Markdown formatting, and export to Markdown, HTML, or plain text.
+
+**Where it falls short:**
+- **Not files:** notes live in Raycast's encrypted database, so Obsidian or VS Code can't open them until you export.
+- **Five notes on the free plan:** unlimited notes and sync between Macs need Raycast Pro.
+
+---
+
+### 4. Tot: Seven Notes and No More
+
+Tot, by The Iconfactory, gives you exactly **seven colour-coded notes**.
+
+**Where it works:**
+- The fixed seven keep notes from piling up.
+- Syncs between Mac, iPhone, and iPad through iCloud.
+
+**Where it falls short:**
+- If you want a scratchpad per project or per meeting, seven runs out quickly.
+
+---
+
+### 5. SideNotes: Notes on the Edge of the Screen
+
+SideNotes, by Apptorium, keeps notes in a panel that slides out from the edge of the screen.
+
+**Where it works:**
+- Out of the way until you need it.
+- Markdown, plain-text, and code modes, with iCloud sync to the iOS app (sold separately).
+
+**Where it falls short:**
+- It's a panel at the screen edge rather than a window you can place next to your work.
+
+---
+
+### Which One to Pick
+
+- You want notes as plain Markdown files and a window that stays over full-screen apps: **[Float](https://float.gilla.fun)**.
+- You want a hard limit that keeps you tidy: **Tot**.
+- You already use Raycast for everything and don't need files: **Raycast Notes**.
+- You'd rather keep notes in a panel at the edge of the screen: **SideNotes**.
 `,
   },
   {
     slug: 'how-to-keep-notes-always-on-top-mac',
     title: 'How to Keep Sticky Notes Always on Top Over Full-Screen Apps on Mac',
     metaTitle: 'How to Keep Sticky Notes Always on Top in macOS (Full Screen Guide)',
-    description: 'Learn why Apple Stickies "Float on Top" disappears in full-screen mode on macOS, and how to keep your notes permanently pinned above full-screen apps and video calls.',
+    description: 'Why Stickies\' "Float on Top" disappears when an app goes full screen on macOS, what an app has to do to stay visible, and how to pin a note over full-screen apps and video calls.',
     date: 'Oct 31, 2026',
     readTime: '5 min read',
     category: 'Guides',
@@ -134,49 +149,52 @@ Tot takes an opinionated, minimalist stance: you get exactly **7 color-coded not
       avatar: '/favicon.png',
     },
     content: `
-One of the most frustrating limitations in macOS is how the operating system handles **Full-Screen Apps and Spaces**.
+One of the most frustrating things about macOS is what happens to small windows when you use **full-screen apps**.
 
-You open Apple's built-in **Stickies** app, check **Window > Float on Top**, and think you're set. But the moment you click the green maximize button on Google Chrome, Xcode, or Figma, **your sticky note disappears.**
+You open Apple's **Stickies**, turn on **Window > Float on Top**, and think you're set. Then you click the green full-screen button in Chrome, Xcode, or Figma, and **your sticky note disappears.**
 
-Why does this happen, and how can you keep a floating note pinned over full-screen apps on Mac? Let's dive in.
-
----
-
-### Why Apple's "Float on Top" Fails in Full Screen
-
-In macOS, when you turn an application full-screen, the OS does not simply resize the window. Instead, **macOS creates a dedicated virtual Space** (a separate desktop display space in Mission Control).
-
-Apple's native Stickies window resides only on the primary desktop space (\`NSNormalWindowLevel\`). Even when set to "Float on Top", the window manager locks Stickies to Desktop 1. When you swipe over to a full-screen app, Stickies stays behind on the old desktop.
+Here's why that happens, and how to keep a note visible over full-screen apps.
 
 ---
 
-### The Solution: True Cocoa Window Levels & Multi-Space Ubiquity
+### Why Stickies Disappears in Full Screen
 
-To keep a window floating above full-screen apps in modern macOS (Sonoma, Sequoia, and beyond), an app must do two specific things in Cocoa / AppKit:
+When an app goes full screen, macOS doesn't just make its window bigger. It moves the app into a **Space of its own**, a separate desktop in Mission Control.
 
-1. **Set Window Collection Behavior to Can Join All Spaces:**
-   \`\`\`rust
-   // Rust / Tauri v2 Window Configuration
-   window.set_visible_on_all_workspaces(true)?;
-   \`\`\`
-2. **Elevate Window Level above Normal Applications:**
-   The window level must be set to \`NSStatusWindowLevel\` or \`NSFloatingWindowLevel\`:
-   \`\`\`rust
-   window.set_always_on_top(true)?;
-   \`\`\`
-
-When both flags are active, the floating window ignores virtual desktop boundaries and hovers seamlessly across every monitor and full-screen space.
+An ordinary window belongs to one Space. Float on Top keeps a sticky above other windows on its own Space, but it doesn't let the sticky follow you into the full-screen app's Space, so the note stays behind on your desktop.
 
 ---
 
-### Step-by-Step: Keeping Notes Always on Top with Float
+### What an App Has to Do to Float Over Full-Screen Apps
 
-**[Float](https://float.gilla.fun)** implements these native macOS window controls out of the box:
+On macOS, a window can stay visible over a full-screen app only if the app does three things:
 
-1. **Summon Float Anywhere:** Press \`⌥ + Space\` (Option + Space) on any screen.
-2. **Toggle Desktop Pin:** Click the **PIN** button in the top right header, or press \`⌥P\`.
-3. **Switch to Full Screen:** Maximize Xcode, VS Code, or start a Zoom screen share.
-4. **Notice the Difference:** Float remains crisply floating above your editor, letting you reference meeting action items, copy terminal snippets, and check to-dos without ever leaving your IDE.
+1. **Lets the window join every Space**, including full-screen ones. In AppKit, that's the \`canJoinAllSpaces\` and \`fullScreenAuxiliary\` collection behaviours.
+2. **Raises the window above ordinary app windows**, for example to the status window level.
+3. **Runs as an accessory app**, without a Dock icon. Otherwise macOS switches you back to the window's original Space when it opens, instead of showing it over the app you're in.
+
+Here's how Float sets the first two when you pin it (Rust, using the \`objc2\` AppKit bindings):
+
+\`\`\`rust
+let behavior = NSWindowCollectionBehavior::CanJoinAllSpaces
+    | NSWindowCollectionBehavior::FullScreenAuxiliary
+    | NSWindowCollectionBehavior::Stationary;
+ns_window.setCollectionBehavior(behavior);
+ns_window.setLevel(NSStatusWindowLevel);
+\`\`\`
+
+A plain "always on top" setting, like Tauri's \`set_always_on_top\`, only covers part of this: it uses the lower floating level and doesn't change which Spaces the window can join.
+
+---
+
+### Step by Step: Keeping a Note on Top with Float
+
+**[Float](https://float.gilla.fun)** does all of this for you:
+
+1. **Open Float from anywhere:** press \`⌥ Space\` (Option + Space).
+2. **Check the pin:** Float starts pinned, and the button in the top-right corner reads **PINNED**. Click it or press \`⌥P\` to switch between pinned and unpinned.
+3. **Go full screen:** make Xcode or VS Code full screen, or start a Zoom screen share.
+4. **Float stays put:** it sits over your editor, so you can check meeting notes, copy a terminal command, or tick off a to-do without leaving the app.
 
 ---
 
@@ -184,25 +202,28 @@ When both flags are active, the floating window ignores virtual desktop boundari
 
 | Shortcut | Action |
 | :--- | :--- |
-| \`⌥ Space\` | Instant summon / dismiss |
-| \`⌥ P\` | Toggle Always on Top (Pin above fullscreen apps) |
-| \`⌘ N\` / \`⌘ T\` | Create new note tab |
-| \`⌘ W\` | Close active note tab |
-| \`⌘ [\` / \`⌘ ]\` | Cycle previous / next note tab |
-| \`⌘ ,\` | Open Settings (Custom storage folder & shortcuts) |
+| \`⌥ Space\` | Show or hide Float |
+| \`⌥ P\` | Pin or unpin (stay over full-screen apps) |
+| \`⌘ N\` / \`⌘ T\` | New note tab |
+| \`⌘ W\` | Close the current tab |
+| \`⌘ [\` / \`⌘ ]\` | Previous or next tab |
+| \`⌘ 1\`–\`⌘ 9\` | Jump to a tab |
+| \`⌘ K\` | Command palette |
+| \`⌥ [\` / \`⌥ ]\` | Make the window more or less transparent |
+| \`⌘ ,\` | Settings |
 
 ---
 
 ### Conclusion
 
-You don't have to tolerate notes hiding behind fullscreen editors. By using an app engineered with native Cocoa multi-workspace support, your notes stay right where your eyes need them.
+You don't have to put up with notes hiding behind full-screen apps. An app that joins every Space and sits above normal windows keeps your notes where you can see them.
 `,
   },
   {
     slug: 'obsidian-quick-capture-floating-scratchpad',
-    title: 'Building the Ultimate Obsidian Quick-Capture Scratchpad on macOS',
-    metaTitle: 'Obsidian Quick Capture on Mac: The Zero-Friction Floating Scratchpad',
-    description: 'Stop waiting for Obsidian to load just to write a fleeting thought. Discover how to connect Float to your Obsidian vault for instantaneous, local-first markdown capture.',
+    title: 'A Quick-Capture Scratchpad for Obsidian on macOS',
+    metaTitle: 'Obsidian Quick Capture on Mac: A Floating Markdown Scratchpad',
+    description: 'Jot things down without opening Obsidian, and have them land in your vault as Markdown files. How to set up Float as a quick-capture scratchpad for Obsidian.',
     date: 'Oct 31, 2026',
     readTime: '4 min read',
     category: 'Workflows',
@@ -214,55 +235,58 @@ You don't have to tolerate notes hiding behind fullscreen editors. By using an a
       avatar: '/favicon.png',
     },
     content: `
-Obsidian is arguably the finest personal knowledge base on the planet. But if there is one universal complaint among Obsidian power users, it's **quick capture speed**.
+Obsidian is one of the best places to keep notes for the long term. The common complaint is **quick capture**.
 
-When inspiration strikes during a meeting or while reading an article, opening Obsidian, waiting for community plugins to initialize, and creating a new daily note file disrupts your flow state.
+When something comes up in a meeting or while you're reading, switching to Obsidian, waiting for it and its plugins to load, and picking a note to put it in takes you out of what you were doing.
 
-Many power users turn to floating companion apps, only to discover their notes are trapped inside closed proprietary cloud databases.
+Many floating note apps solve the speed problem but keep your notes in their own database, away from your vault.
 
-Here is how to create a **keyboard-first quick-capture scratchpad** that saves directly into your Obsidian vault in plain \`.md\` files.
-
----
-
-### The Architecture: Float + Obsidian Vault Sync
-
-Unlike note utilities that rely on proprietary cloud synchronizers, **Float** saves every note as a clean, raw Markdown file on your local disk.
-
-By pointing Float's storage directory to an inbox folder inside your Obsidian vault (for example: \`~/Documents/Vault/00_Inbox\`), you achieve the holy grail of note-taking:
-
-1. **Instant Capture in Float (\`⌥Space\`):** Interactive checkboxes and live WYSIWYG formatting.
-2. **Instant Sync in Obsidian:** Because Obsidian constantly watches your local file system, changes saved by Float appear instantly in your Obsidian file tree and graph view.
-3. **Zero Lock-In:** You can open your notes in Finder, VS Code, iA Writer, or git version control at any moment.
+Here's how to set up a **keyboard-first scratchpad** whose notes land in Obsidian as plain \`.md\` files.
 
 ---
 
-### Step-by-Step Setup Guide
+### How It Works
 
-#### Step 1: Create an Inbox Folder in Obsidian
-Inside your Obsidian vault, create a dedicated folder named \`Float Inbox\` or \`00_Scratchpad\`.
+**Float** saves each open note as a Markdown file in a folder on your Mac. Obsidian watches the folders in your vault, so when that folder is in your vault, Float's notes show up in Obsidian's file list, search, and graph without any sync step.
 
-#### Step 2: Configure Float's Storage Directory
-1. Open Float and press \`⌘,\` (or click the Settings gear icon in the header).
-2. Go to the **Storage & Files** tab.
-3. Click **"Change..."** to open the native macOS folder picker.
-4. Select your \`Float Inbox\` folder inside your Obsidian vault.
-5. Ensure **"Auto-save markdown files to disk"** is toggled ON.
+Two things to know before you set it up:
 
-#### Step 3: Capture Fleeting Thoughts with \`⌥Space\`
-- Hit \`⌥Space\` while reading a paper or in a Slack huddle.
-- Type \`/\` to drop in a quick \`/todo\` or code block.
-- When done, hit \`Esc\` or \`⌥Space\` to tuck Float away.
-- When you open Obsidian later in the evening, all your scratchpads are already indexed, searchable, and ready to be linked into your permanent notes.
+- **Float writes the files; it doesn't read them back.** If you edit a note in Obsidian while it's still open in Float, Float overwrites your edit the next time you type in that tab.
+- **Closing a tab in Float deletes its file.** Treat the folder as an inbox: move a note out of it in Obsidian when you want to keep it.
 
 ---
 
-### Why Not Just Use Obsidian Daily Notes?
+### Option A: Save Straight into Your Vault (Float Pro)
 
-- **Zero Startup Delay:** Float is a tiny, native Rust binary that consumes almost zero RAM in the background. It wakes up in under 5 milliseconds.
-- **Always on Top:** Float floats directly on top of full-screen video calls and PDF readers (\`⌥P\`), whereas Obsidian is a full desktop window.
-- **Separation of Concerns:** Keep your active scratchpad separate from your long-term knowledge graph until you are ready to organize.
+Choosing the notes folder is a Float Pro feature.
 
-Start streamlining your capture workflow with **[Float](https://float.gilla.fun)** today.
+1. In your Obsidian vault, create a folder for Float, such as \`00 Inbox\`.
+2. In Float, press \`⌘,\` to open Settings and go to **Storage & Files**.
+3. Under **Notes Folder Location**, click **Change** and pick that folder.
+4. Make sure **Auto-Save Markdown Files** is on.
+
+### Option B: Open Float's Folder as Its Own Vault (Free)
+
+On the free version, Float saves to \`~/Documents/Float\`. In Obsidian, choose **Open folder as vault** and pick that folder. Your Float notes then have their own small vault, and you can copy anything worth keeping into your main one.
+
+---
+
+### Capturing with \`⌥Space\`
+
+- Press \`⌥Space\` while you're reading or in a call.
+- Type \`/\` for a to-do list, a code block, or a heading.
+- Press \`⌥Space\` to hide Float again, or \`Esc\` twice if you're still typing.
+- Later, in Obsidian, the notes are already there to search, link, and move into your permanent folders.
+
+---
+
+### Why Not Just Use Obsidian's Daily Notes?
+
+- **It's already open:** Float stays running in the background, so \`⌥Space\` shows a window that's already there rather than launching an app.
+- **It stays on top:** pinned, Float sits over full-screen video calls and PDF readers, while Obsidian is a full window of its own.
+- **It keeps rough notes apart:** your scratchpad stays separate from your long-term notes until you're ready to sort it.
+
+Try it with **[Float](https://float.gilla.fun)**.
 `,
   },
 ];

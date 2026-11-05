@@ -74,7 +74,7 @@ export const BlogIndex: React.FC<BlogIndexProps> = ({ onSelectPost, onBackToLand
           Guides on quick capture and floating notes for macOS.
         </h1>
         <p className="mt-4 text-base text-white/60 max-w-xl mx-auto leading-relaxed">
-          Deep-dives into macOS windowing architectures, zero-friction markdown capture, and workflow optimizations for power users.
+          How macOS windows and Spaces work, how to keep notes over full-screen apps, and how to capture notes as plain Markdown.
         </p>
 
         {/* Search & Filter Bar */}
@@ -171,7 +171,7 @@ export const BlogIndex: React.FC<BlogIndexProps> = ({ onSelectPost, onBackToLand
 
       {/* Footer */}
       <footer className="py-12 px-6 border-t border-white/5 text-center text-xs text-white/40 font-mono space-y-3">
-        <p>Float Blog &bull; High-Velocity Desktop Scratchpad for macOS</p>
+        <p>Float Blog &bull; The floating scratchpad for macOS</p>
       </footer>
 
     </div>
