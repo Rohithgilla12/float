@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { BlogPost } from '../data/blogPosts';
 import { ArrowLeft, Calendar, Clock, Share2, Download, Sparkles } from 'lucide-react';
-import { DODO_CHECKOUT_URL, openExternalLink } from '../utils/license';
 import { renderMarkdownToHtml } from '../utils/markdownRenderer';
 
 interface BlogPostViewProps {
@@ -41,10 +40,6 @@ export const BlogPostView: React.FC<BlogPostViewProps> = ({
       navigator.clipboard.writeText(window.location.href);
       alert('Article link copied to clipboard!');
     }
-  };
-
-  const handleBuy = () => {
-    openExternalLink(DODO_CHECKOUT_URL);
   };
 
 
@@ -147,13 +142,15 @@ export const BlogPostView: React.FC<BlogPostViewProps> = ({
           </p>
 
           <div className="mt-6 flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={handleBuy}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            <a
+              href="https://github.com/Rohithgilla12/float/releases/latest"
+              data-umami-event="download"
+              data-umami-event-placement="blog"
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer no-underline"
             >
               <Download className="w-4 h-4" />
-              <span>Download for macOS &bull; $4.99 via Dodo Payments</span>
-            </button>
+              <span>Download for Mac &bull; Free</span>
+            </a>
 
             <a
               href="/"

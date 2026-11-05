@@ -285,9 +285,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const handleGitHub = () => openExternalLink(GITHUB_URL);
   const scrollToFilm = () => document.getElementById('film')?.scrollIntoView({ behavior: 'smooth' });
 
-  const downloadButton = (extra = '') => (
+  const downloadButton = (placement: string, extra = '') => (
     <a
       href={dmgUrl}
+      data-umami-event="download"
+      data-umami-event-placement={placement}
       className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-400 hover:bg-amber-300 text-black font-semibold shadow-[0_10px_30px_-10px_rgba(245,158,11,0.6)] transition-all active:scale-[0.98] cursor-pointer no-underline ${extra}`}
     >
       <Download className="w-4 h-4" />
@@ -295,9 +297,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     </a>
   );
 
-  const proButton = (extra = '') => (
+  const proButton = (placement: string, extra = '') => (
     <button
       onClick={handleBuy}
+      data-umami-event="buy-pro"
+      data-umami-event-placement={placement}
       className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-400 hover:bg-amber-300 text-black font-semibold transition-all active:scale-[0.98] cursor-pointer ${extra}`}
     >
       <span>Unlock Pro · {PRICE}</span>
@@ -333,6 +337,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="flex items-center gap-2">
             <a
               href={dmgUrl}
+              data-umami-event="download"
+              data-umami-event-placement="nav"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold bg-amber-400 hover:bg-amber-300 text-black transition-colors active:scale-95 no-underline"
             >
               <Download className="w-3.5 h-3.5" />
@@ -368,7 +374,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </p>
 
           <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
-            {downloadButton('px-7 py-3.5 text-[15px]')}
+            {downloadButton('hero', 'px-7 py-3.5 text-[15px]')}
             <button
               onClick={scrollToFilm}
               className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl text-white/80 hover:text-white text-[15px] font-medium hover:bg-white/5 transition-colors cursor-pointer"
@@ -547,6 +553,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </ul>
             <a
               href={dmgUrl}
+              data-umami-event="download"
+              data-umami-event-placement="pricing"
               className="mt-8 w-full py-3 rounded-2xl border border-white/15 hover:bg-white/5 text-white text-[14px] font-medium transition-colors inline-flex items-center justify-center gap-2 no-underline"
             >
               <Download className="w-4 h-4" />
@@ -574,7 +582,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <span>14-day refund, no questions</span>
               </li>
             </ul>
-            <div className="mt-8">{proButton('w-full py-3.5 text-[15px]')}</div>
+            <div className="mt-8">{proButton('pricing', 'w-full py-3.5 text-[15px]')}</div>
             <p className="mt-3 text-center text-[12px] text-white/35">Key arrives by email. Paste it in the app under Settings. Checkout and tax by Dodo Payments.</p>
           </div>
         </div>
@@ -648,8 +656,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <section className="relative z-10 py-24 px-6 text-center">
         <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">Ready when you are. <span className="text-white/40">⌥ Space.</span></h2>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-          {downloadButton('px-7 py-3.5 text-[15px]')}
-          <button onClick={handleBuy} className="px-5 py-3.5 text-[15px] text-white/70 hover:text-white cursor-pointer">Or unlock Pro · {PRICE}</button>
+          {downloadButton('closing', 'px-7 py-3.5 text-[15px]')}
+          <button onClick={handleBuy} data-umami-event="buy-pro" data-umami-event-placement="closing" className="px-5 py-3.5 text-[15px] text-white/70 hover:text-white cursor-pointer">Or unlock Pro · {PRICE}</button>
         </div>
       </section>
 

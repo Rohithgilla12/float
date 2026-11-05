@@ -60,8 +60,9 @@ export const LegalPage: React.FC<LegalPageProps> = ({ onBackToHome }) => (
 
       <Section id="privacy" title="Privacy">
         <p>Float has no accounts and no servers of its own. Your notes are written as Markdown files to a folder on your Mac that you choose. The app never uploads them anywhere.</p>
-        <p>The app makes one kind of network request: validating a licence key against Dodo Payments when you activate it. That request contains the key and a device name, nothing from your notes.</p>
-        <p>This website is static. It sets no tracking cookies. If you buy, Dodo Payments collects the details needed to take payment and issue a receipt under their own privacy policy, and shares your email and order with me so I can send the licence key and support you.</p>
+        <p>The app makes two kinds of network request. When it starts, it asks GitHub whether a newer version exists. If you activate a licence, it validates the key with Dodo Payments and rechecks it about once a week; that request contains the key and a device name. Neither request contains anything from your notes.</p>
+        <p>This website sets no cookies. It counts page views and clicks on the Download and Buy buttons with Umami, a cookieless analytics tool I host myself. Umami records the page, the referring site, the browser, the device type, and an approximate location, and it does not store your IP address. Browsers that send Do Not Track are not counted.</p>
+        <p>If you buy, Dodo Payments collects the details needed to take payment and issue a receipt under their own privacy policy, and shares your email and order with me so I can send the licence key and support you.</p>
       </Section>
 
       <Section id="terms" title="Terms">

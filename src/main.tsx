@@ -6,6 +6,7 @@ import { BlogIndex } from './components/BlogIndex';
 import { BlogPostView } from './components/BlogPostView';
 import { LegalPage } from './components/LegalPage';
 import { BLOG_POSTS } from './data/blogPosts';
+import { loadAnalytics } from './utils/analytics';
 import './index.css';
 
 const getInitialRouteState = () => {
@@ -140,6 +141,8 @@ const Root: React.FC = () => {
     />
   );
 };
+
+loadAnalytics();
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
