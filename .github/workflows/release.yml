@@ -73,7 +73,7 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: 'Float v__VERSION__'
-          releaseBody: 'Download Float_v__VERSION___universal.dmg below. Existing installs update themselves from this release.'
+          releaseBody: 'Download Float___VERSION___universal.dmg below. Existing installs update themselves from this release.'
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: true
