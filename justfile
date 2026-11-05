@@ -77,3 +77,16 @@ publish version=`node -p "require('./package.json').version"`:
 ship level:
     just release {{level}}
     just publish
+
+# Downloads per release: dmg = new installs, checks = update checks (one per app launch), updates = auto-updates
+stats:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    gh api "repos/{{repo}}/releases" --paginate --jq '.[] | [.tag_name,
+        ([.assets[] | select(.name | endswith(".dmg")) | .download_count] | add // 0),
+        ([.assets[] | select(.name == "latest.json") | .download_count] | add // 0),
+        ([.assets[] | select(.name | endswith(".app.tar.gz")) | .download_count] | add // 0)] | @tsv' |
+      awk -F'\t' 'BEGIN { printf "%-9s %6s %7s %8s\n", "release", "dmg", "checks", "updates" }
+        { printf "%-9s %6d %7d %8d\n", $1, $2, $3, $4; d += $2; c += $3; u += $4 }
+        END { printf "%-9s %6d %7d %8d\n", "total", d, c, u }'
+    echo "Site analytics: https://analytics.gilla.fun (website: Float)"
