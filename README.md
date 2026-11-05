@@ -1,13 +1,21 @@
-# ⚡ Float
+<div align="center">
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tauri v2](https://img.shields.io/badge/Tauri-v2-FFC131?logo=tauri&logoColor=white)](https://v2.tauri.app/)
-[![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Launch Film](https://img.shields.io/badge/15s_Film-Watch-F59E0B?logo=quicktime&logoColor=white)](https://float.gilla.fun/float-intro.mp4)
+<img src="src-tauri/icons/128x128@2x.png" width="96" height="96" alt="Float app icon" />
 
-> **A floating desktop scratchpad for macOS that lives on a hotkey.**  
-> Crafted with **Tauri v2 (Rust)**, **React + TypeScript**, and **Tailwind CSS**. Built for speed, fluid motion, and zero friction.
+# Float
+
+A floating desktop scratchpad for macOS that lives on a hotkey.<br/>
+Press `⌥ Space` over any app, jot it down, press `Esc`. Notes save as plain Markdown files.
+
+**[Download for macOS](https://github.com/Rohithgilla12/float/releases/latest)** · [Website](https://float.gilla.fun) · [15s film](https://float.gilla.fun/float-intro.mp4)
+
+<sub>Free and MIT licensed · Universal binary, signed and notarised · macOS 11 or later · Optional $4.99 Pro unlock</sub>
+
+<br/>
+
+<img src=".github/assets/float-demo.gif" width="800" alt="Float launch film: a floating note window with checklists, slash commands, and theme switching" />
+
+</div>
 
 ---
 
@@ -78,6 +86,8 @@
 
 ## 🛠️ Development & Building
 
+Float is built with Tauri v2 (Rust), React, TypeScript, and Tailwind CSS.
+
 ### Prerequisites
 - Node.js (v18+)
 - Rust & Cargo (1.80+)
@@ -98,6 +108,7 @@ npm run tauri build
 
 - The code is **100% open source** under the [MIT License](LICENSE).
 - The signed, notarised `.dmg` is free to download from [Releases](https://github.com/Rohithgilla12/float/releases/latest) and updates itself.
+- The free app has the full editor, the global hotkey, and pinning, with 3 note tabs and two themes (Obsidian HUD and Catppuccin Latte).
 - **Float Pro** ($4.99 once, via **Dodo Payments**) unlocks all six themes, unlimited note tabs, image cards, ghost mode, zen mode, and a custom notes folder.
 
 See [`MONETIZATION_AND_SIGNING.md`](MONETIZATION_AND_SIGNING.md) for the complete Apple signing, notarization, and Dodo Payments integration guide.
