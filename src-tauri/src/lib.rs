@@ -4,8 +4,9 @@ use tauri::tray::TrayIconBuilder;
 use tauri::{AppHandle, Manager, State, WebviewWindow};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
-/// Whether the user has pinned Float above other windows. Re-applied on every
-/// summon because macOS can drop the level when the window is hidden.
+/// Whether the user has pinned Float above other windows. On macOS the window
+/// sits at the overlay level while it is pinned or focused, so a summon always
+/// lands over full-screen apps and unpinning only lets it fall behind on blur.
 struct Pinned(AtomicBool);
 
 /// Raises the window above full-screen apps. Tauri's always-on-top uses the
@@ -33,7 +34,7 @@ fn apply_overlay_level(window: &WebviewWindow, on_top: bool) {
 fn set_always_on_top(window: WebviewWindow, pinned: State<Pinned>, always_on_top: bool) -> Result<(), String> {
     pinned.0.store(always_on_top, Ordering::Relaxed);
     #[cfg(target_os = "macos")]
-    apply_overlay_level(&window, always_on_top);
+    apply_overlay_level(&window, always_on_top || window.is_focused().unwrap_or(false));
     #[cfg(not(target_os = "macos"))]
     window.set_always_on_top(always_on_top).map_err(|e| e.to_string())?;
     Ok(())
@@ -42,34 +43,44 @@ fn set_always_on_top(window: WebviewWindow, pinned: State<Pinned>, always_on_top
 fn show_window(window: &WebviewWindow) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     {
-        let on_top = window.state::<Pinned>().0.load(Ordering::Relaxed);
-        apply_overlay_level(window, on_top);
+        let _ = window.app_handle().show();
+        apply_overlay_level(window, true);
     }
     let _ = window.unminimize();
     window.show().map_err(|e| e.to_string())?;
     window.set_focus().map_err(|e| e.to_string())
 }
 
-#[tauri::command]
-fn toggle_window(window: WebviewWindow) -> Result<(), String> {
-    let is_visible = window.is_visible().map_err(|e| e.to_string())?;
-    if is_visible {
-        window.hide().map_err(|e| e.to_string())?;
-    } else {
-        show_window(&window)?;
+/// Hiding the app as well as the window is what makes macOS hand focus back
+/// to the app the user was in before summoning Float.
+fn dismiss_window(window: &WebviewWindow) -> Result<(), String> {
+    window.hide().map_err(|e| e.to_string())?;
+    #[cfg(target_os = "macos")]
+    if window.label() == "main" {
+        let _ = window.app_handle().hide();
     }
     Ok(())
 }
 
 #[tauri::command]
+fn toggle_window(window: WebviewWindow) -> Result<(), String> {
+    let is_visible = window.is_visible().map_err(|e| e.to_string())?;
+    if is_visible {
+        dismiss_window(&window)
+    } else {
+        show_window(&window)
+    }
+}
+
+#[tauri::command]
 fn hide_window(window: WebviewWindow) -> Result<(), String> {
-    window.hide().map_err(|e| e.to_string())
+    dismiss_window(&window)
 }
 
 #[tauri::command]
 fn minimize_window(window: WebviewWindow) -> Result<(), String> {
     // As an accessory app Float has no Dock to minimise into, so hide instead.
-    window.hide().map_err(|e| e.to_string())
+    dismiss_window(&window)
 }
 
 #[tauri::command]
@@ -177,16 +188,28 @@ fn pick_folder(_default_path: Option<String>) -> Result<Option<String>, String> 
 pub fn run() {
     tauri::Builder::default()
         .manage(Pinned(AtomicBool::new(true)))
+        .on_window_event(|window, event| {
+            #[cfg(target_os = "macos")]
+            if window.label() == "main"
+                && let tauri::WindowEvent::Focused(focused) = event
+                && let Some(webview) = window.app_handle().get_webview_window(window.label())
+            {
+                let pinned = window.state::<Pinned>().0.load(Ordering::Relaxed);
+                apply_overlay_level(&webview, pinned || *focused);
+            }
+            #[cfg(not(target_os = "macos"))]
+            let _ = (window, event);
+        })
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app: &AppHandle, _shortcut: &Shortcut, event| {
-                    if event.state() == ShortcutState::Pressed {
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = toggle_window(window);
-                        }
+                    if event.state() == ShortcutState::Pressed
+                        && let Some(window) = app.get_webview_window("main")
+                    {
+                        let _ = toggle_window(window);
                     }
                 })
                 .build(),
@@ -201,10 +224,10 @@ pub fn run() {
             }
 
             // Register global shortcut (Option+Space or Alt+Space)
-            if let Ok(shortcut) = "Alt+Space".parse::<Shortcut>() {
-                if let Err(err) = app.global_shortcut().register(shortcut) {
-                    eprintln!("Failed to register global shortcut Alt+Space: {}", err);
-                }
+            if let Ok(shortcut) = "Alt+Space".parse::<Shortcut>()
+                && let Err(err) = app.global_shortcut().register(shortcut)
+            {
+                eprintln!("Failed to register global shortcut Alt+Space: {}", err);
             }
 
             // Accessory apps (like Spotlight and Raycast) can draw over another
