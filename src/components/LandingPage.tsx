@@ -16,6 +16,8 @@ import {
 import App from '../App';
 import { BLOG_POSTS } from '../data/blogPosts';
 import { DODO_CHECKOUT_URL, PRO_FEATURES, PRO_PRICE, FREE_NOTE_LIMIT, openExternalLink } from '../utils/license';
+import { useLiveSale } from '../hooks/useLiveSale';
+import { SaleBanner } from './SaleBanner';
 
 const INTRO_VIDEO_URL = 'https://float.gilla.fun/float-intro.mp4';
 const GITHUB_URL = 'https://github.com/Rohithgilla12/float';
@@ -280,6 +282,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const stars = useGitHubStars('Rohithgilla12/float');
   const dmgUrl = useLatestDmg();
+  const sale = useLiveSale();
 
   const handleBuy = () => openExternalLink(DODO_CHECKOUT_URL);
   const handleGitHub = () => openExternalLink(GITHUB_URL);
@@ -313,6 +316,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-[1000px] h-[520px] bg-gradient-to-b from-amber-500/10 to-transparent blur-3xl" />
       </div>
+
+      {sale && <SaleBanner sale={sale} />}
 
       <header className="sticky top-0 z-40 backdrop-blur-md bg-[#0C0D0E]/80 border-b border-white/5">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
