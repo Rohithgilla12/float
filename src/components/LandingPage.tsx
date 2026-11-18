@@ -15,14 +15,23 @@ import {
 } from 'lucide-react';
 import App from '../App';
 import { BLOG_POSTS } from '../data/blogPosts';
-import { DODO_CHECKOUT_URL, PRO_FEATURES, PRO_PRICE, FREE_NOTE_LIMIT, openExternalLink } from '../utils/license';
+import {
+  DODO_CHECKOUT_URL,
+  PRO_FEATURES,
+  PRO_PRICE,
+  PRO_PRICE_CENTS,
+  FREE_NOTE_LIMIT,
+  formatUsd,
+  openExternalLink,
+} from '../utils/license';
+import { salePriceCents } from '../data/sale';
 import { useLiveSale } from '../hooks/useLiveSale';
+import { CopyCodeButton } from './CopyCodeButton';
 import { SaleBanner } from './SaleBanner';
 
 const INTRO_VIDEO_URL = 'https://float.gilla.fun/float-intro.mp4';
 const GITHUB_URL = 'https://github.com/Rohithgilla12/float';
 const LATEST_RELEASE_URL = `${GITHUB_URL}/releases/latest`;
-const PRICE = PRO_PRICE;
 
 const NAV_LINKS = [
   { href: '#features', label: 'Features' },
@@ -283,6 +292,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const stars = useGitHubStars('Rohithgilla12/float');
   const dmgUrl = useLatestDmg();
   const sale = useLiveSale();
+  const price = sale ? formatUsd(salePriceCents(PRO_PRICE_CENTS, sale.percentOff)) : PRO_PRICE;
 
   const handleBuy = () => openExternalLink(DODO_CHECKOUT_URL);
   const handleGitHub = () => openExternalLink(GITHUB_URL);
@@ -307,7 +317,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       data-umami-event-placement={placement}
       className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-400 hover:bg-amber-300 text-black font-semibold transition-all active:scale-[0.98] cursor-pointer ${extra}`}
     >
-      <span>Unlock Pro · {PRICE}</span>
+      <span>Unlock Pro · {price}</span>
     </button>
   );
 
@@ -389,7 +399,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </button>
           </div>
           <p className="mt-4 text-[13px] text-white/40">
-            Free to use · Pro unlock {PRICE}, once · macOS 11+ · Open source (MIT)
+            Free to use · Pro unlock {price}, once · macOS 11+ · Open source (MIT)
           </p>
         </div>
 
@@ -531,7 +541,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <section id="pricing" className="relative z-10 py-24 px-6 max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <SectionLabel>Pricing</SectionLabel>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-white">Free to use. {PRICE} to unlock Pro.</h2>
+          <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-white">Free to use. {price} to unlock Pro.</h2>
           <p className="mt-3 text-[15px] text-white/55">One payment, no subscription, every Mac you own. The code is MIT-licensed on GitHub.</p>
         </div>
 
@@ -568,10 +578,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           <div className="md:col-span-3 p-8 rounded-3xl bg-gradient-to-b from-amber-500/[0.09] to-transparent border border-amber-500/30 flex flex-col">
-            <div className="flex items-baseline justify-between">
-              <h3 className="font-bold text-xl text-white">Float Pro</h3>
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <h3 className="font-bold text-xl text-white whitespace-nowrap">Float Pro</h3>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-4xl font-extrabold text-white">{PRICE}</span>
+                {sale && (
+                  <s className="mr-1 text-lg font-semibold text-white/35 decoration-white/40">
+                    <span className="sr-only">Was </span>
+                    {PRO_PRICE}
+                  </s>
+                )}
+                <span className="text-4xl font-extrabold text-white">{price}</span>
                 <span className="text-[13px] text-white/45">once</span>
               </div>
             </div>
@@ -587,7 +603,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <span>14-day refund, no questions</span>
               </li>
             </ul>
-            <div className="mt-8">{proButton('pricing', 'w-full py-3.5 text-[15px]')}</div>
+            <div className="mt-8">
+              {sale && (
+                <p className="mb-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5 rounded-2xl border border-amber-500/25 bg-amber-400/[0.06] px-4 py-3 text-[13px] text-amber-100/85">
+                  <span>Black Friday, {sale.percentOff}% off. Enter</span>
+                  <CopyCodeButton code={sale.code} placement="pricing" />
+                  <span>at checkout.</span>
+                </p>
+              )}
+              {proButton('pricing', 'w-full py-3.5 text-[15px]')}
+            </div>
             <p className="mt-3 text-center text-[12px] text-white/35">Key arrives by email. Paste it in the app under Settings. Checkout and tax by Dodo Payments.</p>
           </div>
         </div>
@@ -662,7 +687,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">Ready when you are. <span className="text-white/40">⌥ Space.</span></h2>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           {downloadButton('closing', 'px-7 py-3.5 text-[15px]')}
-          <button onClick={handleBuy} data-umami-event="buy-pro" data-umami-event-placement="closing" className="px-5 py-3.5 text-[15px] text-white/70 hover:text-white cursor-pointer">Or unlock Pro · {PRICE}</button>
+          <button onClick={handleBuy} data-umami-event="buy-pro" data-umami-event-placement="closing" className="px-5 py-3.5 text-[15px] text-white/70 hover:text-white cursor-pointer">Or unlock Pro · {price}</button>
         </div>
       </section>
 
