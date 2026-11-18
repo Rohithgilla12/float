@@ -1,7 +1,7 @@
 export const BLACK_FRIDAY = {
   code: 'BF26FLOAT',
   percentOff: 40,
-  startsAt: '2026-11-26T00:00:00Z',
+  startsAt: '2026-11-18T00:00:00Z',
   // Exclusive bound: the end of 1 Dec in US Pacific time.
   endsAt: '2026-12-02T08:00:00Z',
   sisterCode: 'BF26PEEK',
