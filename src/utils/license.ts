@@ -5,7 +5,12 @@ const LEGACY_LICENSE_KEY = 'float_notes_dodo_license_v1';
 const REVALIDATE_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const DODO_CHECKOUT_URL = 'https://dodo.pe/float-lifetime';
-export const PRO_PRICE = '$4.99';
+export const PRO_PRICE_CENTS = 499;
+export const PRO_PRICE = formatUsd(PRO_PRICE_CENTS);
+
+export function formatUsd(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
 
 const DODO_ENDPOINTS = {
   dodo_live: 'https://live.dodopayments.com',
