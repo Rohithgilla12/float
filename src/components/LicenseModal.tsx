@@ -12,6 +12,8 @@ import {
   DODO_CHECKOUT_URL,
 } from '../utils/license';
 import { haptics } from '../utils/audioHaptics';
+import { useLiveSale } from '../hooks/useLiveSale';
+import { CopyCodeButton } from './CopyCodeButton';
 
 interface LicenseModalProps {
   isOpen: boolean;
@@ -36,6 +38,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({
 }) => {
   const [licenseInput, setLicenseInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const sale = useLiveSale();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -98,7 +101,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({
             <div>
               <h3 className="font-semibold text-sm">{locked ? `${locked.title} is a Pro feature` : 'Float Pro'}</h3>
               <p className="text-[11px] text-[var(--text-muted)]">
-                {licenseStatus.isPro ? 'Licensed on this Mac' : `${PRO_PRICE} once. No subscription.`}
+                {licenseStatus.isPro ? 'Licensed on this Mac' : sale ? `$2.99 once (${sale.percentOff}% off). No subscription.` : `${PRO_PRICE} once. No subscription.`}
               </p>
             </div>
           </div>
@@ -171,6 +174,15 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({
                 ))}
               </ul>
 
+              {sale && (
+                <div className="p-2.5 rounded-xl bg-amber-400/10 border border-amber-500/25 flex items-center justify-between gap-2">
+                  <div className="text-[11px] text-amber-200">
+                    <span className="font-semibold text-amber-300">Black Friday:</span> Use code at checkout:
+                  </div>
+                  <CopyCodeButton code={sale.code} placement="in-app-modal" />
+                </div>
+              )}
+
               <button
                 type="button"
                 onClick={() => {
@@ -179,7 +191,7 @@ export const LicenseModal: React.FC<LicenseModalProps> = ({
                 }}
                 className="w-full py-2.5 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-semibold flex items-center justify-center gap-2 transition-colors active:scale-[0.99]"
               >
-                <span>Get Float Pro for {PRO_PRICE}</span>
+                <span>{sale ? `Get Float Pro for $2.99 (${sale.percentOff}% off)` : `Get Float Pro for ${PRO_PRICE}`}</span>
                 <ExternalLink className="w-4 h-4" />
               </button>
 
