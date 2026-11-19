@@ -9,7 +9,7 @@ Press `⌥ Space` over any app, jot it down, press `Esc`. Notes save as plain Ma
 
 **[Download for macOS](https://github.com/Rohithgilla12/float/releases/latest)** · [Website](https://float.gilla.fun) · [15s film](https://float.gilla.fun/float-intro.mp4)
 
-<sub>Free and MIT licensed · Universal binary, signed and notarised · macOS 11 or later · Optional $4.99 Pro unlock</sub>
+<sub>Free and MIT licensed · Universal binary, signed and notarised · macOS 11 or later · 🖤 <b>Black Friday Deal:</b> <a href="https://float.gilla.fun/#pricing">Pro is 40% off ($2.99)</a> with code <code>BF26FLOAT</code></sub>
 
 <br/>
 
